@@ -12,6 +12,23 @@ from mdifier.parser import Node, NodeType, TemplateInfo, WikiParser
 from mdifier.template_expander import TemplateExpander
 from mdifier.wiki import WikiPage
 
+# 节点类型 → 渲染方法名（注册表）
+NODE_RENDERERS: dict[NodeType, str] = {
+    NodeType.HEADING: "_render_heading",
+    NodeType.PARAGRAPH: "_render_paragraph",
+    NodeType.LIST: "_render_list",
+    NodeType.TABLE: "_render_table",  # AST 节点 table
+    NodeType.HORIZONTAL_RULE: "_render_horizontal_rule",
+    NodeType.TEXT: "_render_text",
+}
+
+# 需要 expanded_templates 参数的渲染器
+_NODE_RENDERERS_NEED_TEMPLATES = {
+    "_render_paragraph",
+    "_render_list",
+    "_render_text",
+}
+
 
 class MarkdownConverter:
     """Markdown转换器"""
@@ -203,20 +220,18 @@ class MarkdownConverter:
         Returns:
             Markdown字符串
         """
-        if node.type == NodeType.HEADING:
-            return self._render_heading(node)
-        elif node.type == NodeType.PARAGRAPH:
-            return self._render_paragraph(node, expanded_templates)
-        elif node.type == NodeType.LIST:
-            return self._render_list(node, expanded_templates)
-        elif node.type == NodeType.TABLE:
-            return self._render_table(node)
-        elif node.type == NodeType.HORIZONTAL_RULE:
-            return '---\n'
-        elif node.type == NodeType.TEXT:
-            return self._render_text(node, expanded_templates)
-        else:
+        renderer_name = NODE_RENDERERS.get(node.type)
+        if not renderer_name:
             return ''
+        renderer = getattr(self, renderer_name)
+        # 根据渲染器签名决定是否传 expanded_templates
+        if renderer_name in _NODE_RENDERERS_NEED_TEMPLATES:
+            return renderer(node, expanded_templates)
+        return renderer(node)
+
+    def _render_horizontal_rule(self, node: Node) -> str:
+        """水平线"""
+        return '---\n'
 
     def _render_heading(self, node: Node) -> str:
         """渲染标题节点"""

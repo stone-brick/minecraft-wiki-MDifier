@@ -4,11 +4,25 @@
 通过 MediaWiki API 展开模板，获取渲染后的HTML
 """
 
+from collections.abc import Callable
+
 import requests
 from bs4 import BeautifulSoup
 
 from mdifier.formatters import MinecraftColorFormatter
 from mdifier.wiki import LANG_CONFIG
+
+# 格式检测器：(elem) -> 格式字符串 | None
+# 注册表形式，按优先级顺序匹配；首个返回非 None 的获胜
+FormatDetector = Callable[[object], str | None]
+FORMAT_DETECTORS: list[FormatDetector] = [
+    # 1. infobox 表格
+    lambda e: "infobox_table" if e.find(class_='infobox-row') else None,
+    # 2. mcui（elem 本身或内部）
+    lambda e: "mcui" if "mcui" in (e.get('class') or []) or e.find(class_='mcui') else None,
+    # 3. 一般表格（elem 本身是 table 或内部有 table）
+    lambda e: "table" if e.name == 'table' or e.find('table') else None,
+]
 
 
 class TemplateExpander:
@@ -122,19 +136,10 @@ class TemplateExpander:
         Returns:
             格式类型: "text", "infobox_table", "table", "mcui"
         """
-        # 检查是否是 infobox 表格
-        if elem.find(class_='infobox-row'):
-            return "infobox_table"
-
-        # 检查是否是一般表格（包括 elem 本身是 table 的情况）
-        if elem.name == 'table' or elem.find('table'):
-            return "table"
-
-        # 检查是否是 mcui（elem 本身是 mcui 或内部有 mcui）
-        elem_classes = elem.get('class') or []
-        if 'mcui' in elem_classes or elem.find(class_='mcui'):
-            return "mcui"
-
+        for detector in FORMAT_DETECTORS:
+            fmt = detector(elem)
+            if fmt:
+                return fmt
         return "text"
 
     def _parse_table(self, elem, fmt: str) -> list[list[str]]:
