@@ -7,6 +7,8 @@
 import requests
 from bs4 import BeautifulSoup
 
+from mdifier.formatters import MinecraftColorFormatter
+
 
 class TemplateExpander:
     """模板展开器"""
@@ -19,6 +21,7 @@ class TemplateExpander:
         self.session.headers.update({
             "User-Agent": "Minecraft-Wiki-MDifier/0.1.0 (Python Wiki Converter)"
         })
+        self.formatter = MinecraftColorFormatter()
 
     def expand(self, template_call: str) -> dict:
         """
@@ -285,7 +288,7 @@ class TemplateExpander:
                 if 'margin-left' in style:
                     item = child.find(class_='invslot-item')
                     if item:
-                        title = self._clean_minecraft_codes(item.get('title', '?'))
+                        title = self.formatter.clean(item.get('title', '?'))
                         return title
         return ''
 
@@ -338,7 +341,7 @@ class TemplateExpander:
 
     def _format_item(self, item) -> str:
         """格式化单个物品（含数量）"""
-        title = self._clean_minecraft_codes(item.get('title', '?'))
+        title = self.formatter.clean(item.get('title', '?'))
         # 查找所在 invslot 的 stacksize
         parent = item.find_parent(class_='invslot')
         if parent:
@@ -347,54 +350,6 @@ class TemplateExpander:
                 count = ss.get_text(strip=True)
                 return f'{title}x{count}'
         return title
-
-    def _clean_minecraft_codes(self, text: str) -> str:
-        """将 Minecraft &格式代码 转为语义化标签，保留格式信息
-
-        将 `&e镶铆盔甲纹饰&/&7锻造模板&r` 转为
-        `[yellow]镶铆盔甲纹饰\n[gray]锻造模板[/reset]`
-        """
-        import re
-        if not text:
-            return text
-
-        # 颜色代码：&0-9, &a-f（基岩版额外：&g-i, &p-v, &x-z）
-        colors = {
-            '0': 'black', '1': 'dark_blue', '2': 'dark_green', '3': 'dark_aqua',
-            '4': 'dark_red', '5': 'dark_purple', '6': 'gold', '7': 'gray',
-            '8': 'dark_gray', '9': 'blue', 'a': 'green', 'b': 'aqua',
-            'c': 'red', 'd': 'light_purple', 'e': 'yellow', 'f': 'white',
-            'g': 'minecoin_gold', 'h': 'material_quartz', 'i': 'material_iron',
-            'p': 'material_gold', 'q': 'material_diamond', 's': 'material_redstone',
-            't': 'material_lapis', 'u': 'material_amethyst', 'v': 'material_copper',
-            'x': 'material_netherite', 'y': 'material_emerald', 'z': 'material_resin',
-        }
-        # 格式代码：&k-o, &r
-        formats = {
-            'k': 'obfuscated', 'l': 'bold', 'm': 'strikethrough',
-            'n': 'underlined', 'o': 'italic', 'r': 'reset',
-        }
-
-        # 把 &/ 替换为换行
-        text = text.replace('&/', '\n')
-        # 双斜杠视为空格
-        text = re.sub(r'/+', ' ', text)
-
-        # 把 &code 替换为 [code] 前缀
-        def replace_code(match):
-            code = match.group(1).lower()
-            if code in colors:
-                return f'[{colors[code]}]'
-            if code in formats:
-                return f'[{formats[code]}]'
-            return ''
-
-        text = re.sub(r'&([0-9a-zA-Z])', replace_code, text)
-
-        # 清理多余空白
-        text = re.sub(r'[ \t]+', ' ', text)
-        text = re.sub(r' *\n *', '\n', text).strip()
-        return text
 
     def _parse_output(self, mcui_output) -> str:
         """输出物品"""
@@ -407,7 +362,7 @@ class TemplateExpander:
             elif 'invslot' in cls:
                 item = child.find(class_='invslot-item')
                 if item:
-                    title = self._clean_minecraft_codes(item.get('title', '?'))
+                    title = self.formatter.clean(item.get('title', '?'))
                     ss = child.find(class_='invslot-stacksize')
                     count = f'x{ss.get_text()}' if ss else ''
                     return f'{title}{count}'
