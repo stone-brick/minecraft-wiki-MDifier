@@ -8,25 +8,57 @@
 pip install -e .
 ```
 
+### PATH 设置
+
+`mdifier` 命令装在 Python 的 Scripts 目录。如果终端找不到命令：
+
+**Windows (Git Bash / PowerShell)**：
+```bash
+# 找到 Scripts 路径（一般输出形如 C:\Program Files\Python\Python313\Scripts）
+python -c "import sysconfig; print(sysconfig.get_paths()['scripts'])"
+# 临时加 PATH（替换上面输出的实际路径，Git Bash 用正斜杠）
+export PATH="$PATH:/d/Program\ Files/Python/Python313/Scripts"
+# 永久加：把上述加到 ~/.bashrc
+```
+
+**macOS / Linux**：
+```bash
+# 通常 pip install 会自动装到 ~/.local/bin
+export PATH="$PATH:$HOME/.local/bin"
+# 或：python -m mdifier.cli（跨平台等价）
+```
+
+验证：
+```bash
+mdifier --version
+# 如不行：python -m mdifier.cli --version
+```
+
 ## 使用方式
 
 ### CLI
 
 ```bash
-# 转换页面
+# 转换页面（中文 wiki 默认）
 mdifier "铁锭"
+
+# 英文 wiki
+mdifier "Iron Ingot" --lang en -o iron.md
 
 # 输出到文件
 mdifier "铁锭" -o iron_ingot.md
 
-# 使用 URL
+# 使用 URL（自动识别语言）
 mdifier "https://zh.minecraft.wiki/铁锭"
+mdifier "https://minecraft.wiki/wiki/Iron_Ingot"
 
 # 搜索页面
 mdifier search "钻石"
+mdifier search "diamond" --lang en
 
 # 批量转换：多个标题 → 独立 .md 文件
 mdifier batch -t 钻石 -t 铁锭 -t 附魔台 -o ./out
+mdifier batch -t Iron_Ingot -t Diamond --lang en -o ./en_out
 
 # 批量转换：从文件读取标题列表（每行一个，# 开头为注释）
 mdifier batch -i pages.txt -o ./out --workers 8
@@ -36,22 +68,34 @@ mdifier batch --from-search "红石" --search-limit 30 -o ./out
 
 # 缓存管理
 mdifier cache info    # 查看缓存状态
-mdifier cache clear   # 强制清空缓存
-mdifier cache prune   # 仅清理过期条目
+mdifier cache clear   # 强制清空缓存（默认会交互确认；加 -y 跳过）
+mdifier cache prune   # 仅清理过期条目（保留未过期）
 
 # 自定义模板标记（喂给不同 LLM prompt 风格）
-mdifier batch -t 钻石 -t 铁锭 --marker-format ':::{name}:::/:::'
-mdifier batch -i pages.txt -o ./out --marker-format '<details><summary>{name}</summary>/</details>'
+# 格式：open/close，用单个 / 分隔，{name} 是模板类名占位符
+mdifier batch -t 钻石 --marker-format ':::{name}:::/:::'
+mdifier batch -i pages.txt -o ./out --marker-format '<template:{name} start>/<template:{name} end>'
+mdifier batch -t Iron_Ingot --marker-format '<details><summary>{name}</summary>/</details>'
 ```
 
 ### Python 库
 
 ```python
-from mdifier import convert, convert_many, BatchConvertResult
+from mdifier import convert, convert_detailed, convert_many, search, BatchConvertResult, ConvertResult
 
-# 简单转换
+# 简单转换（中文默认）
 md = convert("铁锭")
 print(md)
+
+# 英文 wiki
+md_en = convert("Iron Ingot", lang="en")
+
+# 详细模式返回 ConvertResult（带 title、source、templates）
+result: ConvertResult = convert_detailed("铁锭")
+print(f"标题: {result.title}")
+print(f"来源: {result.source}")  # "api" 或 "html"
+print(f"模板: {result.templates}")  # 当前为空 dict（保留扩展位）
+print(f"Markdown 长度: {len(result.markdown)}")
 
 # 跨调用共享缓存（同一进程内多次 convert 不重复请求模板）
 shared_cache = {}
@@ -67,15 +111,68 @@ if result.failed:
     print(f"失败: {result.failed}")
 if result.unresolved:
     print(f"未展开模板: {result.unresolved}")
+
+# 跨语言批量：混合 URL + 纯标题，内部按 lang 分组
+items = [
+    "钻石",                                        # zh
+    "https://minecraft.wiki/wiki/Diamond",          # en（URL 识别）
+    "Iron Ingot",                                  # 使用 --lang 默认值
+    "https://zh.minecraft.wiki/wiki/工作台",         # zh
+]
+result = convert_many(items, lang="zh")
+
+# 进度回调
+def on_progress(done, total, title):
+    print(f"[{done}/{total}] {title}")
+result = convert_many(["钻石", "铁锭", "附魔台"], on_progress=on_progress)
+
+# 搜索
+results = search("diamond", lang="en")
+for r in results[:5]:
+    print(f"{r['title']}: {r['description']} ({r['url']})")
+```
+
+### URL 自动识别
+
+| URL 模式 | 识别为 |
+|----------|--------|
+| `https://zh.minecraft.wiki/wiki/铁锭` | zh |
+| `https://zh.minecraft.wiki/铁锭`（省略 `/wiki/`） | zh |
+| `https://minecraft.wiki/wiki/Iron_Ingot` | en |
+| `https://en.minecraft.wiki/wiki/Diamond` | en |
+| `钻石`（纯标题） | 使用 `--lang` 默认值 |
+
+### 错误处理
+
+```python
+# 单页 convert 抛 ValueError
+try:
+    md = convert("nonexistent_xyz_123")
+except ValueError as e:
+    print(f"失败: {e}")  # "无法获取页面: nonexistent_xyz_123"
+
+# 批量 convert_many 不抛，仅聚合到 result.failed
+result = convert_many(["钻石", "nonexistent_xyz_123"])
+for t, err in result.failed:
+    print(f"  失败: {t}: {err}")
+# CLI 模式下 result.failed 非空时 exit code = 1
+
+# 语言不支持抛 ValueError
+try:
+    convert("X", lang="xx")
+except ValueError as e:
+    print(e)  # "Unsupported language: xx. Available: ['zh', 'en']"
 ```
 
 ## 功能特点
 
 - **双模式**：CLI（`mdifier`）+ Python 库
+- **多语言支持**：内置 `zh`（zh.minecraft.wiki）和 `en`（minecraft.wiki）
 - **批量转换**：`mdifier batch` 子命令支持 -t / -i / --from-search
+- **跨语言批量**：标题列表可混合 zh/en 页面，内部自动按语言分组
 - **持久化模板缓存**：相同模板只请求一次，跨运行共享（**5.4x 加速**）
 - **缓存管理**：`mdifier cache info/clear/prune` 子命令组
-- **自动 PascalCase**：驼峰模板名自动尝试 PascalCase 形式
+- **自动 PascalCase**：仅对全小写、无空格/连字符的纯字母名生效（如 `for` → `For`、`id table` → `Id Table`）
 - **未展开报告**：批量结束时报告缺失的模板名
 - **模板标记可配置**：可自定义 `<template:xxx>` 标记格式
 - **批量可取消**：`MarkdownConverter.cancel()` 中断大批量任务
@@ -131,7 +228,7 @@ if result.unresolved:
 
 ### 自定义模板标记
 
-可改为 `:::info`、HTML `details` 等风格：
+可改为 `:::info`、HTML `details` 等风格。`open` 和 `close` 各自可独立配置：
 
 ```python
 from mdifier.converter import MarkdownConverter
@@ -144,6 +241,17 @@ c.template_marker_close = ":::"
 # :::infobox
 # ...内容...
 # :::
+
+# 也可以 HTML 风格
+c.template_marker_open = "<details><summary>{name}</summary>"
+c.template_marker_close = "</details>"
+```
+
+CLI 端用 `--marker-format`（格式：`open/close`，用单个 `/` 分隔，`{name}` 是模板类名占位符）：
+
+```bash
+mdifier batch -t 钻石 --marker-format ':::{name}:::/:::'
+mdifier batch -i pages.txt --marker-format '<template:{name} start>/<template:{name} end>'
 ```
 
 ### 批量取消（API 用户）
@@ -179,13 +287,45 @@ convert("铁锭", template_cache=shared)  # 增量 17 条，24 条共享
 - 磁盘缓存（`~/.cache/mdifier/`）：跨进程、跨运行共享
 - `convert_many()` 内部使用磁盘缓存；不写单页 `convert` 的中间缓存
 
-## 项目结构
+### 缓存管理命令对比
+
+| 命令 | 行为 | 适用场景 |
+|------|------|----------|
+| `mdifier cache info` | 显示统计（只读） | 查看缓存状态 |
+| `mdifier cache clear` | 删除整个缓存文件 | wiki 大改，强制重建 |
+| `mdifier cache prune` | 保留未过期（< 7 天），仅删除过期 | 日常维护 |
+
+注：`cache clear` 默认会交互确认（除非 `-y`）。
+
+### `cache_info()` 返回字段
+
+| 字段 | 类型 | 含义 |
+|------|------|------|
+| `path` | str | 缓存文件路径 |
+| `exists` | bool | 是否存在 |
+| `size_bytes` | int | 字节数 |
+| `size_mb` | float | MB（保留 2 位小数）|
+| `entries` | int | 总条目数 |
+| `fresh_entries` | int | 未过期条目数 |
+| `expired_entries` | int | 已过期条目数 |
+| `oldest_ts` | str | 最早时间戳（ISO 格式）|
+| `newest_ts` | str | 最新时间戳（ISO 格式）|
+
+Python 等价：
+
+```python
+from mdifier.cache import cache_info, clear_cache
+
+info = cache_info()
+if info["exists"] and info["size_mb"] > 100:
+    clear_cache()  # 清理
+```
 
 ## 项目结构
 
 ```
 src/mdifier/
-├── __init__.py           # 包初始化，导出 convert/convert_many/BatchConvertResult
+├── __init__.py           # 包初始化，导出 convert/convert_detailed/convert_many/search
 ├── lib.py                # 库模式 API（含 convert_many）
 ├── cli.py                # CLI 入口（click，含 batch/cache 子命令）
 ├── convert.py            # 独立转换脚本（命令行直接运行）
@@ -241,6 +381,47 @@ done
 # 缓存管理
 mdifier cache info
 mdifier cache clear -y
+```
+
+## 高级选项
+
+### `MarkdownConverter` 构造参数
+
+```python
+from mdifier.converter import MarkdownConverter
+
+c = MarkdownConverter(
+    lang="zh",                   # 语言：zh 或 en
+    max_workers=10,              # 模板展开线程池大小
+    template_cache={},           # 跨调用共享缓存（None 则新建）
+    use_persistent_cache=True,   # 是否加载磁盘缓存（默认 True）
+)
+```
+
+### `BatchConvertResult.results` 顺序说明
+
+`result.results` **仅含成功项**，顺序与输入**不严格一致**（`convert_many` 按 lang 分组、按 future 完成顺序填充）。如需保持输入顺序，可自行构建 `dict[title, result]`：
+
+```python
+result = convert_many(["钻石", "铁锭", "附魔台"], lang="zh")
+by_title = {r.title: r for r in result.results}
+md_diamond = by_title.get("钻石")
+```
+
+### `MinecraftColorFormatter` 独立 API
+
+低层颜色规范类，可独立使用或子类化：
+
+```python
+from mdifier.formatters import MinecraftColorFormatter
+
+f = MinecraftColorFormatter()
+md_text = f.clean("&e黄色&r重置")  # '[yellow]黄色[reset]重置'
+
+# 自定义颜色规范（未来扩展）
+class HtmlColorFormatter(MinecraftColorFormatter):
+    COLORS = {"red": "#ff0000", "blue": "#0000ff"}
+    # ...
 ```
 
 ## 依赖
