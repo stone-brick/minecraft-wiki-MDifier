@@ -19,14 +19,14 @@ mdifier "铁锭"
 # 输出到文件
 mdifier "铁锭" -o iron_ingot.md
 
-# 使用URL
+# 使用 URL
 mdifier "https://zh.minecraft.wiki/铁锭"
 
 # 搜索页面
 mdifier search "钻石"
 ```
 
-### Python库
+### Python 库
 
 ```python
 from mdifier import convert
@@ -34,106 +34,103 @@ from mdifier import convert
 # 简单转换
 md = convert("铁锭")
 print(md)
-
-# 获取详细信息（包含模板数据）
-from mdifier import convert_detailed
-result = convert_detailed("铁锭")
-print(result.title)      # 页面标题
-print(result.markdown)    # Markdown内容
-print(result.templates)   # 模板数据
 ```
 
 ## 功能特点
 
-- 支持 CLI 和 Python 库两种使用方式
-- 优先使用 MediaWiki API 获取内容，降级到 HTML 抓取
-- Wiki 模板（合成表、信息框、进度等）转换为带语言标注的代码块
-- 图片保留描述和原始 URL 链接
+- **双模式**：CLI（`mdifier`）+ Python 库
+- **智能获取**：优先 MediaWiki API，HTML 降级抓取
+- **模板适配**：合成表、物品信息框、战利品表等 30+ 常见模板自动展开
+- **mcui 解析**：合成台、熔炉、织布机、锻造台的图片化 UI 转语义化文本
+- **颜色代码**：Minecraft `&e` `&r` 等格式代码转为 `[yellow]` `[reset]` 等语义标签
+- **并发优化**：模板展开使用线程池，30+ 模板页面 4.6x 加速
 
 ## 模板处理
 
-各类 Wiki 模板会被转换为代码块格式：
+模板被包裹在 `<template:xxx>` 标记中，内容按格式分类型处理：
 
-| 原模板 | 输出语言标注 |
-|--------|-------------|
-| 合成表 | ```mc:crafting |
-| 物品信息框 | ```mc:infobox |
-| 进度 | ```mc:advancement |
-| 其他模板 | ```mc:template |
+| 模板 | 输出 |
+|------|------|
+| `Infobox`（物品信息框） | 两列 Markdown 表格 |
+| `Crafting`（合成表） | 三列：材料 / 配方 / 描述 |
+| `LootChest`（战利品表） | 六列：物品 / 来源 / 数量 / 概率等 |
+| `mcui`（合成台/熔炉/织布机/锻造台） | 3x3 网格文本 + 物品描述 |
+| `Hatnote`、`Quote` | 用 markdownify 转为 Markdown 格式 |
+| 其他未识别模板 | 通用 markdownify 转换 |
+
+**输出示例**：
+
+```markdown
+### 合成
+
+<template:wikitable start>
+| 材料 | 合成 配方 |
+| --- | --- |
+| 钻石块 | [_|_|_ / _|_|钻石块|_ / _|_|_] -> 钻石x9 |
+<template:wikitable end>
+```
 
 ## 项目结构
 
 ```
-mdifier/
-├── src/mdifier/
-│   ├── cli.py          # CLI入口
-│   ├── wiki.py         # Wiki页面获取
-│   ├── parser.py       # MediaWiki解析器
-│   ├── converter.py    # Markdown转换器
-│   ├── lib.py          # 库模式API
-│   └── templates/      # 模板处理器
-│       ├── crafting.py
-│       ├── infobox.py
-│       ├── progress.py
-│       └── common.py
-├── tests/
-└── pyproject.toml
+src/mdifier/
+├── __init__.py           # 包初始化，导出 convert/convert_detailed/search
+├── lib.py                # 库模式 API
+├── cli.py                # CLI 入口（click）
+├── convert.py            # 独立转换脚本（可命令行直接运行）
+├── search.py             # 独立搜索脚本
+├── wiki.py               # MediaWiki API 获取 + HTML 降级
+├── parser.py             # Wikitext 解析器（模板/链接/标题）
+├── template_expander.py  # 模板展开：HTML 解析 + 格式检测 + mcui 解析
+└── converter.py          # Markdown 生成：dict dispatch 渲染
 ```
 
-## Claude Code Skill
+### 数据流
 
-mdifier 可以作为 Claude Code 的技能（Skill）使用。
+1. `WikiFetcher` → MediaWiki API 获取 wikitext
+2. `WikiParser` → 解析 AST，提取模板到 `templates` 字典
+3. `TemplateExpander` → **并发**调用 API 展开每个模板的渲染 HTML
+4. `MarkdownConverter` → 按格式分发到对应渲染器，生成最终 Markdown
 
-### 目录结构
+## 开发
 
-```
-.claude/skills/mdifier/
-├── SKILL.md           # 技能配置（待创建）
-└── scripts/
-    ├── convert.py     # 转换脚本
-    └── search.py      # 搜索脚本
-```
-
-### 使用方式
-
-#### 转换页面
-```bash
-python .claude/skills/mdifier/scripts/convert.py --title "页面标题" --output 结果.md
-```
-
-#### 搜索页面
-```bash
-python .claude/skills/mdifier/scripts/search.py "搜索关键词"
-```
-
-### 脚本参数
-
-**convert.py:**
-- `--title`: 页面标题（必需）
-- `--output`: 输出文件路径（可选）
-- `--lang`: 语言 zh/en（默认zh）
-- `--include-templates`: 包含模板数据（可选）
-
-**search.py:**
-- `query`: 搜索关键词（位置参数）
-- `--num`: 返回数量（默认10）
-- `--lang`: 语言（默认zh）
-
-### 示例
+### 安装开发依赖
 
 ```bash
-# 转换"钻石"页面
-python .claude/skills/mdifier/scripts/convert.py --title "钻石"
-
-# 搜索含"钻石"的内容
-python .claude/skills/mdifier/scripts/search.py "钻石"
-
-# 转换并保存到文件
-python .claude/skills/mdifier/scripts/convert.py --title "铁锭" --output iron.md
-
-# 搜索英文页面
-python .claude/skills/mdifier/scripts/search.py "diamond" --lang en
+pip install -e ".[dev]"
+pre-commit install
 ```
+
+### 运行 ruff 检查
+
+```bash
+ruff check .
+```
+
+或通过 pre-commit 自动触发（提交时自动运行）：
+
+```bash
+pre-commit run --all-files
+```
+
+### 手动测试
+
+```bash
+# 转换单页
+mdifier "钻石" -o diamond.md
+
+# 多页批量
+for page in 钻石 铁锭 附魔台; do
+    mdifier "$page" -o "${page}.md"
+done
+```
+
+## 依赖
+
+- `requests` — MediaWiki API HTTP 客户端
+- `beautifulsoup4` — HTML 解析
+- `click` — CLI 框架
+- `markdownify` — 通用 HTML → Markdown 转换
 
 ## License
 
