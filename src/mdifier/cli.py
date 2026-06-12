@@ -143,9 +143,13 @@ def search_cmd(query: str, lang: str, num: int):
               help="输出目录；为 None 则打印到 stdout")
 @click.option("--workers", type=int, default=4, help="跨页并发抓取数")
 @click.option("--no-progress", is_flag=True, default=False, help="禁用进度条")
+@click.option(
+    "--marker-format", default=None,
+    help="自定义模板标记，格式 'open/close'，如 ':::{name}:::/:::'"
+)
 def batch_cmd(
     titles, input_file, from_search, search_limit,
-    lang, output_dir, workers, no_progress
+    lang, output_dir, workers, no_progress, marker_format
 ):
     """
     批量转换 Wiki 页面
@@ -175,8 +179,26 @@ def batch_cmd(
                 deduped.append(t)
 
         progress = _make_progress(len(deduped), enabled=not no_progress)
+        # 解析 --marker-format 为 converter_factory
+        converter_factory = None
+        if marker_format:
+            try:
+                open_, close_ = marker_format.split("/", 1)
+            except ValueError:
+                click.echo("错误: --marker-format 格式为 'open/close'，必须包含 '/'", err=True)
+                sys.exit(2)
+            from mdifier.converter import MarkdownConverter as _MC
+
+            def _make_converter(item_lang: str, cache: dict | None):
+                c = _MC(lang=item_lang, template_cache=cache)
+                c.template_marker_open = open_
+                c.template_marker_close = close_
+                return c
+
+            converter_factory = _make_converter
         result = convert_many(
-            deduped, lang=lang, max_workers=workers, on_progress=progress
+            deduped, lang=lang, max_workers=workers,
+            on_progress=progress, converter_factory=converter_factory,
         )
         _emit_results(result, output_dir)
 

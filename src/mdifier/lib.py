@@ -23,7 +23,8 @@ class ConvertResult:
 
 def convert(
     title_or_url: str,
-    lang: str | None = None
+    lang: str | None = None,
+    template_cache: dict | None = None,
 ) -> str:
     """
     将Minecraft Wiki页面转换为Markdown
@@ -31,6 +32,8 @@ def convert(
     Args:
         title_or_url: 页面标题或完整URL
         lang: 语言，'zh'或'en'，None则自动检测
+        template_cache: 跨调用共享的模板缓存（None 则新建空 dict）
+            不会自动持久化到磁盘（用 convert_many 才有）
 
     Returns:
         Markdown格式字符串
@@ -39,6 +42,11 @@ def convert(
         >>> from mdifier import convert
         >>> md = convert("铁锭")
         >>> print(md)
+
+        >>> # 跨调用共享缓存
+        >>> shared = {}
+        >>> convert("钻石", template_cache=shared)
+        >>> convert("铁锭", template_cache=shared)  # 共享
     """
     # 验证 lang
     if lang is not None and lang not in LANG_CONFIG:
@@ -65,7 +73,7 @@ def convert(
         raise ValueError(f"无法获取页面: {title}")
 
     # 转换
-    converter = MarkdownConverter(lang=lang)
+    converter = MarkdownConverter(lang=lang, template_cache=template_cache)
     return converter.convert_wiki(page)
 
 
@@ -151,6 +159,7 @@ def convert_many(
     max_workers: int = 4,
     on_progress: Callable[[int, int, str], None] | None = None,
     template_cache: dict | None = None,
+    converter_factory: Callable[[str, dict | None], MarkdownConverter] | None = None,
 ) -> BatchConvertResult:
     """
     批量转换 Wiki 页面
@@ -161,6 +170,8 @@ def convert_many(
         max_workers: 跨页并发抓取数
         on_progress: 进度回调 (done, total, title)
         template_cache: 跨批次共享的模板缓存（None 则内部新建）
+        converter_factory: 自定义 converter 工厂 (lang, cache) -> MarkdownConverter
+            用于获得 converter 引用（如想从外部调用 cancel()）
 
     Returns:
         BatchConvertResult，含 results 和 failed 列表
@@ -170,6 +181,13 @@ def convert_many(
         >>> result = convert_many(["钻石", "铁锭", "附魔台"])
         >>> for r in result.results:
         ...     print(f"=== {r.title} ===")
+
+        >>> # 外部引用 converter 实现取消
+        >>> import threading
+        >>> from mdifier.converter import MarkdownConverter
+        >>> c = MarkdownConverter(lang='zh')
+        >>> threading.Timer(0.5, c.cancel).start()
+        >>> convert_many(['钻石'], converter_factory=lambda l, cache: c)
     """
     if lang not in LANG_CONFIG:
         raise ValueError(
@@ -195,14 +213,23 @@ def convert_many(
     for idx, (item_lang, t) in enumerate(parsed):
         by_lang.setdefault(item_lang, []).append((idx, t))
 
+    # 默认 converter 工厂
+    def default_factory(item_lang: str, cache: dict | None) -> MarkdownConverter:
+        return MarkdownConverter(lang=item_lang, template_cache=cache)
+
+    factory = converter_factory or default_factory
+
     # 3. 每 lang 一次会话
     final_results: list[ConvertResult | None] = [None] * len(items)
     final_failed: list[tuple[str, str]] = []
+    all_unresolved: set[str] = set()
     done, total = 0, len(items)
+    seen_converters: set[int] = set()  # 防止跨 lang 重复 flush
 
     for group_lang, group in by_lang.items():
         fetcher = WikiFetcher(lang=group_lang)
-        converter = MarkdownConverter(lang=group_lang, template_cache=template_cache)
+        # 用用户工厂或默认工厂创建 converter
+        converter = factory(group_lang, template_cache)
         titles = [t for _, t in group]
 
         # 跨页并发抓取
@@ -216,7 +243,7 @@ def convert_many(
             }
             for fut in as_completed(fut_map):
                 if converter._cancelled:
-                    # 取消：等待剩余任务完成（或中断）
+                    # 取消：取消剩余 futures
                     for remaining in fut_map:
                         remaining.cancel()
                     break
@@ -228,15 +255,18 @@ def convert_many(
                 done += 1
                 if on_progress:
                     on_progress(done, total, t)
+        # 收集 unresolved（多个 lang 各有 converter）
+        all_unresolved.update(converter._unresolved)
 
-    # 保存模板缓存到磁盘（跨运行共享）；仅在用户没传 cache 时持久化
-    if template_cache is None:
-        converter.flush_cache()
+        # 持久化缓存（用户没传 cache 时，每个 lang converter 独立 flush）
+        if template_cache is None and id(converter) not in seen_converters:
+            seen_converters.add(id(converter))
+            converter.flush_cache()
 
     return BatchConvertResult(
         results=[r for r in final_results if r is not None],
         failed=final_failed,
-        unresolved=sorted(converter._unresolved),
+        unresolved=sorted(all_unresolved),
     )
 
 
