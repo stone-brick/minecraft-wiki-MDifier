@@ -73,15 +73,31 @@ class MarkdownConverter:
         lang: str = "zh",
         max_workers: int = 10,
         template_cache: dict | None = None,
+        use_persistent_cache: bool = True,
     ):
         self.parser = WikiParser()
         self.expander = TemplateExpander(lang=lang)
         self.max_workers = max_workers
+        self._use_persistent_cache = use_persistent_cache
         # 跨页共享的模板缓存（外部注入实现多批次共享）
-        self._template_cache = template_cache if template_cache is not None else {}
+        if template_cache is not None:
+            self._template_cache = template_cache
+        elif use_persistent_cache:
+            from mdifier.cache import load_cache
+            self._template_cache = load_cache()
+        else:
+            self._template_cache = {}
         self._cache_lock = threading.Lock()
         # 未展开的模板名（驼峰映射缺失或模板不存在）
         self._unresolved: set[str] = set()
+
+    def flush_cache(self) -> None:
+        """将当前模板缓存保存到磁盘（供后续运行复用）"""
+        if not self._use_persistent_cache:
+            return
+        from mdifier.cache import save_cache
+        with self._cache_lock:
+            save_cache(self._template_cache)
 
     def convert_wiki(self, page: WikiPage) -> str:
         """

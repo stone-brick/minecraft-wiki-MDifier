@@ -224,6 +224,10 @@ def convert_many(
                 if on_progress:
                     on_progress(done, total, t)
 
+    # 保存模板缓存到磁盘（跨运行共享）；仅在用户没传 cache 时持久化
+    if template_cache is None:
+        converter.flush_cache()
+
     return BatchConvertResult(
         results=[r for r in final_results if r is not None],
         failed=final_failed,
