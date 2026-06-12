@@ -1,0 +1,322 @@
+"""
+模板展开器
+
+通过 MediaWiki API 展开模板，获取渲染后的HTML
+"""
+
+import requests
+from bs4 import BeautifulSoup
+
+
+class TemplateExpander:
+    """模板展开器"""
+
+    BASE_URL = "https://zh.minecraft.wiki/api.php"
+
+    def __init__(self, lang: str = "zh"):
+        self.lang = lang
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": "Minecraft-Wiki-MDifier/0.1.0 (Python Wiki Converter)"
+        })
+
+    def expand(self, template_call: str) -> dict:
+        """
+        展开模板调用
+
+        Args:
+            template_call: 模板调用字符串，如 "{{Hatnote|text}}"
+
+        Returns:
+            dict: {
+                "html": 渲染后的HTML,
+                "class": HTML元素的class,
+                "text": 提取的文本内容,
+                "format": 格式类型 ("text", "infobox_table", "table"),
+                "table": 表格数据（如果有的话）
+            }
+        """
+        params = {
+            "action": "parse",
+            "text": template_call,
+            "format": "json",
+            "prop": "text",
+        }
+        resp = self.session.get(self.BASE_URL, params=params)
+        data = resp.json()
+        html = data["parse"]["text"]["*"]
+
+        return self._parse_expanded_html(html)
+
+    def _parse_expanded_html(self, html: str) -> dict:
+        """
+        解析展开后的HTML，提取class和内容
+
+        Args:
+            html: 渲染后的HTML内容
+
+        Returns:
+            dict: {
+                "html": 原始HTML,
+                "class": 主要元素的class,
+                "text": 主要元素的文本内容,
+                "format": 格式类型,
+                "table": 表格数据（如果有的话）
+            }
+        """
+        soup = BeautifulSoup(html, 'html.parser')
+
+        # 找到外层容器
+        container = soup.find('div', class_='mw-content-ltr')
+        if container is None:
+            container = soup
+
+        # 在容器内找第一个真正的模板元素（不是 mw-parser-output）
+        elem = container.find(class_=lambda c: c and 'mw-parser-output' not in c)
+
+        if elem is None:
+            # 如果没找到，返回整个HTML
+            return {
+                "html": html,
+                "class": None,
+                "text": soup.get_text(strip=True),
+                "format": "text",
+                "table": None
+            }
+
+        classes = elem.get('class', [])
+        main_class = classes[0] if classes else None
+
+        # 检测格式
+        fmt = self._detect_format(elem)
+
+        result = {
+            "html": str(elem),
+            "class": main_class,
+            "text": elem.get_text(strip=True),
+            "format": fmt,
+            "table": None
+        }
+
+        # 解析表格
+        if fmt in ("infobox_table", "table"):
+            result["table"] = self._parse_table(elem, fmt)
+
+        return result
+
+    def _detect_format(self, elem) -> str:
+        """
+        检测HTML格式类型
+
+        Args:
+            elem: BeautifulSoup元素
+
+        Returns:
+            格式类型: "text", "infobox_table", "table"
+        """
+        # 检查是否是 infobox 表格
+        if elem.find(class_='infobox-row'):
+            return "infobox_table"
+
+        # 检查是否是一般表格（包括 elem 本身是 table 的情况）
+        if elem.name == 'table' or elem.find('table'):
+            return "table"
+
+        return "text"
+
+    def _parse_table(self, elem, fmt: str) -> list[list[str]]:
+        """
+        解析HTML表格
+
+        Args:
+            elem: BeautifulSoup元素
+            fmt: 格式类型
+
+        Returns:
+            表格数据，每行是字符串列表
+        """
+        rows = []
+
+        if fmt == "infobox_table":
+            # Infobox 表格：每行包含 label 和 field
+            for row in elem.find_all(class_='infobox-row'):
+                label = row.find(class_='infobox-row-label')
+                field = row.find(class_='infobox-row-field')
+                label_text = label.get_text(strip=True) if label else ''
+                field_text = field.get_text(strip=True) if field else ''
+                rows.append([label_text, field_text])
+        else:
+            # 一般表格：解析HTML table
+            # elem可能是 table 或包含 table 的容器
+            table = elem if elem.name == 'table' else elem.find('table')
+            if table:
+                for tr in table.find_all('tr'):
+                    cells = []
+                    for cell in tr.find_all(['th', 'td']):
+                        mcui = cell.find(class_='mcui')
+                        if mcui:
+                            text = self._parse_mcui(mcui)
+                        else:
+                            text = cell.get_text(separator=' ', strip=True)
+                        cells.append(text)
+                    if cells:
+                        rows.append(cells)
+
+        return rows
+
+    def _parse_mcui(self, mcui) -> str:
+        """
+        解析 mcui 结构，输出语义化文本
+
+        Args:
+            mcui: BeautifulSoup mcui 元素
+
+        Returns:
+            格式化的物品信息字符串
+        """
+        parts = []
+
+        # 通过 mcui 的 class 区分类型
+        mcui_classes = mcui.get('class') or []
+        mcui_input = mcui.find(class_='mcui-input')
+        if mcui_input:
+            is_furnace = any('Furnace' in c for c in mcui_classes)
+            if is_furnace:
+                inputs = self._parse_furnace_input(mcui_input)
+            else:
+                inputs = self._parse_grid_input(mcui_input)
+            if inputs:
+                parts.append(inputs)
+
+        # 输出
+        mcui_output = mcui.find(class_='mcui-output')
+        if mcui_output:
+            output = self._parse_output(mcui_output)
+            if output:
+                parts.append(f'-> {output}')
+
+        return ' '.join(parts) if parts else '?'
+
+    def _parse_grid_input(self, mcui_input) -> str:
+        """
+        3x3 网格输入：每行独立，用 | 分隔单元格，/ 分隔行
+        [[|]] searchaux 标记代表空位置
+        """
+        rows_text = []
+        for row in mcui_input.find_all(class_='mcui-row'):
+            cells = []
+            for child in row.children:
+                if not hasattr(child, 'get'):
+                    continue
+                cls = child.get('class') or []
+                if not cls:
+                    continue
+                if 'searchaux' in cls:
+                    # 隐藏 [[|]] 标记：代表空位置
+                    cells.append('_')
+                elif 'invslot' in cls:
+                    items = child.find_all(class_='invslot-item')
+                    if items:
+                        cell_text = '/'.join(self._format_item(i) for i in items)
+                        cells.append(cell_text)
+                    else:
+                        cells.append('_')
+            rows_text.append('|'.join(cells))
+        return '[' + ' / '.join(rows_text) + ']'
+
+    def _parse_furnace_input(self, mcui_input) -> str:
+        """熔炉输入：物品 + 燃料"""
+        parts = []
+        for child in mcui_input.children:
+            if not hasattr(child, 'get'):
+                continue
+            cls = child.get('class') or []
+            if not cls:
+                continue
+            if 'searchaux' in cls:
+                continue  # 跳过 [[|]] 隐藏标记
+            elif 'mcui-fuel' in cls:
+                parts.append('+ 任意燃料')
+            elif 'invslot' in cls:
+                items = child.find_all(class_='invslot-item')
+                if items:
+                    titles = '/'.join(self._format_item(i) for i in items)
+                    parts.append(titles)
+        return ' '.join(parts)
+
+    def _format_item(self, item) -> str:
+        """格式化单个物品（含数量）"""
+        title = self._clean_minecraft_codes(item.get('title', '?'))
+        # 查找所在 invslot 的 stacksize
+        parent = item.find_parent(class_='invslot')
+        if parent:
+            ss = parent.find(class_='invslot-stacksize')
+            if ss:
+                count = ss.get_text(strip=True)
+                return f'{title}x{count}'
+        return title
+
+    def _clean_minecraft_codes(self, text: str) -> str:
+        """将 Minecraft &格式代码 转为语义化标签，保留格式信息
+
+        将 `&e镶铆盔甲纹饰&/&7锻造模板&r` 转为
+        `[yellow]镶铆盔甲纹饰\n[gray]锻造模板[/reset]`
+        """
+        import re
+        if not text:
+            return text
+
+        # 颜色代码：&0-9, &a-f（基岩版额外：&g-i, &p-v, &x-z）
+        colors = {
+            '0': 'black', '1': 'dark_blue', '2': 'dark_green', '3': 'dark_aqua',
+            '4': 'dark_red', '5': 'dark_purple', '6': 'gold', '7': 'gray',
+            '8': 'dark_gray', '9': 'blue', 'a': 'green', 'b': 'aqua',
+            'c': 'red', 'd': 'light_purple', 'e': 'yellow', 'f': 'white',
+            'g': 'minecoin_gold', 'h': 'material_quartz', 'i': 'material_iron',
+            'p': 'material_gold', 'q': 'material_diamond', 's': 'material_redstone',
+            't': 'material_lapis', 'u': 'material_amethyst', 'v': 'material_copper',
+            'x': 'material_netherite', 'y': 'material_emerald', 'z': 'material_resin',
+        }
+        # 格式代码：&k-o, &r
+        formats = {
+            'k': 'obfuscated', 'l': 'bold', 'm': 'strikethrough',
+            'n': 'underlined', 'o': 'italic', 'r': 'reset',
+        }
+
+        # 把 &/ 替换为换行
+        text = text.replace('&/', '\n')
+        # 双斜杠视为空格
+        text = re.sub(r'/+', ' ', text)
+
+        # 把 &code 替换为 [code] 前缀
+        def replace_code(match):
+            code = match.group(1).lower()
+            if code in colors:
+                return f'[{colors[code]}]'
+            if code in formats:
+                return f'[{formats[code]}]'
+            return ''
+
+        text = re.sub(r'&([0-9a-zA-Z])', replace_code, text)
+
+        # 清理多余空白
+        text = re.sub(r'[ \t]+', ' ', text)
+        text = re.sub(r' *\n *', '\n', text).strip()
+        return text
+
+    def _parse_output(self, mcui_output) -> str:
+        """输出物品"""
+        for child in mcui_output.children:
+            if not (hasattr(child, 'get') and child.get('class')):
+                continue
+            cls = child.get('class') or []
+            if 'searchaux' in cls:
+                continue
+            elif 'invslot' in cls:
+                item = child.find(class_='invslot-item')
+                if item:
+                    title = self._clean_minecraft_codes(item.get('title', '?'))
+                    ss = child.find(class_='invslot-stacksize')
+                    count = f'x{ss.get_text()}' if ss else ''
+                    return f'{title}{count}'
+        return ''
