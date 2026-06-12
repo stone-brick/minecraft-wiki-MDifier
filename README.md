@@ -38,6 +38,10 @@ mdifier batch --from-search "红石" --search-limit 30 -o ./out
 mdifier cache info    # 查看缓存状态
 mdifier cache clear   # 强制清空缓存
 mdifier cache prune   # 仅清理过期条目
+
+# 自定义模板标记（喂给不同 LLM prompt 风格）
+mdifier batch -t 钻石 -t 铁锭 --marker-format ':::{name}:::/:::'
+mdifier batch -i pages.txt -o ./out --marker-format '<details><summary>{name}</summary>/</details>'
 ```
 
 ### Python 库
@@ -48,6 +52,11 @@ from mdifier import convert, convert_many, BatchConvertResult
 # 简单转换
 md = convert("铁锭")
 print(md)
+
+# 跨调用共享缓存（同一进程内多次 convert 不重复请求模板）
+shared_cache = {}
+convert("钻石", template_cache=shared_cache)
+convert("铁锭", template_cache=shared_cache)  # 共享已展开的模板
 
 # 批量转换
 result = convert_many(["钻石", "铁锭", "附魔台"], max_workers=4)
@@ -139,15 +148,38 @@ c.template_marker_close = ":::"
 
 ### 批量取消（API 用户）
 
+通过 `converter_factory` 参数获得 converter 引用，从其他线程调用 `cancel()`：
+
 ```python
 import threading
 from mdifier import convert_many
 from mdifier.converter import MarkdownConverter
 
-c = MarkdownConverter()
+c = MarkdownConverter(lang='zh')
 threading.Timer(0.5, c.cancel).start()
-# 1 秒后自动取消批量任务
+# 0.5 秒后自动取消批量任务
+convert_many(['钻石', '铁锭', '附魔台'],
+             converter_factory=lambda l, cache: c)
 ```
+
+### 跨调用共享缓存（不持久化）
+
+单页 `convert` 也支持传入 `template_cache`，同一进程内多次转换共享模板展开结果：
+
+```python
+from mdifier import convert
+
+shared = {}
+convert("钻石", template_cache=shared)  # 24 条模板展开
+convert("铁锭", template_cache=shared)  # 增量 17 条，24 条共享
+```
+
+**与磁盘缓存的区别**：
+- `template_cache` 参数：进程内共享，不写盘
+- 磁盘缓存（`~/.cache/mdifier/`）：跨进程、跨运行共享
+- `convert_many()` 内部使用磁盘缓存；不写单页 `convert` 的中间缓存
+
+## 项目结构
 
 ## 项目结构
 
