@@ -26,12 +26,19 @@ def main():
     Minecraft Wiki MDifier
 
     将Minecraft Wiki页面转换为AI助手易读的Markdown格式
+
+    缺省行为：直接传标题/URL 时自动调用 convert。
+    例：
+        mdifier "铁锭"             # 等价于 mdifier convert "铁锭"
+        mdifier "铁锭" -o x.md     # 等价于 mdifier convert "铁锭" -o x.md
+        mdifier search "钻石"       # 必须用子命令
+        mdifier batch -t ...         # 必须用子命令
     """
     pass
 
 
 @main.command()
-@click.argument("title_or_url", type=str)
+@click.argument("title_or_url", type=str, metavar="TITLE_OR_URL")
 @click.option(
     "-o", "--output",
     type=click.Path(),
@@ -42,30 +49,25 @@ def main():
     "-l", "--lang",
     type=click.Choice(LANGUAGES, case_sensitive=False),
     default="zh",
-    help="语言"
-)
-@click.option(
-    "--include-templates",
-    is_flag=True,
-    default=False,
-    help="在返回结果中包含模板数据"
+    help="语言（默认 zh，支持自动 URL 识别）"
 )
 def convert_cmd(
     title_or_url: str,
     output: str | None,
     lang: str,
-    include_templates: bool
 ):
     """
     转换Wiki页面为Markdown
 
+    支持纯标题或自动识别 URL（zh.minecraft.wiki / minecraft.wiki / en.minecraft.wiki）
+
     示例:
-        mdifier "铁锭"
-        mdifier "铁锭" -o iron_ingot.md
-        mdifier "https://zh.minecraft.wiki/铁锭"
+        mdifier convert "铁锭"
+        mdifier convert "铁锭" -o iron_ingot.md
+        mdifier convert "https://zh.minecraft.wiki/铁锭"
     """
     try:
-        markdown = convert(title_or_url, lang=lang, include_templates=include_templates)
+        markdown = convert(title_or_url, lang=lang)
 
         if output:
             with open(output, "w", encoding="utf-8") as f:
@@ -88,13 +90,13 @@ def convert_cmd(
     "-l", "--lang",
     type=click.Choice(LANGUAGES, case_sensitive=False),
     default="zh",
-    help="语言"
+    help="语言（默认 zh）"
 )
 @click.option(
     "-n", "--num",
     type=int,
     default=10,
-    help="返回结果数量"
+    help="返回结果数量（默认 10）"
 )
 def search_cmd(query: str, lang: str, num: int):
     """
@@ -137,7 +139,8 @@ def search_cmd(query: str, lang: str, num: int):
               help="--from-search 时返回的最大结果数")
 @click.option(
     "-l", "--lang",
-    type=click.Choice(LANGUAGES, case_sensitive=False), default="zh"
+    type=click.Choice(LANGUAGES, case_sensitive=False), default="zh",
+    help="默认语言（默认 zh）"
 )
 @click.option("-o", "--output-dir", type=click.Path(file_okay=False), default=None,
               help="输出目录；为 None 则打印到 stdout")
@@ -233,7 +236,7 @@ def cache():
 
 @cache.command(name="info")
 def cache_info_cmd():
-    """显示缓存统计信息"""
+    """显示缓存统计信息（路径、大小、条目、时间戳）"""
     from mdifier.cache import cache_info
     info = cache_info()
     click.echo(f"路径:    {info['path']}")
@@ -251,7 +254,7 @@ def cache_info_cmd():
 @cache.command(name="clear")
 @click.option("-y", "--yes", is_flag=True, help="跳过确认提示")
 def cache_clear_cmd(yes):
-    """清空缓存（强制下次重新请求）"""
+    """清空整个缓存文件（强制下次重新请求）"""
     from mdifier.cache import cache_info, clear_cache
     info = cache_info()
     if not info["exists"]:
@@ -271,7 +274,7 @@ def cache_clear_cmd(yes):
 
 @cache.command(name="prune")
 def cache_prune_cmd():
-    """清理已过期的条目（保留未过期的）"""
+    """清理已过期条目（保留 < 7 天的 fresh 条目）"""
     from mdifier.cache import CACHE_FILE, CACHE_TTL, cache_info
     info = cache_info()
     if not info["exists"]:

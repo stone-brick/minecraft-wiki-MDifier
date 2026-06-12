@@ -40,17 +40,17 @@ mdifier --version
 
 ```bash
 # 转换页面（中文 wiki 默认）
-mdifier "铁锭"
+mdifier convert "铁锭"
 
 # 英文 wiki
-mdifier "Iron Ingot" --lang en -o iron.md
+mdifier convert "Iron Ingot" --lang en -o iron.md
 
 # 输出到文件
-mdifier "铁锭" -o iron_ingot.md
+mdifier convert "铁锭" -o iron_ingot.md
 
 # 使用 URL（自动识别语言）
-mdifier "https://zh.minecraft.wiki/铁锭"
-mdifier "https://minecraft.wiki/wiki/Iron_Ingot"
+mdifier convert "https://zh.minecraft.wiki/铁锭"
+mdifier convert "https://minecraft.wiki/wiki/Iron_Ingot"
 
 # 搜索页面
 mdifier search "钻石"
@@ -371,11 +371,11 @@ pre-commit run --all-files
 
 ```bash
 # 转换单页
-mdifier "钻石" -o diamond.md
+mdifier convert "钻石" -o diamond.md
 
 # 多页批量
 for page in 钻石 铁锭 附魔台; do
-    mdifier "$page" -o "${page}.md"
+    mdifier convert "$page" -o "${page}.md"
 done
 
 # 缓存管理
