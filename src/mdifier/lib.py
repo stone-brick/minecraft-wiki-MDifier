@@ -6,8 +6,8 @@
 
 from dataclasses import dataclass
 
-from mdifier.wiki import WikiFetcher, WikiPage, parse_url
 from mdifier.converter import MarkdownConverter
+from mdifier.wiki import WikiFetcher, parse_url
 
 
 @dataclass

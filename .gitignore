@@ -50,3 +50,9 @@ coverage.xml
 # 本地测试产物
 *.test
 *.out
+
+# 测试输出目录
+tests/
+
+# Claude Code 本地配置
+.claude/

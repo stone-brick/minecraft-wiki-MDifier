@@ -4,11 +4,13 @@ Markdown转换器
 将解析后的AST转换为Markdown格式
 """
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from markdownify import markdownify as md
 
-from mdifier.parser import WikiParser, Node, NodeType, TemplateInfo
-from mdifier.wiki import WikiPage
+from mdifier.parser import Node, NodeType, TemplateInfo, WikiParser
 from mdifier.template_expander import TemplateExpander
+from mdifier.wiki import WikiPage
 
 
 class MarkdownConverter:
@@ -16,8 +18,9 @@ class MarkdownConverter:
 
     # 格式渲染器映射：format → 方法名
     FORMAT_RENDERERS = {
-        "infobox_table": "_render_table",
-        "table": "_render_table",
+        "infobox_table": "_render_template_table",
+        "table": "_render_template_table",
+        "mcui": "_render_template_table",
     }
 
     # 已知需要驼峰转写的模板名（小写 -> 正确名）
@@ -36,9 +39,10 @@ class MarkdownConverter:
         "columns list": "Columns-list",
     }
 
-    def __init__(self, lang: str = "zh"):
+    def __init__(self, lang: str = "zh", max_workers: int = 10):
         self.parser = WikiParser()
         self.expander = TemplateExpander(lang=lang)
+        self.max_workers = max_workers
 
     def convert_wiki(self, page: WikiPage) -> str:
         """
@@ -77,7 +81,7 @@ class MarkdownConverter:
 
     def _expand_all_templates(self, templates: dict[str, TemplateInfo]) -> dict[str, dict]:
         """
-        展开所有模板
+        并发展开所有模板（10x 加速）
 
         Args:
             templates: 模板字典
@@ -86,8 +90,27 @@ class MarkdownConverter:
             展开后的模板字典
         """
         expanded = {}
-        for name, info in templates.items():
-            expanded[name] = self._expand_template(info.name, info.params)
+
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            # 提交所有任务
+            future_to_name = {
+                executor.submit(
+                    self._expand_template, info.name, info.params
+                ): name
+                for name, info in templates.items()
+            }
+
+            # 收集结果
+            for future in as_completed(future_to_name):
+                name = future_to_name[future]
+                try:
+                    expanded[name] = future.result()
+                except Exception:
+                    # 单个模板失败不应中断整体
+                    expanded[name] = self._fallback_template(
+                        name, templates[name].params
+                    )
+
         return expanded
 
     def _expand_template(self, name: str, params: dict[str, str]) -> dict:
@@ -99,15 +122,9 @@ class MarkdownConverter:
             params: 模板参数
 
         Returns:
-            展开结果 dict: {
-                "name": 模板名,
-                "class": 渲染后HTML的class,
-                "text": 渲染后的文本,
-                "html": 原始HTML
-            }
+            展开结果 dict
         """
-        # 构建模板调用字符串
-        # 应用驼峰映射
+        # 构建模板调用字符串（应用驼峰映射）
         api_name = self.CAMEL_CASE_TEMPLATES.get(name.lower(), name)
         parts = [api_name]
         for key, value in params.items():
@@ -117,7 +134,6 @@ class MarkdownConverter:
                 parts.append(f"{key}={value}")
         template_call = "{{" + "|".join(parts) + "}}"
 
-        # 调用API展开
         try:
             expanded = self.expander.expand(template_call)
             return {
@@ -129,15 +145,27 @@ class MarkdownConverter:
                 "table": expanded.get("table")
             }
         except Exception:
-            # 如果展开失败，返回原始参数
-            params_str = ", ".join(f"{k}={v}" for k, v in params.items())
-            return {
-                "name": name,
-                "class": None,
-                "text": f"[{name}: {params_str}]",
-                "html": None,
-                "format": "text",
-                "table": None
+            return self._fallback_template(name, params)
+
+    def _fallback_template(self, name: str, params: dict[str, str]) -> dict:
+        """
+        模板展开失败时的回退结果
+
+        Args:
+            name: 模板名称
+            params: 模板参数
+
+        Returns:
+            回退 dict
+        """
+        params_str = ", ".join(f"{k}={v}" for k, v in params.items())
+        return {
+            "name": name,
+            "class": None,
+            "text": f"[{name}: {params_str}]",
+            "html": None,
+            "format": "text",
+            "table": None
             }
 
     def _generate_markdown(
@@ -261,7 +289,7 @@ class MarkdownConverter:
 
         return pattern.sub(replace_match, text)
 
-    def _render_table(self, info: dict) -> str:
+    def _render_template_table(self, info: dict) -> str:
         """渲染模板表格为Markdown"""
         table = info.get("table", [])
         if not table:

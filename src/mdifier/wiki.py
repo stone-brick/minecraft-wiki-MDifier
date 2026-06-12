@@ -8,7 +8,6 @@ Wiki页面获取模块
 
 import re
 from dataclasses import dataclass
-from typing import Optional
 
 import requests
 from bs4 import BeautifulSoup
@@ -63,11 +62,11 @@ class WikiFetcher:
             urls = data[3]
             return [
                 {"title": t, "description": d, "url": u}
-                for t, d, u in zip(titles, descriptions, urls)
+                for t, d, u in zip(titles, descriptions, urls, strict=False)
             ]
         return []
 
-    def fetch_via_api(self, title: str) -> Optional[WikiPage]:
+    def fetch_via_api(self, title: str) -> WikiPage | None:
         """
         通过MediaWiki API获取页面内容
 
@@ -101,7 +100,7 @@ class WikiFetcher:
             source="api"
         )
 
-    def fetch_via_html(self, title: str) -> Optional[WikiPage]:
+    def fetch_via_html(self, title: str) -> WikiPage | None:
         """
         通过HTML抓取获取页面内容（降级方案）
 
@@ -146,7 +145,7 @@ class WikiFetcher:
             source="html"
         )
 
-    def fetch(self, title: str) -> Optional[WikiPage]:
+    def fetch(self, title: str) -> WikiPage | None:
         """
         获取Wiki页面，优先使用API
 
@@ -196,7 +195,7 @@ def parse_url(url: str) -> tuple[str, str]:
     return "zh", url
 
 
-def convert(title_or_url: str, lang: Optional[str] = None) -> Optional[WikiPage]:
+def convert(title_or_url: str, lang: str | None = None) -> WikiPage | None:
     """
     便捷函数：获取Wiki页面
 

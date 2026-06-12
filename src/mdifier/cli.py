@@ -9,12 +9,11 @@
 """
 
 import sys
-from typing import Optional
 
 import click
 
 from mdifier import __version__
-from mdifier.lib import convert, convert_detailed, search
+from mdifier.lib import convert, search
 
 
 @click.group()
@@ -50,7 +49,7 @@ def main():
 )
 def convert_cmd(
     title_or_url: str,
-    output: Optional[str],
+    output: str | None,
     lang: str,
     include_templates: bool
 ):

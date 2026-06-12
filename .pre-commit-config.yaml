@@ -1,0 +1,11 @@
+# pre-commit 配置：https://pre-commit.com/
+# 安装：pip install pre-commit
+# 启用：pre-commit install
+# 手动运行：pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.16
+    hooks:
+      - id: ruff
+        args: [--fix]

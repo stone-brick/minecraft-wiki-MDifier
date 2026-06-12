@@ -99,7 +99,7 @@ class TemplateExpander:
         }
 
         # 解析表格
-        if fmt in ("infobox_table", "table"):
+        if fmt in ("infobox_table", "table", "mcui"):
             result["table"] = self._parse_table(elem, fmt)
 
         return result
@@ -112,7 +112,7 @@ class TemplateExpander:
             elem: BeautifulSoup元素
 
         Returns:
-            格式类型: "text", "infobox_table", "table"
+            格式类型: "text", "infobox_table", "table", "mcui"
         """
         # 检查是否是 infobox 表格
         if elem.find(class_='infobox-row'):
@@ -121,6 +121,11 @@ class TemplateExpander:
         # 检查是否是一般表格（包括 elem 本身是 table 的情况）
         if elem.name == 'table' or elem.find('table'):
             return "table"
+
+        # 检查是否是 mcui（elem 本身是 mcui 或内部有 mcui）
+        elem_classes = elem.get('class') or []
+        if 'mcui' in elem_classes or elem.find(class_='mcui'):
+            return "mcui"
 
         return "text"
 
@@ -145,6 +150,18 @@ class TemplateExpander:
                 label_text = label.get_text(strip=True) if label else ''
                 field_text = field.get_text(strip=True) if field else ''
                 rows.append([label_text, field_text])
+        elif fmt == "mcui":
+            # mcui 格式（合成台/熔炉/织布机/锻造台）
+            elem_classes = elem.get('class') or []
+            if 'mcui' in elem_classes:
+                # elem 本身就是 mcui
+                text = self._parse_mcui(elem)
+                rows.append([text])
+            else:
+                # elem 是容器，内部有 mcui
+                for mcui in elem.find_all(class_='mcui'):
+                    text = self._parse_mcui(mcui)
+                    rows.append([text])
         else:
             # 一般表格：解析HTML table
             # elem可能是 table 或包含 table 的容器
@@ -178,24 +195,99 @@ class TemplateExpander:
 
         # 通过 mcui 的 class 区分类型
         mcui_classes = mcui.get('class') or []
-        mcui_input = mcui.find(class_='mcui-input')
-        if mcui_input:
-            is_furnace = any('Furnace' in c for c in mcui_classes)
-            if is_furnace:
-                inputs = self._parse_furnace_input(mcui_input)
-            else:
-                inputs = self._parse_grid_input(mcui_input)
-            if inputs:
-                parts.append(inputs)
+        is_furnace = any('Furnace' in c for c in mcui_classes)
+        is_smithing = any('Smithing' in c for c in mcui_classes)
 
-        # 输出
-        mcui_output = mcui.find(class_='mcui-output')
-        if mcui_output:
-            output = self._parse_output(mcui_output)
-            if output:
-                parts.append(f'-> {output}')
+        # 收集所有输入槽位
+        inputs = []
+
+        if is_smithing:
+            # Smithing: 多个 invslot 直接挂在 mcui 下，没有 mcui-input 包装
+            slots = self._collect_smithing_inputs(mcui)
+            if slots:
+                inputs.append(' + '.join(slots))
+        else:
+            # 合成/熔炉/Loom
+            mcui_input = mcui.find(class_='mcui-input')
+            if mcui_input:
+                if is_furnace:
+                    inputs.append(self._parse_furnace_input(mcui_input))
+                elif mcui_input.find(class_='mcui-row'):
+                    inputs.append(self._parse_grid_input(mcui_input))
+                else:
+                    inputs.append(self._parse_single_input(mcui_input))
+
+            # mcui-inputPattern (Loom 特殊命名)
+            mcui_input_pattern = mcui.find(class_='mcui-inputPattern')
+            if mcui_input_pattern:
+                pat = self._parse_single_input(mcui_input_pattern)
+                if pat:
+                    inputs.append(pat)
+
+        inputs = [i for i in inputs if i]
+        if inputs:
+            parts.append(' '.join(inputs))
+
+        # 输出：smithing 的输出 invslot 也在 mcui 直接子级
+        if is_smithing:
+            output_text = self._collect_smithing_output(mcui)
+            if output_text:
+                parts.append(f'-> {output_text}')
+        else:
+            mcui_output = mcui.find(class_='mcui-output')
+            if mcui_output:
+                output = self._parse_output(mcui_output)
+                if output:
+                    parts.append(f'-> {output}')
 
         return ' '.join(parts) if parts else '?'
+
+    def _parse_single_input(self, container) -> str:
+        """解析单个输入槽位"""
+        items = container.find_all(class_='invslot-item')
+        if not items:
+            return ''
+        return '/'.join(self._format_item(i) for i in items)
+
+    def _collect_smithing_inputs(self, mcui) -> list[str]:
+        """Smithing 模板：invslot 在 template-Smithing_Table-slots 下"""
+        slots_container = mcui.find(class_='template-Smithing_Table-slots')
+        if not slots_container:
+            return []
+        result = []
+        for child in slots_container.children:
+            if not hasattr(child, 'get') or not child.get('class'):
+                continue
+            cls = child.get('class') or []
+            if 'searchaux' in cls:
+                continue
+            if 'invslot' in cls:
+                # 跳过输出槽（通过 style="margin-left: 72px" 区分）
+                style = child.get('style', '')
+                if 'margin-left' in style:
+                    continue
+                item = child.find(class_='invslot-item')
+                if item:
+                    result.append(self._format_item(item))
+        return result
+
+    def _collect_smithing_output(self, mcui) -> str:
+        """Smithing 模板的输出：通过 style="margin-left: 72px" 标识"""
+        slots_container = mcui.find(class_='template-Smithing_Table-slots')
+        if not slots_container:
+            return ''
+        for child in slots_container.children:
+            if not hasattr(child, 'get') or not child.get('class'):
+                continue
+            cls = child.get('class') or []
+            if 'invslot' in cls:
+                style = child.get('style', '')
+                if 'margin-left' in style:
+                    item = child.find(class_='invslot-item')
+                    if item:
+                        title = self._clean_minecraft_codes(item.get('title', '?'))
+                        return title
+        return ''
 
     def _parse_grid_input(self, mcui_input) -> str:
         """
