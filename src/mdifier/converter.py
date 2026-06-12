@@ -56,6 +56,9 @@ class MarkdownConverter:
         "columns-list": "Columns-list",
         "columns list": "Columns-list",
         "edition": "Edition",
+        "infobox item": "Infobox item",
+        "load achievements": "Load achievements",
+        "load advancements": "Load advancements",
         "id table": "ID table",
         "crafting usage": "Crafting usage",
         "trade uses": "Trade uses",
@@ -77,6 +80,8 @@ class MarkdownConverter:
         # 跨页共享的模板缓存（外部注入实现多批次共享）
         self._template_cache = template_cache if template_cache is not None else {}
         self._cache_lock = threading.Lock()
+        # 未展开的模板名（驼峰映射缺失或模板不存在）
+        self._unresolved: set[str] = set()
 
     def convert_wiki(self, page: WikiPage) -> str:
         """
@@ -159,7 +164,7 @@ class MarkdownConverter:
             展开结果 dict
         """
         # 构建缓存键：模板名 + 完整参数（不同物品的同模板结果不同）
-        api_name = self.CAMEL_CASE_TEMPLATES.get(name.lower(), name)
+        api_name = self._resolve_template_name(name)
         parts = [api_name]
         for key, value in params.items():
             if key.isdigit():
@@ -188,9 +193,27 @@ class MarkdownConverter:
         except Exception:
             result = self._fallback_template(name, params)
 
+        # 记录未展开的模板（API 返回 class="new" 表示页面不存在）
+        if result.get("class") == "new":
+            self._unresolved.add(name)
+
         with self._cache_lock:
             self._template_cache[cache_key] = result
         return result
+
+    def _resolve_template_name(self, name: str) -> str:
+        """解析模板 API 名称：手工映射 → 自动 PascalCase"""
+        # 1. 手工映射优先
+        if name.lower() in self.CAMEL_CASE_TEMPLATES:
+            return self.CAMEL_CASE_TEMPLATES[name.lower()]
+
+        # 2. 自动尝试 PascalCase（仅对全小写、无空格的简单名称）
+        cleaned = name.replace(" ", "").replace("-", "")
+        if cleaned.isalpha() and cleaned.islower():
+            pascal = cleaned.capitalize()
+            if pascal != name:
+                return pascal
+        return name
 
     def _fallback_template(self, name: str, params: dict[str, str]) -> dict:
         """

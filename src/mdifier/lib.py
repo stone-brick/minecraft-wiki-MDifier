@@ -6,7 +6,7 @@
 
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from mdifier.converter import MarkdownConverter
 from mdifier.wiki import LANG_CONFIG, WikiFetcher, parse_url
@@ -128,6 +128,7 @@ class BatchConvertResult:
     """批量转换结果"""
     results: list[ConvertResult]            # 顺序与输入一致（失败的项为 None）
     failed: list[tuple[str, str]]           # (title, error_message)
+    unresolved: list[str] = field(default_factory=list)  # 未展开的模板名（驼峰缺失）
 
 
 def _convert_one(
@@ -226,6 +227,7 @@ def convert_many(
     return BatchConvertResult(
         results=[r for r in final_results if r is not None],
         failed=final_failed,
+        unresolved=sorted(converter._unresolved),
     )
 
 
