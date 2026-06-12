@@ -215,6 +215,11 @@ def convert_many(
                 for (i, t), page in zip(group, pages, strict=True)
             }
             for fut in as_completed(fut_map):
+                if converter._cancelled:
+                    # 取消：等待剩余任务完成（或中断）
+                    for remaining in fut_map:
+                        remaining.cancel()
+                    break
                 idx, t = fut_map[fut]
                 try:
                     final_results[idx] = fut.result()

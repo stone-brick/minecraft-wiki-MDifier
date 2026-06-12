@@ -68,6 +68,10 @@ class MarkdownConverter:
         "sound table/block/stone": "Sound table/block/stone",
     }
 
+    # 模板标记格式（可被 CLI 覆盖）
+    template_marker_open: str = "<template:{name} start>"
+    template_marker_close: str = "<template:{name} end>"
+
     def __init__(
         self,
         lang: str = "zh",
@@ -90,6 +94,12 @@ class MarkdownConverter:
         self._cache_lock = threading.Lock()
         # 未展开的模板名（驼峰映射缺失或模板不存在）
         self._unresolved: set[str] = set()
+        # 取消标志（convert_many 检查）
+        self._cancelled = False
+
+    def cancel(self) -> None:
+        """请求取消批量转换（下次检查点生效）"""
+        self._cancelled = True
 
     def flush_cache(self) -> None:
         """将当前模板缓存保存到磁盘（供后续运行复用）"""
@@ -391,7 +401,11 @@ class MarkdownConverter:
         if not class_name:
             # 没有特殊 class 直接输出表格，不包裹标记
             return "\n".join(lines)
-        return f'<template:{class_name} start>\n' + "\n".join(lines) + f'\n<template:{class_name} end>'
+        return (
+            self.template_marker_open.format(name=class_name) + "\n"
+            + "\n".join(lines) + "\n"
+            + self.template_marker_close.format(name=class_name)
+        )
 
     def _render_html_generic(self, info: dict) -> str:
         """使用 markdownify 将 HTML 转为 Markdown"""
@@ -407,7 +421,11 @@ class MarkdownConverter:
         if not class_name:
             # 没有特殊 class 的模板直接输出文本，不包裹标记
             return rendered
-        return f'<template:{class_name} start>\n{rendered}\n<template:{class_name} end>'
+        return (
+            self.template_marker_open.format(name=class_name) + "\n"
+            + rendered + "\n"
+            + self.template_marker_close.format(name=class_name)
+        )
 
 
 def convert(page: WikiPage) -> str:
