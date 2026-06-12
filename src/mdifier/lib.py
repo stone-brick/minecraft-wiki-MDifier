@@ -7,7 +7,7 @@
 from dataclasses import dataclass
 
 from mdifier.converter import MarkdownConverter
-from mdifier.wiki import WikiFetcher, parse_url
+from mdifier.wiki import LANG_CONFIG, WikiFetcher, parse_url
 
 
 @dataclass
@@ -38,6 +38,13 @@ def convert(
         >>> md = convert("铁锭")
         >>> print(md)
     """
+    # 验证 lang
+    if lang is not None and lang not in LANG_CONFIG:
+        raise ValueError(
+            f"Unsupported language: {lang}. "
+            f"Available: {list(LANG_CONFIG.keys())}"
+        )
+
     # 解析输入
     if title_or_url.startswith("http"):
         parsed_lang, title = parse_url(title_or_url)
@@ -78,6 +85,13 @@ def convert_detailed(title_or_url: str, lang: str | None = None) -> ConvertResul
         >>> print(result.markdown)
         >>> print(result.templates)
     """
+    # 验证 lang
+    if lang is not None and lang not in LANG_CONFIG:
+        raise ValueError(
+            f"Unsupported language: {lang}. "
+            f"Available: {list(LANG_CONFIG.keys())}"
+        )
+
     # 解析输入
     if title_or_url.startswith("http"):
         parsed_lang, title = parse_url(title_or_url)
@@ -110,6 +124,10 @@ def convert_detailed(title_or_url: str, lang: str | None = None) -> ConvertResul
 def search(query: str, lang: str = "zh") -> list[dict]:
     """
     搜索Minecraft Wiki页面
+
+    Args:
+        query: 搜索关键词
+        lang: 语言，'zh' 或 'en'
 
     Args:
         query: 搜索关键词

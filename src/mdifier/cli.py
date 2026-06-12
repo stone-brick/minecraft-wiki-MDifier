@@ -14,6 +14,9 @@ import click
 
 from mdifier import __version__
 from mdifier.lib import convert, search
+from mdifier.wiki import LANG_CONFIG
+
+LANGUAGES = list(LANG_CONFIG.keys())
 
 
 @click.group()
@@ -37,7 +40,7 @@ def main():
 )
 @click.option(
     "-l", "--lang",
-    type=click.Choice(["zh", "en"], case_sensitive=False),
+    type=click.Choice(LANGUAGES, case_sensitive=False),
     default="zh",
     help="语言"
 )
@@ -83,7 +86,7 @@ def convert_cmd(
 @click.argument("query", type=str)
 @click.option(
     "-l", "--lang",
-    type=click.Choice(["zh", "en"], case_sensitive=False),
+    type=click.Choice(LANGUAGES, case_sensitive=False),
     default="zh",
     help="语言"
 )

@@ -8,15 +8,20 @@ import requests
 from bs4 import BeautifulSoup
 
 from mdifier.formatters import MinecraftColorFormatter
+from mdifier.wiki import LANG_CONFIG
 
 
 class TemplateExpander:
     """模板展开器"""
 
-    BASE_URL = "https://zh.minecraft.wiki/api.php"
-
     def __init__(self, lang: str = "zh"):
+        if lang not in LANG_CONFIG:
+            raise ValueError(
+                f"Unsupported language: {lang}. "
+                f"Available: {list(LANG_CONFIG.keys())}"
+            )
         self.lang = lang
+        self.api_url = LANG_CONFIG[lang]["api"]
         self.session = requests.Session()
         self.session.headers.update({
             "User-Agent": "Minecraft-Wiki-MDifier/0.1.0 (Python Wiki Converter)"
@@ -45,7 +50,7 @@ class TemplateExpander:
             "format": "json",
             "prop": "text",
         }
-        resp = self.session.get(self.BASE_URL, params=params)
+        resp = self.session.get(self.api_url, params=params)
         data = resp.json()
         html = data["parse"]["text"]["*"]
 

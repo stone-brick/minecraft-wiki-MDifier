@@ -12,6 +12,26 @@ from dataclasses import dataclass
 import requests
 from bs4 import BeautifulSoup
 
+# 语言配置：集中管理 URL 和解析模式
+LANG_CONFIG: dict[str, dict[str, str]] = {
+    "zh": {
+        "api": "https://zh.minecraft.wiki/api.php",
+        "base": "https://zh.minecraft.wiki",
+    },
+    "en": {
+        "api": "https://minecraft.wiki/api.php",
+        "base": "https://minecraft.wiki",
+    },
+}
+
+# URL 解析模式：(正则, 匹配的语言)
+# 注意：MediaWiki 默认 URL 是 /wiki/{title}，但用户可能省略 /wiki/
+URL_PATTERNS: list[tuple[str, str]] = [
+    (r"https?://zh\.minecraft\.wiki/(?:wiki/)?(?P<title>.+)", "zh"),
+    (r"https?://minecraft\.wiki/(?:wiki/)?(?P<title>.+)", "en"),
+    (r"https?://en\.minecraft\.wiki/(?:wiki/)?(?P<title>.+)", "en"),
+]
+
 
 @dataclass
 class WikiPage:
@@ -24,11 +44,15 @@ class WikiPage:
 class WikiFetcher:
     """Wiki页面获取器"""
 
-    BASE_API_URL = "https://zh.minecraft.wiki/api.php"
-    BASE_URL = "https://zh.minecraft.wiki"
-
     def __init__(self, lang: str = "zh"):
+        if lang not in LANG_CONFIG:
+            raise ValueError(
+                f"Unsupported language: {lang}. "
+                f"Available: {list(LANG_CONFIG.keys())}"
+            )
         self.lang = lang
+        self.api_url = LANG_CONFIG[lang]["api"]
+        self.base_url = LANG_CONFIG[lang]["base"]
         self.session = requests.Session()
         self.session.headers.update({
             "User-Agent": "Minecraft-Wiki-MDifier/0.1.0 (Python Wiki Converter)"
@@ -51,7 +75,7 @@ class WikiFetcher:
             "namespace": "0",
             "format": "json",
         }
-        response = self.session.get(self.BASE_API_URL, params=params)
+        response = self.session.get(self.api_url, params=params)
         response.raise_for_status()
         data = response.json()
 
@@ -82,7 +106,7 @@ class WikiFetcher:
             "format": "json",
             "prop": "wikitext",
         }
-        response = self.session.get(self.BASE_API_URL, params=params)
+        response = self.session.get(self.api_url, params=params)
         if response.status_code != 200:
             return None
 
@@ -112,7 +136,7 @@ class WikiFetcher:
         """
         # 将标题转换为URL路径
         url_title = title.replace(" ", "_")
-        url = f"{self.BASE_URL}/{url_title}"
+        url = f"{self.base_url}/{url_title}"
 
         response = self.session.get(url)
         if response.status_code != 200:
@@ -178,18 +202,12 @@ def parse_url(url: str) -> tuple[str, str]:
     Returns:
         (lang, title) 元组
     """
-    patterns = [
-        r"https?://zh\.minecraft\.wiki/?(?P<title>.+)",
-        r"https?://en\.minecraft\.wiki/?(?P<title>.+)",
-    ]
-
-    for pattern in patterns:
+    for pattern, lang in URL_PATTERNS:
         match = re.match(pattern, url)
         if match:
             title = match.group("title")
             # URL解码
             title = requests.utils.unquote(title)
-            lang = "zh" if "zh" in pattern else "en"
             return lang, title
 
     return "zh", url
