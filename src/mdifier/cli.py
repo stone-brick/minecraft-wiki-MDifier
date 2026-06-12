@@ -204,6 +204,75 @@ def batch_cmd(
         sys.exit(2)
 
 
+@main.group()
+def cache():
+    """管理模板展开缓存"""
+
+
+@cache.command(name="info")
+def cache_info_cmd():
+    """显示缓存统计信息"""
+    from mdifier.cache import cache_info
+    info = cache_info()
+    click.echo(f"路径:    {info['path']}")
+    click.echo(f"存在:    {info['exists']}")
+    if info["exists"]:
+        click.echo(f"大小:    {info['size_bytes']:,} 字节 ({info['size_mb']} MB)")
+        click.echo(f"总条目:  {info['entries']}")
+        click.echo(f"  未过期: {info['fresh_entries']}")
+        click.echo(f"  已过期: {info['expired_entries']}")
+        if info["oldest_ts"]:
+            click.echo(f"最早:    {info['oldest_ts']}")
+            click.echo(f"最新:    {info['newest_ts']}")
+
+
+@cache.command(name="clear")
+@click.option("-y", "--yes", is_flag=True, help="跳过确认提示")
+def cache_clear_cmd(yes):
+    """清空缓存（强制下次重新请求）"""
+    from mdifier.cache import cache_info, clear_cache
+    info = cache_info()
+    if not info["exists"]:
+        click.echo("缓存不存在，无需清理", err=True)
+        return
+
+    if not yes:
+        click.confirm(
+            f"确定删除 {info['size_mb']} MB、{info['entries']} 条目的缓存？",
+            abort=True,
+        )
+    if clear_cache():
+        click.echo(f"✓ 已清空缓存：{info['size_mb']} MB、{info['entries']} 条目", err=True)
+    else:
+        click.echo("缓存不存在", err=True)
+
+
+@cache.command(name="prune")
+def cache_prune_cmd():
+    """清理已过期的条目（保留未过期的）"""
+    from mdifier.cache import CACHE_FILE, CACHE_TTL, cache_info
+    info = cache_info()
+    if not info["exists"]:
+        click.echo("缓存不存在", err=True)
+        return
+    if info["expired_entries"] == 0:
+        click.echo(f"无过期条目（共 {info['entries']} 条目，全部未过期）", err=True)
+        return
+    # 加载 → 过滤 → 写回
+    import json
+    import time
+
+    cache = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
+    now = time.time()
+    pruned = {k: v for k, v in cache.items() if now - v.get("_ts", 0) < CACHE_TTL}
+    removed = len(cache) - len(pruned)
+    CACHE_FILE.write_text(
+        json.dumps(pruned, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    click.echo(f"✓ 清理完成：移除 {removed} 条过期，保留 {len(pruned)} 条", err=True)
+
+
 def _read_titles_file(path: str) -> list[str]:
     """从文件读取标题列表"""
     titles: list[str] = []

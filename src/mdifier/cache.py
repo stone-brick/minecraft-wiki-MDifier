@@ -50,3 +50,69 @@ def save_cache(cache: dict) -> None:
         json.dumps(enriched, ensure_ascii=False),
         encoding="utf-8"
     )
+
+
+def clear_cache() -> bool:
+    """清空缓存（删除磁盘文件）
+
+    Returns:
+        True 如果文件存在并被删除；False 如果缓存不存在
+    """
+    if CACHE_FILE.exists():
+        CACHE_FILE.unlink()
+        return True
+    return False
+
+
+def cache_info() -> dict:
+    """返回缓存统计信息
+
+    Returns:
+        {
+            "path": 缓存文件路径,
+            "exists": 是否存在,
+            "size_bytes": 文件大小（如果存在）,
+            "size_mb": 文件大小 MB,
+            "entries": 总条目数,
+            "fresh_entries": 未过期条目数,
+            "expired_entries": 已过期条目数,
+            "oldest_ts": 最早时间戳（ISO 格式）,
+            "newest_ts": 最新时间戳（ISO 格式）,
+        }
+    """
+    from datetime import datetime
+
+    info = {
+        "path": str(CACHE_FILE),
+        "exists": CACHE_FILE.exists(),
+        "size_bytes": 0,
+        "size_mb": 0.0,
+        "entries": 0,
+        "fresh_entries": 0,
+        "expired_entries": 0,
+        "oldest_ts": None,
+        "newest_ts": None,
+    }
+    if not CACHE_FILE.exists():
+        return info
+
+    info["size_bytes"] = CACHE_FILE.stat().st_size
+    info["size_mb"] = round(info["size_bytes"] / 1024 / 1024, 2)
+
+    try:
+        data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
+        info["entries"] = len(data)
+        now = time.time()
+        ts_list = [v.get("_ts", 0) for v in data.values() if "_ts" in v]
+        for v in data.values():
+            ts = v.get("_ts", 0)
+            if now - ts < CACHE_TTL:
+                info["fresh_entries"] += 1
+            else:
+                info["expired_entries"] += 1
+        if ts_list:
+            info["oldest_ts"] = datetime.fromtimestamp(min(ts_list)).isoformat()
+            info["newest_ts"] = datetime.fromtimestamp(max(ts_list)).isoformat()
+    except (json.JSONDecodeError, OSError):
+        pass
+    return info
