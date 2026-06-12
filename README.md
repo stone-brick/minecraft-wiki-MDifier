@@ -33,12 +33,17 @@ mdifier batch -i pages.txt -o ./out --workers 8
 
 # 批量转换：从搜索结果中取前 N 个
 mdifier batch --from-search "红石" --search-limit 30 -o ./out
+
+# 缓存管理
+mdifier cache info    # 查看缓存状态
+mdifier cache clear   # 强制清空缓存
+mdifier cache prune   # 仅清理过期条目
 ```
 
 ### Python 库
 
 ```python
-from mdifier import convert, convert_many
+from mdifier import convert, convert_many, BatchConvertResult
 
 # 简单转换
 md = convert("铁锭")
@@ -51,18 +56,25 @@ for r in result.results:
     print(r.markdown)
 if result.failed:
     print(f"失败: {result.failed}")
+if result.unresolved:
+    print(f"未展开模板: {result.unresolved}")
 ```
 
 ## 功能特点
 
 - **双模式**：CLI（`mdifier`）+ Python 库
 - **批量转换**：`mdifier batch` 子命令支持 -t / -i / --from-search
-- **跨页模板缓存**：相同模板只请求一次，批量场景大幅节省 HTTP 请求
+- **持久化模板缓存**：相同模板只请求一次，跨运行共享（**5.4x 加速**）
+- **缓存管理**：`mdifier cache info/clear/prune` 子命令组
+- **自动 PascalCase**：驼峰模板名自动尝试 PascalCase 形式
+- **未展开报告**：批量结束时报告缺失的模板名
+- **模板标记可配置**：可自定义 `<template:xxx>` 标记格式
+- **批量可取消**：`MarkdownConverter.cancel()` 中断大批量任务
 - **智能获取**：优先 MediaWiki API，HTML 降级抓取
 - **模板适配**：合成表、物品信息框、战利品表等 30+ 常见模板自动展开
 - **mcui 解析**：合成台、熔炉、织布机、锻造台的图片化 UI 转语义化文本
 - **颜色代码**：Minecraft `&e` `&r` 等格式代码转为 `[yellow]` `[reset]` 等语义标签
-- **并发优化**：模板展开使用线程池，30+ 模板页面 4.6x 加速
+- **并发优化**：模板展开使用线程池，单页 4.6x 加速
 
 ## 模板处理
 
@@ -89,19 +101,69 @@ if result.failed:
 <template:wikitable end>
 ```
 
+## 性能与缓存
+
+### 缓存机制
+
+模板展开结果自动持久化到磁盘：
+
+- **位置**：`~/.cache/mdifier/templates.json`（Windows: `C:\Users\<user>\.cache\mdifier\`）
+- **大小**：~1 MB / 1000 模板
+- **TTL**：7 天（过期自动失效）
+- **共享**：跨进程、跨运行、跨项目
+
+### 性能数据
+
+| 场景 | 耗时 |
+|------|------|
+| 首次运行（建立缓存） | ~6s |
+| 二次运行（命中缓存） | ~1s |
+| **加速比** | **5.4x** |
+
+### 自定义模板标记
+
+可改为 `:::info`、HTML `details` 等风格：
+
+```python
+from mdifier.converter import MarkdownConverter
+
+c = MarkdownConverter()
+c.template_marker_open = ":::{name}"
+c.template_marker_close = ":::"
+
+# 输出示例：
+# :::infobox
+# ...内容...
+# :::
+```
+
+### 批量取消（API 用户）
+
+```python
+import threading
+from mdifier import convert_many
+from mdifier.converter import MarkdownConverter
+
+c = MarkdownConverter()
+threading.Timer(0.5, c.cancel).start()
+# 1 秒后自动取消批量任务
+```
+
 ## 项目结构
 
 ```
 src/mdifier/
-├── __init__.py           # 包初始化，导出 convert/convert_detailed/search
-├── lib.py                # 库模式 API
-├── cli.py                # CLI 入口（click）
-├── convert.py            # 独立转换脚本（可命令行直接运行）
+├── __init__.py           # 包初始化，导出 convert/convert_many/BatchConvertResult
+├── lib.py                # 库模式 API（含 convert_many）
+├── cli.py                # CLI 入口（click，含 batch/cache 子命令）
+├── convert.py            # 独立转换脚本（命令行直接运行）
 ├── search.py             # 独立搜索脚本
 ├── wiki.py               # MediaWiki API 获取 + HTML 降级
 ├── parser.py             # Wikitext 解析器（模板/链接/标题）
 ├── template_expander.py  # 模板展开：HTML 解析 + 格式检测 + mcui 解析
-└── converter.py          # Markdown 生成：dict dispatch 渲染
+├── formatters.py         # Minecraft 颜色代码 → 语义化标签
+├── converter.py          # Markdown 生成：dict dispatch 渲染
+└── cache.py              # 模板展开缓存持久化
 ```
 
 ### 数据流
@@ -110,6 +172,7 @@ src/mdifier/
 2. `WikiParser` → 解析 AST，提取模板到 `templates` 字典
 3. `TemplateExpander` → **并发**调用 API 展开每个模板的渲染 HTML
 4. `MarkdownConverter` → 按格式分发到对应渲染器，生成最终 Markdown
+5. 跨运行：`MarkdownConverter.__init__` 从 `cache.py` 加载磁盘缓存
 
 ## 开发
 
@@ -142,16 +205,22 @@ mdifier "钻石" -o diamond.md
 for page in 钻石 铁锭 附魔台; do
     mdifier "$page" -o "${page}.md"
 done
+
+# 缓存管理
+mdifier cache info
+mdifier cache clear -y
 ```
 
 ## 依赖
+
+### 必需
 
 - `requests` — MediaWiki API HTTP 客户端
 - `beautifulsoup4` — HTML 解析
 - `click` — CLI 框架
 - `markdownify` — 通用 HTML → Markdown 转换
 
-### 可选依赖
+### 可选
 
 - `tqdm` — `mdifier batch` 进度条；缺则降级为 stderr 文本
 
