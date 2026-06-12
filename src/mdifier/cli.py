@@ -72,11 +72,13 @@ def convert_cmd(
         if output:
             try:
                 from pathlib import Path
-                out_path = Path(output)
+                # 解析为绝对路径：避免 Git Bash 的 MSYS 路径翻译
+                # 相对路径基于 cwd；绝对路径不变
+                out_path = Path(output).resolve()
                 if out_path.parent and not out_path.parent.exists():
                     out_path.parent.mkdir(parents=True, exist_ok=True)
                 out_path.write_text(markdown, encoding="utf-8")
-                click.echo(f"已保存到: {output}")
+                click.echo(f"已保存到: {out_path}")
             except FileNotFoundError as e:
                 click.echo(f"错误: 路径无效 ({output}): {e}", err=True)
                 sys.exit(1)
@@ -361,14 +363,15 @@ def _emit_results(result, output_dir: str | None) -> None:
         return
 
     from pathlib import Path
-    out = Path(output_dir)
+    # 解析为绝对路径：避免 Git Bash 的 MSYS 路径翻译
+    out = Path(output_dir).resolve()
     try:
         out.mkdir(parents=True, exist_ok=True)
     except PermissionError as e:
-        click.echo(f"错误: 无写权限创建目录 ({output_dir}): {e}", err=True)
+        click.echo(f"错误: 无写权限创建目录 ({out}): {e}", err=True)
         return
     except OSError as e:
-        click.echo(f"错误: 创建目录失败 ({output_dir}): {e}", err=True)
+        click.echo(f"错误: 创建目录失败 ({out}): {e}", err=True)
         return
     used_names: set[str] = set()
     for r in result.results:

@@ -34,6 +34,31 @@ mdifier --version
 # 如不行：python -m mdifier.cli --version
 ```
 
+### 路径最佳实践（AI 助手必看）
+
+`-o` 和 `-i` 参数的路径处理**因 shell 而异**。为避免混乱，**推荐使用相对路径**：
+
+| 路径形式 | PowerShell | Git Bash | 推荐度 |
+|----------|------------|----------|--------|
+| `output/x.md`（相对） | cwd | cwd | 🥇 跨 shell 一致 |
+| `D:/tests/x.md`（Windows 绝对） | D:\tests\x.md | D:\tests\x.md | 🥈 两 shell 都认 |
+| `/tests/x.md`（Unix 绝对） | **D:\tests\x.md**（字面）| D:\Program Files\Git\tests（MSYS 翻译） | ❌ 行为不一致 |
+
+**为什么 PowerShell 把 `/tests/x.md` 写到 D:\tests\？** PowerShell 不会做 MSYS 翻译，按字面理解路径，相当于 `D:\tests\x.md`（D: 是当前盘符）。
+
+**为什么 Git Bash 把 `/tests/x.md` 翻译到 D:\Program Files\Git\tests\？** Git Bash 启动时把 `/` 映射到 Git 安装目录（MSYS 机制），这跟系统根目录不是一回事。
+
+**推荐写法（AI 助手）**：
+```bash
+# 用相对路径（自动基于当前工作目录）
+cd ~/wiki && mdifier convert "铁锭" -o output/iron.md
+
+# 批量时先建子目录
+mkdir -p output && mdifier batch -t 钻石 -t 铁锭 -o output/
+```
+
+保存路径**会显示为绝对路径**（避免你猜测它在哪）。
+
 ## 使用方式
 
 ### CLI
