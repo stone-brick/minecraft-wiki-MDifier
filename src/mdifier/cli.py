@@ -70,9 +70,22 @@ def convert_cmd(
         markdown = convert(title_or_url, lang=lang)
 
         if output:
-            with open(output, "w", encoding="utf-8") as f:
-                f.write(markdown)
-            click.echo(f"已保存到: {output}")
+            try:
+                from pathlib import Path
+                out_path = Path(output)
+                if out_path.parent and not out_path.parent.exists():
+                    out_path.parent.mkdir(parents=True, exist_ok=True)
+                out_path.write_text(markdown, encoding="utf-8")
+                click.echo(f"已保存到: {output}")
+            except FileNotFoundError as e:
+                click.echo(f"错误: 路径无效 ({output}): {e}", err=True)
+                sys.exit(1)
+            except PermissionError as e:
+                click.echo(f"错误: 无写权限 ({output}): {e}", err=True)
+                sys.exit(1)
+            except OSError as e:
+                click.echo(f"错误: 写入文件失败 ({output}): {e}", err=True)
+                sys.exit(1)
         else:
             click.echo(markdown)
 
@@ -349,11 +362,22 @@ def _emit_results(result, output_dir: str | None) -> None:
 
     from pathlib import Path
     out = Path(output_dir)
-    out.mkdir(parents=True, exist_ok=True)
+    try:
+        out.mkdir(parents=True, exist_ok=True)
+    except PermissionError as e:
+        click.echo(f"错误: 无写权限创建目录 ({output_dir}): {e}", err=True)
+        return
+    except OSError as e:
+        click.echo(f"错误: 创建目录失败 ({output_dir}): {e}", err=True)
+        return
     used_names: set[str] = set()
     for r in result.results:
         path = _unique_path(out, _slug(r.title) + ".md", used_names)
-        path.write_text(r.markdown, encoding="utf-8")
+        try:
+            path.write_text(r.markdown, encoding="utf-8")
+        except (FileNotFoundError, PermissionError, OSError) as e:
+            click.echo(f"警告: 写入失败 ({path}): {e}", err=True)
+            continue
         used_names.add(path.name)
 
 
