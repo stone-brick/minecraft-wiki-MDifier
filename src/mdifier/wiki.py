@@ -7,6 +7,8 @@ Wiki页面获取模块
 """
 
 import re
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 
 import requests
@@ -190,6 +192,36 @@ class WikiFetcher:
             return page
 
         return None
+
+    def fetch_many(
+        self,
+        titles: list[str],
+        max_workers: int = 4,
+        on_progress: Callable[[str, WikiPage | None], None] | None = None,
+    ) -> list[WikiPage | None]:
+        """
+        并发获取多个页面；保持输入顺序；失败位置为 None
+
+        Args:
+            titles: 页面标题列表
+            max_workers: 并发抓取数
+            on_progress: 进度回调 (title, page_or_none)
+
+        Returns:
+            与输入等长的列表，失败位置为 None
+        """
+        results: list[WikiPage | None] = [None] * len(titles)
+        with ThreadPoolExecutor(max_workers=max_workers) as ex:
+            future_to_idx = {ex.submit(self.fetch, t): i for i, t in enumerate(titles)}
+            for fut in as_completed(future_to_idx):
+                i = future_to_idx[fut]
+                try:
+                    results[i] = fut.result()
+                except Exception:
+                    results[i] = None
+                if on_progress:
+                    on_progress(titles[i], results[i])
+        return results
 
 
 def parse_url(url: str) -> tuple[str, str]:

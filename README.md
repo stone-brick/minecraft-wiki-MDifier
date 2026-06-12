@@ -24,21 +24,40 @@ mdifier "https://zh.minecraft.wiki/铁锭"
 
 # 搜索页面
 mdifier search "钻石"
+
+# 批量转换：多个标题 → 独立 .md 文件
+mdifier batch -t 钻石 -t 铁锭 -t 附魔台 -o ./out
+
+# 批量转换：从文件读取标题列表（每行一个，# 开头为注释）
+mdifier batch -i pages.txt -o ./out --workers 8
+
+# 批量转换：从搜索结果中取前 N 个
+mdifier batch --from-search "红石" --search-limit 30 -o ./out
 ```
 
 ### Python 库
 
 ```python
-from mdifier import convert
+from mdifier import convert, convert_many
 
 # 简单转换
 md = convert("铁锭")
 print(md)
+
+# 批量转换
+result = convert_many(["钻石", "铁锭", "附魔台"], max_workers=4)
+for r in result.results:
+    print(f"=== {r.title} ===")
+    print(r.markdown)
+if result.failed:
+    print(f"失败: {result.failed}")
 ```
 
 ## 功能特点
 
 - **双模式**：CLI（`mdifier`）+ Python 库
+- **批量转换**：`mdifier batch` 子命令支持 -t / -i / --from-search
+- **跨页模板缓存**：相同模板只请求一次，批量场景大幅节省 HTTP 请求
 - **智能获取**：优先 MediaWiki API，HTML 降级抓取
 - **模板适配**：合成表、物品信息框、战利品表等 30+ 常见模板自动展开
 - **mcui 解析**：合成台、熔炉、织布机、锻造台的图片化 UI 转语义化文本
@@ -131,6 +150,10 @@ done
 - `beautifulsoup4` — HTML 解析
 - `click` — CLI 框架
 - `markdownify` — 通用 HTML → Markdown 转换
+
+### 可选依赖
+
+- `tqdm` — `mdifier batch` 进度条；缺则降级为 stderr 文本
 
 ## License
 

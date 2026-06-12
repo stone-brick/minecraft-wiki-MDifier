@@ -4,6 +4,7 @@ Markdown转换器
 将解析后的AST转换为Markdown格式
 """
 
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from markdownify import markdownify as md
@@ -54,12 +55,28 @@ class MarkdownConverter:
         "ilink": "ILink",
         "columns-list": "Columns-list",
         "columns list": "Columns-list",
+        "edition": "Edition",
+        "id table": "ID table",
+        "crafting usage": "Crafting usage",
+        "trade uses": "Trade uses",
+        "drop sources": "Drop sources",
+        "navbox items": "Navbox items",
+        "video note": "Video note",
+        "sound table/block/stone": "Sound table/block/stone",
     }
 
-    def __init__(self, lang: str = "zh", max_workers: int = 10):
+    def __init__(
+        self,
+        lang: str = "zh",
+        max_workers: int = 10,
+        template_cache: dict | None = None,
+    ):
         self.parser = WikiParser()
         self.expander = TemplateExpander(lang=lang)
         self.max_workers = max_workers
+        # 跨页共享的模板缓存（外部注入实现多批次共享）
+        self._template_cache = template_cache if template_cache is not None else {}
+        self._cache_lock = threading.Lock()
 
     def convert_wiki(self, page: WikiPage) -> str:
         """
@@ -132,7 +149,7 @@ class MarkdownConverter:
 
     def _expand_template(self, name: str, params: dict[str, str]) -> dict:
         """
-        展开单个模板
+        展开单个模板（带跨页缓存）
 
         Args:
             name: 模板名称
@@ -141,7 +158,7 @@ class MarkdownConverter:
         Returns:
             展开结果 dict
         """
-        # 构建模板调用字符串（应用驼峰映射）
+        # 构建缓存键：模板名 + 完整参数（不同物品的同模板结果不同）
         api_name = self.CAMEL_CASE_TEMPLATES.get(name.lower(), name)
         parts = [api_name]
         for key, value in params.items():
@@ -149,11 +166,18 @@ class MarkdownConverter:
                 parts.append(value)
             else:
                 parts.append(f"{key}={value}")
-        template_call = "{{" + "|".join(parts) + "}}"
+        cache_key = "|".join(parts)
 
+        # 缓存命中
+        with self._cache_lock:
+            if cache_key in self._template_cache:
+                return self._template_cache[cache_key]
+
+        # 缓存未命中 → 实际调用
+        template_call = "{{" + cache_key + "}}"
         try:
             expanded = self.expander.expand(template_call)
-            return {
+            result = {
                 "name": name,
                 "class": expanded["class"],
                 "text": expanded["text"],
@@ -162,7 +186,11 @@ class MarkdownConverter:
                 "table": expanded.get("table")
             }
         except Exception:
-            return self._fallback_template(name, params)
+            result = self._fallback_template(name, params)
+
+        with self._cache_lock:
+            self._template_cache[cache_key] = result
+        return result
 
     def _fallback_template(self, name: str, params: dict[str, str]) -> dict:
         """
@@ -320,18 +348,27 @@ class MarkdownConverter:
             lines.insert(1, "| " + " | ".join(["---"] * col_count) + " |")
 
         # 用模板标记包裹
-        class_name = info.get("class", "table")
+        class_name = info.get("class")
+        if not class_name:
+            # 没有特殊 class 直接输出表格，不包裹标记
+            return "\n".join(lines)
         return f'<template:{class_name} start>\n' + "\n".join(lines) + f'\n<template:{class_name} end>'
 
     def _render_html_generic(self, info: dict) -> str:
         """使用 markdownify 将 HTML 转为 Markdown"""
         html = info.get("html", "")
+        text = info.get("text", "")
+        if not html and not text:
+            return ""
         if not html:
-            return info.get("text", "")
+            return text
 
-        text = md(html, heading_style="atx", bullet_char="-")
-        class_name = info.get("class", "generic")
-        return f'<template:{class_name} start>\n{text}\n<template:{class_name} end>'
+        rendered = md(html, heading_style="atx", bullet_char="-")
+        class_name = info.get("class")
+        if not class_name:
+            # 没有特殊 class 的模板直接输出文本，不包裹标记
+            return rendered
+        return f'<template:{class_name} start>\n{rendered}\n<template:{class_name} end>'
 
 
 def convert(page: WikiPage) -> str:
