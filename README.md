@@ -89,6 +89,9 @@ mdifier convert "Iron Ingot" --lang en -o iron.md
 # 输出到文件
 mdifier convert "铁锭" -o iron_ingot.md
 
+# 完整 JSON 输出（含 templates）
+mdifier convert "铁锭" --detail
+
 # 使用 URL（自动识别语言）
 mdifier convert "https://zh.minecraft.wiki/铁锭"
 mdifier convert "https://minecraft.wiki/wiki/Iron_Ingot"
@@ -143,10 +146,11 @@ print(md)
 md_en = convert("Iron Ingot", lang="en")
 
 # 详细模式返回 ConvertResult（带 title、source、templates）
+# CLI 可用 --detail 等价：mdifier convert "铁锭" --detail
 result: ConvertResult = convert_detailed("铁锭")
 print(f"标题: {result.title}")
 print(f"来源: {result.source}")  # "api" 或 "html"
-print(f"模板: {result.templates}")  # 保留扩展位，当前为空 dict
+print(f"模板: {result.templates}")  # 非空 dict，含所有展开后的模板数据
 print(f"Markdown 长度: {len(result.markdown)}")
 
 # 跨调用共享缓存（同一进程内多次 convert 不重复请求模板）
@@ -241,6 +245,7 @@ except InvalidInputError as e:
 - **模板标记可配置**：可自定义 `<template:xxx>` 标记格式
 - **批量可取消**：`MarkdownConverter.cancel()` 中断大批量任务
 - **智能获取**：优先 MediaWiki API，HTML 降级抓取
+- **网络重试**：HTTP GET 请求自动重试 3 次（指数退避 0.5s/1s/2s），应对瞬时 5xx/429
 - **模板适配**：合成表、物品信息框、战利品表等 30+ 常见模板自动展开
 - **mcui 解析**：合成台、熔炉、织布机、锻造台的图片化 UI 转语义化文本
 - **颜色代码**：Minecraft `&e` `&r` 等格式代码转为 `[yellow]` `[reset]` 等语义标签
