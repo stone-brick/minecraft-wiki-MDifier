@@ -4,6 +4,8 @@
 将各系统的颜色代码统一转为语义化标签。
 """
 
+import re
+
 
 class MinecraftColorFormatter:
     """Minecraft & 格式代码 → 语义化标签
@@ -56,8 +58,6 @@ class MinecraftColorFormatter:
         """将 & 代码转为 [tag] 形式"""
         if not text:
             return text
-
-        import re
 
         # 把 &/ 替换为换行
         text = text.replace("&/", "\n")
