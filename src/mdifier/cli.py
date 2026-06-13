@@ -17,7 +17,7 @@ import click
 from mdifier import __version__
 from mdifier.converter import MarkdownConverter
 from mdifier.exceptions import FetchError, InvalidInputError, PageNotFoundError
-from mdifier.lib import convert, convert_many, search
+from mdifier.lib import convert, convert_detailed, convert_many, search
 from mdifier.wiki import LANG_CONFIG
 
 # BSD sysexits.h 退出码（Python 3.13+ 统一支持）
@@ -58,10 +58,16 @@ def main():
     default="zh",
     help="语言（默认 zh，支持自动 URL 识别）",
 )
+@click.option(
+    "--detail",
+    is_flag=True,
+    help="输出完整 JSON（包含 title、markdown、source、templates）",
+)
 def convert_cmd(
     title_or_url: str,
     output: str | None,
     lang: str,
+    detail: bool,
 ):
     """
     转换Wiki页面为Markdown
@@ -71,10 +77,26 @@ def convert_cmd(
     示例:
         mdifier convert "铁锭"
         mdifier convert "铁锭" -o iron_ingot.md
+        mdifier convert "铁锭" --detail     # 完整 JSON 输出
         mdifier convert "https://zh.minecraft.wiki/铁锭"
     """
     try:
-        markdown = convert(title_or_url, lang=lang)
+        if detail:
+            import json
+
+            result = convert_detailed(title_or_url, lang=lang)
+            content = json.dumps(
+                {
+                    "title": result.title,
+                    "markdown": result.markdown,
+                    "source": result.source,
+                    "templates": result.templates,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        else:
+            content = convert(title_or_url, lang=lang)
 
         if output:
             try:
@@ -83,7 +105,7 @@ def convert_cmd(
                 out_path = Path(output).resolve()
                 if out_path.parent and not out_path.parent.exists():
                     out_path.parent.mkdir(parents=True, exist_ok=True)
-                out_path.write_text(markdown, encoding="utf-8")
+                out_path.write_text(content, encoding="utf-8")
                 click.echo(f"已保存到: {out_path}")
             except FileNotFoundError as e:
                 click.secho(f"错误: 路径无效 ({output}): {e}", fg="red", err=True)
@@ -95,7 +117,7 @@ def convert_cmd(
                 click.secho(f"错误: 写入文件失败 ({output}): {e}", fg="red", err=True)
                 sys.exit(EXIT_IOERR)
         else:
-            click.echo(markdown)
+            click.echo(content)
 
     except InvalidInputError as e:
         click.secho(f"错误: {e}", fg="red", err=True)

@@ -101,7 +101,12 @@ def convert_detailed(title_or_url: str, lang: str | None = None) -> ConvertResul
     page, lang = _resolve_and_fetch(title_or_url, lang)
     converter = MarkdownConverter(lang=lang)
     markdown = converter.convert_wiki(page)
-    return ConvertResult(title=page.title, markdown=markdown, source=page.source, templates={})
+    return ConvertResult(
+        title=page.title,
+        markdown=markdown,
+        source=page.source,
+        templates=converter._template_cache.copy(),
+    )
 
 
 @dataclass
