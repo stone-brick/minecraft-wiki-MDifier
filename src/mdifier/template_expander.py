@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from mdifier.formatters import MinecraftColorFormatter
-from mdifier.wiki import LANG_CONFIG
+from mdifier.wiki import LANG_CONFIG, USER_AGENT
 
 # 格式检测器：(elem) -> 格式字符串 | None
 # 注册表形式，按优先级顺序匹配；首个返回非 None 的获胜
@@ -38,9 +38,7 @@ class TemplateExpander:
         self.lang = lang
         self.api_url = LANG_CONFIG[lang]["api"]
         self.session = requests.Session()
-        self.session.headers.update(
-            {"User-Agent": "Minecraft-Wiki-MDifier/0.1.0 (Python Wiki Converter)"}
-        )
+        self.session.headers.update({"User-Agent": USER_AGENT})
         self.formatter = MinecraftColorFormatter()
 
     def expand(self, template_call: str) -> dict:
@@ -209,8 +207,8 @@ class TemplateExpander:
 
         # 通过 mcui 的 class 区分类型
         mcui_classes = mcui.get("class") or []
-        is_furnace = any("Furnace" in c for c in mcui_classes)
-        is_smithing = any("Smithing" in c for c in mcui_classes)
+        is_furnace = any("Furnace" in cls for cls in mcui_classes)
+        is_smithing = any("Smithing" in cls for cls in mcui_classes)
 
         # 收集所有输入槽位
         inputs = []
@@ -238,7 +236,7 @@ class TemplateExpander:
                 if pat:
                     inputs.append(pat)
 
-        inputs = [i for i in inputs if i]
+        inputs = [s for s in inputs if s]
         if inputs:
             parts.append(" ".join(inputs))
 

@@ -134,6 +134,10 @@ class WikiParser:
                 table_nodes = []
                 continue
 
+            if in_table and stripped.startswith("|-"):
+                # 行分隔符，跳过
+                continue
+
             if in_table:
                 table_nodes.append(self._parse_table_row(stripped))
                 continue
@@ -258,16 +262,6 @@ class WikiParser:
         """
         target = match.group(1)
         display = match.group(2) or target
-
-        # 外部链接
-        if target.startswith("http"):
-            return f"[{display}]({target})"
-
-        # 内部链接（Wiki页面）
-        # 移除命名空间前缀
-        if ":" in target:
-            return f"[{display}]({target})"
-
         return f"[{display}]({target})"
 
     def _format_image(self, match: re.Match) -> str:
@@ -298,11 +292,6 @@ class WikiParser:
             表格节点
         """
         cells = []
-        # 移除表格标记
-        row = re.sub(r"^\|\-", "", row)
-        row = re.sub(r"^\|\}", "", row)
-        row = re.sub(r"^!!", "", row)
-
         # 分割单元格
         parts = re.split(r"\|\|", row)
         for part in parts:
@@ -326,10 +315,11 @@ class WikiParser:
             列表节点
         """
         items = []
-        parts = line.split("*") + line.split("#")
+        marker = "*" if line.lstrip().startswith("*") else "#"
+        parts = line.split(marker)
         parts = [p.strip() for p in parts if p.strip()]
 
-        list_type = "ul" if "*" in line else "ol"
+        list_type = "ul" if marker == "*" else "ol"
 
         for item in parts:
             items.append(Node(type=NodeType.LIST_ITEM, content=self._process_inline(item)))

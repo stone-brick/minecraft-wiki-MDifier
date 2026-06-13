@@ -11,11 +11,30 @@ import json
 import time
 from pathlib import Path
 
+from mdifier.exceptions import CacheError
+
 CACHE_DIR = Path.home() / ".cache" / "mdifier"
 CACHE_FILE = CACHE_DIR / "templates.json"
 
 # 缓存有效期（7 天，wiki 内容会更新）
 CACHE_TTL = 7 * 24 * 3600
+
+# 模块级单例：跨 lang 复用同一份持久化缓存，只在首次使用时懒加载
+_SHARED_PERSISTENT_CACHE: dict | None = None
+
+
+def get_or_load_persistent_cache() -> dict:
+    """懒加载持久化缓存，全局只读一次磁盘。"""
+    global _SHARED_PERSISTENT_CACHE
+    if _SHARED_PERSISTENT_CACHE is None:
+        _SHARED_PERSISTENT_CACHE = load_cache()
+    return _SHARED_PERSISTENT_CACHE
+
+
+def reset_persistent_cache() -> None:
+    """重置单例（测试用）。"""
+    global _SHARED_PERSISTENT_CACHE
+    _SHARED_PERSISTENT_CACHE = None
 
 
 def load_cache() -> dict:
@@ -43,7 +62,10 @@ def save_cache(cache: dict) -> None:
     """
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     enriched = {k: {**v, "_ts": time.time()} for k, v in cache.items()}
-    CACHE_FILE.write_text(json.dumps(enriched, ensure_ascii=False), encoding="utf-8")
+    try:
+        CACHE_FILE.write_text(json.dumps(enriched, ensure_ascii=False), encoding="utf-8")
+    except OSError as e:
+        raise CacheError(f"缓存写入失败: {e}") from e
 
 
 def clear_cache() -> bool:

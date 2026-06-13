@@ -27,8 +27,10 @@ def main():
         result = convert(args.title, lang=args.lang)
 
         if args.output:
-            with open(args.output, "w", encoding="utf-8") as f:
-                f.write(result)
+            out = Path(args.output)
+            if out.parent and not out.parent.exists():
+                out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(result, encoding="utf-8")
             print(f"已保存到: {args.output}")
         else:
             print(result)

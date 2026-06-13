@@ -2,31 +2,31 @@
 命令行接口
 
 用法:
-    mdifier "页面标题"                    # 转换页面
-    mdifier "页面标题" -o output.md        # 输出到文件
-    mdifier "https://zh.minecraft.wiki/页面"  # URL方式
-    mdifier search "关键词"                # 搜索页面
+    mdifier convert "页面标题"            # 转换页面
+    mdifier convert "页面标题" -o x.md    # 输出到文件
+    mdifier convert "https://zh.minecraft.wiki/页面"  # URL方式
+    mdifier search "关键词"              # 搜索页面
 """
 
-import os
 import sys
 
 import click
 
 from mdifier import __version__
+from mdifier.converter import MarkdownConverter
 from mdifier.exceptions import FetchError, InvalidInputError, PageNotFoundError
 from mdifier.lib import convert, convert_many, search
 from mdifier.wiki import LANG_CONFIG
 
-# BSD sysexits.h 退出码（getattr 兼容 Windows 缺失常量）
+# BSD sysexits.h 退出码（Python 3.13+ 统一支持）
 EXIT_OK = 0
-EXIT_USAGE = getattr(os, "EX_USAGE", 64)  # 命令行参数错
-EXIT_DATAERR = getattr(os, "EX_DATAERR", 65)  # 数据错
-EXIT_SOFTWARE = getattr(os, "EX_SOFTWARE", 70)  # 内部软件错
-EXIT_IOERR = getattr(os, "EX_IOERR", 74)  # 本地 I/O 错
-EXIT_TEMPFAIL = getattr(os, "EX_TEMPFAIL", 75)  # 网络临时失败
-EXIT_NOPERM = getattr(os, "EX_NOPERM", 77)  # 权限错
-EXIT_CONFIG = getattr(os, "EX_CONFIG", 78)  # 配置错
+EXIT_USAGE = 64  # 命令行参数错
+EXIT_DATAERR = 65  # 数据错
+EXIT_SOFTWARE = 70  # 内部软件错
+EXIT_IOERR = 74  # 本地 I/O 错
+EXIT_TEMPFAIL = 75  # 网络临时失败
+EXIT_NOPERM = 77  # 权限错
+EXIT_CONFIG = 78  # 配置错
 
 LANGUAGES = list(LANG_CONFIG.keys())
 
@@ -39,12 +39,7 @@ def main():
 
     将Minecraft Wiki页面转换为AI助手易读的Markdown格式
 
-    缺省行为：直接传标题/URL 时自动调用 convert。
-    例：
-        mdifier "铁锭"             # 等价于 mdifier convert "铁锭"
-        mdifier "铁锭" -o x.md     # 等价于 mdifier convert "铁锭" -o x.md
-        mdifier search "钻石"       # 必须用子命令
-        mdifier batch -t ...         # 必须用子命令
+    子命令：convert / search / batch / cache
     """
     pass
 
@@ -142,6 +137,8 @@ def search_cmd(query: str, lang: str, num: int):
 
         for i, r in enumerate(results, 1):
             title = r.get("title", "")
+            if not title:
+                continue
             desc = r.get("description", "")
             url = r.get("url", "")
 
@@ -150,7 +147,8 @@ def search_cmd(query: str, lang: str, num: int):
                 click.echo(f"   {desc}")
             if url:
                 click.echo(f"   {url}")
-            click.echo()
+            if i < len(results):
+                click.echo()
 
     except Exception as e:
         click.secho(f"错误: {e}", fg="red", err=True)
@@ -234,10 +232,9 @@ def batch_cmd(
                     "错误: --marker-format 格式为 'open/close'，必须包含 '/'", fg="red", err=True
                 )
                 sys.exit(EXIT_USAGE)
-            from mdifier.converter import MarkdownConverter as _MC
 
             def _make_converter(item_lang: str, cache: dict | None):
-                c = _MC(lang=item_lang, template_cache=cache)
+                c = MarkdownConverter(lang=item_lang, template_cache=cache)
                 c.template_marker_open = open_
                 c.template_marker_close = close_
                 return c

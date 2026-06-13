@@ -4,6 +4,7 @@ Markdown转换器
 将解析后的AST转换为Markdown格式
 """
 
+import re
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -12,6 +13,12 @@ from markdownify import markdownify as md
 from mdifier.parser import Node, NodeType, TemplateInfo, WikiParser
 from mdifier.template_expander import TemplateExpander
 from mdifier.wiki import WikiPage
+
+
+def _escape_cache_value(v: str) -> str:
+    """转义缓存键中的分隔符，防止 cache_key 碰撞（"a|b" vs "a"/"b"）。"""
+    return v.replace("\\", "\\\\").replace("|", "\\|").replace("=", "\\=")
+
 
 # 节点类型 → 渲染方法名（注册表）
 NODE_RENDERERS: dict[NodeType, str] = {
@@ -24,7 +31,7 @@ NODE_RENDERERS: dict[NodeType, str] = {
 }
 
 # 需要 expanded_templates 参数的渲染器
-_NODE_RENDERERS_NEED_TEMPLATES = {
+NODE_RENDERERS_NEED_TEMPLATES = {
     "_render_paragraph",
     "_render_list",
     "_render_text",
@@ -192,9 +199,9 @@ class MarkdownConverter:
         parts = [api_name]
         for key, value in params.items():
             if key.isdigit():
-                parts.append(value)
+                parts.append(_escape_cache_value(value))
             else:
-                parts.append(f"{key}={value}")
+                parts.append(f"{_escape_cache_value(key)}={_escape_cache_value(value)}")
         cache_key = "|".join(parts)
 
         # 缓存命中
@@ -217,8 +224,8 @@ class MarkdownConverter:
         except Exception:
             result = self._fallback_template(name, params)
 
-        # 记录未展开的模板（API 返回 class="new" 表示页面不存在）
-        if result.get("class") == "new":
+        # 记录未展开的模板（API 返回 class="new" 或展开失败 class="error"）
+        if result.get("class") in ("new", "error"):
             self._unresolved.add(name)
 
         with self._cache_lock:
@@ -253,7 +260,7 @@ class MarkdownConverter:
         params_str = ", ".join(f"{k}={v}" for k, v in params.items())
         return {
             "name": name,
-            "class": None,
+            "class": "error",
             "text": f"[{name}: {params_str}]",
             "html": None,
             "format": "text",
@@ -297,7 +304,7 @@ class MarkdownConverter:
             return ""
         renderer = getattr(self, renderer_name)
         # 根据渲染器签名决定是否传 expanded_templates
-        if renderer_name in _NODE_RENDERERS_NEED_TEMPLATES:
+        if renderer_name in NODE_RENDERERS_NEED_TEMPLATES:
             return renderer(node, expanded_templates)
         return renderer(node)
 
@@ -351,8 +358,6 @@ class MarkdownConverter:
         Returns:
             替换后的文本
         """
-        import re
-
         pattern = re.compile(r"\{TEMPLATE:([^{}]+?)\}")
 
         def replace_match(match):
@@ -373,6 +378,18 @@ class MarkdownConverter:
 
         return pattern.sub(replace_match, text)
 
+    def _wrap_template(self, class_name: str | None, body: str) -> str:
+        """用模板标记包裹内容（class_name 为 None 时直接返回）"""
+        if not class_name:
+            return body
+        return (
+            self.template_marker_open.format(name=class_name)
+            + "\n"
+            + body
+            + "\n"
+            + self.template_marker_close.format(name=class_name)
+        )
+
     def _render_template_table(self, info: dict) -> str:
         """渲染模板表格为Markdown"""
         table = info.get("table", [])
@@ -391,15 +408,8 @@ class MarkdownConverter:
         # 用模板标记包裹
         class_name = info.get("class")
         if not class_name:
-            # 没有特殊 class 直接输出表格，不包裹标记
             return "\n".join(lines)
-        return (
-            self.template_marker_open.format(name=class_name)
-            + "\n"
-            + "\n".join(lines)
-            + "\n"
-            + self.template_marker_close.format(name=class_name)
-        )
+        return self._wrap_template(class_name, "\n".join(lines))
 
     def _render_html_generic(self, info: dict) -> str:
         """使用 markdownify 将 HTML 转为 Markdown"""
@@ -413,15 +423,8 @@ class MarkdownConverter:
         rendered = md(html, heading_style="atx", bullet_char="-")
         class_name = info.get("class")
         if not class_name:
-            # 没有特殊 class 的模板直接输出文本，不包裹标记
             return rendered
-        return (
-            self.template_marker_open.format(name=class_name)
-            + "\n"
-            + rendered
-            + "\n"
-            + self.template_marker_close.format(name=class_name)
-        )
+        return self._wrap_template(class_name, rendered)
 
 
 def convert(page: WikiPage) -> str:

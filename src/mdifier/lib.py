@@ -7,10 +7,12 @@
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
+from itertools import count
 
+from mdifier.cache import get_or_load_persistent_cache, save_cache
 from mdifier.converter import MarkdownConverter
 from mdifier.exceptions import InvalidInputError
-from mdifier.wiki import LANG_CONFIG, WikiFetcher, parse_url
+from mdifier.wiki import LANG_CONFIG, WikiFetcher, WikiPage, parse_url
 
 
 @dataclass
@@ -21,6 +23,27 @@ class ConvertResult:
     markdown: str  # Markdown内容
     source: str  # 数据来源 "api" 或 "html"
     templates: dict  # 提取的模板数据
+
+
+def _resolve_and_fetch(title_or_url: str, lang: str | None) -> tuple[WikiPage, str]:
+    """共享的 lang 验证 + URL 解析 + fetch。返回 (page, resolved_lang)。"""
+    if lang is not None and lang not in LANG_CONFIG:
+        raise InvalidInputError(
+            f"Unsupported language: {lang}. Available: {list(LANG_CONFIG.keys())}"
+        )
+    if title_or_url.startswith("http"):
+        parsed_lang, title = parse_url(title_or_url)
+        if lang is None:
+            lang = parsed_lang
+    else:
+        title = title_or_url
+        if lang is None:
+            lang = "zh"
+    fetcher = WikiFetcher(lang=lang)
+    page = fetcher.fetch(title)
+    if page is None:
+        raise InvalidInputError(f"无法获取页面: {title}")
+    return page, lang
 
 
 def convert(
@@ -50,30 +73,7 @@ def convert(
         >>> convert("钻石", template_cache=shared)
         >>> convert("铁锭", template_cache=shared)  # 共享
     """
-    # 验证 lang
-    if lang is not None and lang not in LANG_CONFIG:
-        raise InvalidInputError(
-            f"Unsupported language: {lang}. Available: {list(LANG_CONFIG.keys())}"
-        )
-
-    # 解析输入
-    if title_or_url.startswith("http"):
-        parsed_lang, title = parse_url(title_or_url)
-        if lang is None:
-            lang = parsed_lang
-    else:
-        title = title_or_url
-        if lang is None:
-            lang = "zh"
-
-    # 获取页面
-    fetcher = WikiFetcher(lang=lang)
-    page = fetcher.fetch(title)
-
-    if page is None:
-        raise InvalidInputError(f"无法获取页面: {title}")
-
-    # 转换
+    page, lang = _resolve_and_fetch(title_or_url, lang)
     converter = MarkdownConverter(lang=lang, template_cache=template_cache)
     return converter.convert_wiki(page)
 
@@ -96,33 +96,9 @@ def convert_detailed(title_or_url: str, lang: str | None = None) -> ConvertResul
         >>> print(result.markdown)
         >>> print(result.templates)
     """
-    # 验证 lang
-    if lang is not None and lang not in LANG_CONFIG:
-        raise InvalidInputError(
-            f"Unsupported language: {lang}. Available: {list(LANG_CONFIG.keys())}"
-        )
-
-    # 解析输入
-    if title_or_url.startswith("http"):
-        parsed_lang, title = parse_url(title_or_url)
-        if lang is None:
-            lang = parsed_lang
-    else:
-        title = title_or_url
-        if lang is None:
-            lang = "zh"
-
-    # 获取页面
-    fetcher = WikiFetcher(lang=lang)
-    page = fetcher.fetch(title)
-
-    if page is None:
-        raise InvalidInputError(f"无法获取页面: {title}")
-
-    # 转换
+    page, lang = _resolve_and_fetch(title_or_url, lang)
     converter = MarkdownConverter(lang=lang)
     markdown = converter.convert_wiki(page)
-
     return ConvertResult(title=page.title, markdown=markdown, source=page.source, templates={})
 
 
@@ -135,7 +111,7 @@ class BatchConvertResult:
     unresolved: list[str] = field(default_factory=list)  # 未展开的模板名（驼峰缺失）
 
 
-def _convert_one(converter: MarkdownConverter, page: object, title: str) -> ConvertResult:
+def _convert_one(converter: MarkdownConverter, page: WikiPage | None, title: str) -> ConvertResult:
     """单页转换辅助函数（供 ThreadPoolExecutor 调用）"""
     if page is None:
         raise InvalidInputError(f"无法获取页面: {title}")
@@ -215,14 +191,14 @@ def convert_many(
     # 3. 每 lang 一次会话
     final_results: list[ConvertResult | None] = [None] * len(items)
     final_failed: list[tuple[str, str]] = []
-    all_unresolved: set[str] = set()
-    done, total = 0, len(items)
-    seen_converters: set[int] = set()  # 防止跨 lang 重复 flush
+    all_unresolved: dict[str, int] = {}  # {模板名: 首次出现索引}
+    done_counter = count(1)
 
     for group_lang, group in by_lang.items():
         fetcher = WikiFetcher(lang=group_lang)
         # 用用户工厂或默认工厂创建 converter
-        converter = factory(group_lang, template_cache)
+        cache = template_cache if template_cache is not None else get_or_load_persistent_cache()
+        converter = factory(group_lang, cache)
         titles = [t for _, t in group]
 
         # 跨页并发抓取
@@ -230,37 +206,38 @@ def convert_many(
 
         # 跨页并发转换（每页 1 线程，模板展开内部有 10 workers）
         with ThreadPoolExecutor(max_workers=2) as ex:
-            fut_map = {
+            future_map = {
                 ex.submit(_convert_one, converter, page, t): (i, t)
                 for (i, t), page in zip(group, pages, strict=True)
             }
-            for fut in as_completed(fut_map):
+            for future in as_completed(future_map):
                 if converter._cancelled:
                     # 取消：取消剩余 futures
-                    for remaining in fut_map:
+                    for remaining in future_map:
                         remaining.cancel()
                     break
-                idx, t = fut_map[fut]
+                idx, t = future_map[future]
                 try:
-                    final_results[idx] = fut.result()
+                    final_results[idx] = future.result()
                 except Exception as e:
                     # 含异常类型名，方便用户定位问题
                     final_failed.append((t, f"{type(e).__name__}: {e}"))
-                done += 1
+                done = next(done_counter)
                 if on_progress:
-                    on_progress(done, total, t)
-        # 收集 unresolved（多个 lang 各有 converter）
-        all_unresolved.update(converter._unresolved)
+                    on_progress(done, len(items), t)
+        # 收集 unresolved（保持插入序，首现优先）
+        for tmpl in converter._unresolved:
+            if tmpl not in all_unresolved:
+                all_unresolved[tmpl] = 0
 
-        # 持久化缓存（用户没传 cache 时，每个 lang converter 独立 flush）
-        if template_cache is None and id(converter) not in seen_converters:
-            seen_converters.add(id(converter))
-            converter.flush_cache()
+    # 批量结束只 flush 一次（用户没传 cache 时）
+    if template_cache is None:
+        save_cache(cache)
 
     return BatchConvertResult(
         results=[r for r in final_results if r is not None],
         failed=final_failed,
-        unresolved=sorted(all_unresolved),
+        unresolved=list(all_unresolved),
     )
 
 

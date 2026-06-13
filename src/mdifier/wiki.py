@@ -14,12 +14,15 @@ from dataclasses import dataclass
 import requests
 from bs4 import BeautifulSoup
 
+from mdifier import __version__
 from mdifier.exceptions import (
     InvalidInputError,
     NetworkError,
     PageNotFoundError,
     WikiAPIError,
 )
+
+USER_AGENT = f"Minecraft-Wiki-MDifier/{__version__} (Python Wiki Converter)"
 
 # 语言配置：集中管理 URL 和解析模式
 LANG_CONFIG: dict[str, dict[str, str]] = {
@@ -63,9 +66,7 @@ class WikiFetcher:
         self.api_url = LANG_CONFIG[lang]["api"]
         self.base_url = LANG_CONFIG[lang]["base"]
         self.session = requests.Session()
-        self.session.headers.update(
-            {"User-Agent": "Minecraft-Wiki-MDifier/0.1.0 (Python Wiki Converter)"}
-        )
+        self.session.headers.update({"User-Agent": USER_AGENT})
 
     def search(self, query: str) -> list[dict]:
         """
@@ -236,6 +237,8 @@ class WikiFetcher:
                 return page
         except NetworkError:
             raise
+        except WikiAPIError as e:
+            raise WikiAPIError(f"API 和 HTML 都异常: {title}: {e}") from e
         except requests.RequestException as e:
             raise NetworkError(f"网络请求失败: {e}") from e
 
@@ -262,10 +265,10 @@ class WikiFetcher:
         results: list[WikiPage | None] = [None] * len(titles)
         with ThreadPoolExecutor(max_workers=max_workers) as ex:
             future_to_idx = {ex.submit(self.fetch, t): i for i, t in enumerate(titles)}
-            for fut in as_completed(future_to_idx):
-                i = future_to_idx[fut]
+            for future in as_completed(future_to_idx):
+                i = future_to_idx[future]
                 try:
-                    results[i] = fut.result()
+                    results[i] = future.result()
                 except Exception:
                     results[i] = None
                 if on_progress:
@@ -282,6 +285,9 @@ def parse_url(url: str) -> tuple[str, str]:
 
     Returns:
         (lang, title) 元组
+
+    Raises:
+        InvalidInputError: URL 不被识别
     """
     for pattern, lang in URL_PATTERNS:
         match = re.match(pattern, url)
@@ -291,7 +297,7 @@ def parse_url(url: str) -> tuple[str, str]:
             title = requests.utils.unquote(title)
             return lang, title
 
-    return "zh", url
+    raise InvalidInputError(f"Unrecognized URL: {url}")
 
 
 def convert(title_or_url: str, lang: str | None = None) -> WikiPage | None:

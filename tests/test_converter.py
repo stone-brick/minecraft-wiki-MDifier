@@ -45,9 +45,9 @@ class TestMarkdownConverter:
         assert result == "Already_Capitalized"
 
     def test_fallback_template(self):
-        """_fallback_template 返回 {name: k=v} 形式"""
+        """_fallback_template 返回 {name: k=v} 形式，class="error" 标记展开失败"""
         result = self.c._fallback_template("Hatnote", {"1": "text"})
-        assert result["class"] is None
+        assert result["class"] == "error"
         assert result["format"] == "text"
         assert "[Hatnote: 1=text]" in result["text"]
 
