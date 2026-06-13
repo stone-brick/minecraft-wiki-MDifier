@@ -13,6 +13,7 @@ import sys
 import click
 
 from mdifier import __version__
+from mdifier.exceptions import FetchError, InvalidInputError, PageNotFoundError
 from mdifier.lib import convert, convert_many, search
 from mdifier.wiki import LANG_CONFIG
 
@@ -91,11 +92,17 @@ def convert_cmd(
         else:
             click.echo(markdown)
 
-    except ValueError as e:
+    except InvalidInputError as e:
         click.echo(f"错误: {e}", err=True)
         sys.exit(1)
+    except PageNotFoundError as e:
+        click.echo(f"页面未找到: {e}", err=True)
+        sys.exit(1)
+    except FetchError as e:
+        click.echo(f"网络错误: {e}", err=True)
+        sys.exit(2)
     except Exception as e:
-        click.echo(f"未知错误: {e}", err=True)
+        click.echo(f"未知错误: {type(e).__name__}: {e}", err=True)
         sys.exit(1)
 
 
