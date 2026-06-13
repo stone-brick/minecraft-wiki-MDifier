@@ -117,3 +117,16 @@ class TestConvertMany:
             MC.return_value._unresolved = {"test_template"}
             result = convert_many(["X"])
             assert "test_template" in result.unresolved
+
+
+class TestConvertDetailed:
+    def test_templates_are_populated(self):
+        """convert_detailed 返回的 templates 非空"""
+        from mdifier import convert_detailed
+
+        with patch("mdifier.lib.WikiFetcher") as MF, patch("mdifier.lib.MarkdownConverter") as MC:
+            MF.return_value.fetch.return_value = _make_page("铁锭")
+            MC.return_value.convert_wiki.return_value = "# 铁锭\nbody"
+            MC.return_value._template_cache = {"Hatnote": {"class": "hatnote", "text": "note"}}
+            result = convert_detailed("铁锭")
+            assert result.templates == {"Hatnote": {"class": "hatnote", "text": "note"}}
