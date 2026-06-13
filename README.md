@@ -123,14 +123,11 @@ mdifier batch -i pages.txt -o ./out --marker-format '<template:{name} start>/<te
 mdifier batch -t Iron_Ingot --marker-format '<details><summary>{name}</summary>/</details>'
 ```
 
-如果 `pip install` 后找不到 `mdifier` 命令，也可直接运行脚本（无需安装）：
+没装 pip 或找不到 `mdifier` 命令时，直接用 `python -m` 运行模块：
 
 ```bash
-# 转换单页
-python src/mdifier/convert.py --title "钻石" --output diamond.md
-
-# 搜索
-python src/mdifier/search.py "钻石" --num 5
+python -m mdifier.cli convert "铁锭"
+python -m mdifier.cli search "钻石"
 ```
 
 ### Python 库
