@@ -12,9 +12,7 @@ def _make_page(title: str, content: str = "{{Hatnote|x}}") -> WikiPage:
 
 def _make_convert_result(title: str) -> SimpleNamespace:
     """构造 ConvertResult-like 对象（SimpleNamespace 替代）"""
-    return SimpleNamespace(
-        title=title, markdown=f"#{title}\nbody", source="api", templates={}
-    )
+    return SimpleNamespace(title=title, markdown=f"#{title}\nbody", source="api", templates={})
 
 
 class TestConvertMany:
@@ -22,6 +20,7 @@ class TestConvertMany:
         """不支持的 lang 抛 InvalidInputError"""
         from mdifier import convert_many
         from mdifier.exceptions import InvalidInputError
+
         try:
             convert_many(["X"], lang="xx")
         except InvalidInputError as e:
@@ -32,10 +31,12 @@ class TestConvertMany:
     def test_dedup(self):
         """重复标题不去重——dedup 在 CLI 层"""
         from mdifier import convert_many
-        with patch("mdifier.lib.WikiFetcher") as MF, \
-             patch("mdifier.lib._convert_one") as CO:
+
+        with patch("mdifier.lib.WikiFetcher") as MF, patch("mdifier.lib._convert_one") as CO:
+
             def mock_fetch(titles, **kwargs):
                 return [_make_page(t) for t in titles]
+
             MF.return_value.fetch_many.side_effect = mock_fetch
             CO.side_effect = lambda c, p, t: _make_convert_result(t)
             # convert_many 本身不去重（CLI batch_cmd 负责去重）
@@ -47,16 +48,19 @@ class TestConvertMany:
     def test_failed_aggregation(self):
         """失败页面聚合到 result.failed，含异常类型名"""
         from mdifier import convert_many
-        with patch("mdifier.lib.WikiFetcher") as MF, \
-             patch("mdifier.lib._convert_one") as CO:
+
+        with patch("mdifier.lib.WikiFetcher") as MF, patch("mdifier.lib._convert_one") as CO:
+
             def mock_fetch(titles, **kwargs):
                 return [_make_page(t) for t in titles]
+
             MF.return_value.fetch_many.side_effect = mock_fetch
 
             def mock_convert(c, p, t):
                 if t == "BAD":
                     raise ValueError("测试失败")
                 return _make_convert_result(t)
+
             CO.side_effect = mock_convert
             result = convert_many(["GOOD", "BAD"])
             assert len(result.results) == 1
@@ -69,16 +73,19 @@ class TestConvertMany:
     def test_progress_callback(self):
         """进度回调被正确调用（顺序不保证，因为 as_completed）"""
         from mdifier import convert_many
+
         calls = []
-        with patch("mdifier.lib.WikiFetcher") as MF, \
-             patch("mdifier.lib._convert_one") as CO:
+        with patch("mdifier.lib.WikiFetcher") as MF, patch("mdifier.lib._convert_one") as CO:
+
             def mock_fetch(titles, **kwargs):
                 return [_make_page(t) for t in titles]
+
             MF.return_value.fetch_many.side_effect = mock_fetch
             CO.side_effect = lambda c, p, t: _make_convert_result(t)
 
             def on_progress(done, total, title):
                 calls.append((done, total, title))
+
             convert_many(["A", "B", "C"], on_progress=on_progress)
 
         # 3 次回调，done 范围 1-3
@@ -94,11 +101,16 @@ class TestConvertMany:
     def test_unresolved_collection(self):
         """_unresolved 被收集到 result.unresolved"""
         from mdifier import convert_many
-        with patch("mdifier.lib.WikiFetcher") as MF, \
-             patch("mdifier.lib._convert_one") as CO, \
-             patch("mdifier.lib.MarkdownConverter") as MC:
+
+        with (
+            patch("mdifier.lib.WikiFetcher") as MF,
+            patch("mdifier.lib._convert_one") as CO,
+            patch("mdifier.lib.MarkdownConverter") as MC,
+        ):
+
             def mock_fetch(titles, **kwargs):
                 return [_make_page(t) for t in titles]
+
             MF.return_value.fetch_many.side_effect = mock_fetch
             CO.side_effect = lambda c, p, t: _make_convert_result(t)
             # 模拟 converter 实例的 _unresolved 集合

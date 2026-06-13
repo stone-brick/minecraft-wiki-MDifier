@@ -16,6 +16,7 @@ from mdifier.wiki import LANG_CONFIG, WikiFetcher, parse_url
 @dataclass
 class ConvertResult:
     """转换结果"""
+
     title: str  # 页面标题
     markdown: str  # Markdown内容
     source: str  # 数据来源 "api" 或 "html"
@@ -52,8 +53,7 @@ def convert(
     # 验证 lang
     if lang is not None and lang not in LANG_CONFIG:
         raise InvalidInputError(
-            f"Unsupported language: {lang}. "
-            f"Available: {list(LANG_CONFIG.keys())}"
+            f"Unsupported language: {lang}. Available: {list(LANG_CONFIG.keys())}"
         )
 
     # 解析输入
@@ -99,8 +99,7 @@ def convert_detailed(title_or_url: str, lang: str | None = None) -> ConvertResul
     # 验证 lang
     if lang is not None and lang not in LANG_CONFIG:
         raise InvalidInputError(
-            f"Unsupported language: {lang}. "
-            f"Available: {list(LANG_CONFIG.keys())}"
+            f"Unsupported language: {lang}. Available: {list(LANG_CONFIG.keys())}"
         )
 
     # 解析输入
@@ -124,25 +123,19 @@ def convert_detailed(title_or_url: str, lang: str | None = None) -> ConvertResul
     converter = MarkdownConverter(lang=lang)
     markdown = converter.convert_wiki(page)
 
-    return ConvertResult(
-        title=page.title,
-        markdown=markdown,
-        source=page.source,
-        templates={}
-    )
+    return ConvertResult(title=page.title, markdown=markdown, source=page.source, templates={})
 
 
 @dataclass
 class BatchConvertResult:
     """批量转换结果"""
-    results: list[ConvertResult]            # 顺序与输入一致（失败的项为 None）
-    failed: list[tuple[str, str]]           # (title, error_message)
+
+    results: list[ConvertResult]  # 顺序与输入一致（失败的项为 None）
+    failed: list[tuple[str, str]]  # (title, error_message)
     unresolved: list[str] = field(default_factory=list)  # 未展开的模板名（驼峰缺失）
 
 
-def _convert_one(
-    converter: MarkdownConverter, page: object, title: str
-) -> ConvertResult:
+def _convert_one(converter: MarkdownConverter, page: object, title: str) -> ConvertResult:
     """单页转换辅助函数（供 ThreadPoolExecutor 调用）"""
     if page is None:
         raise InvalidInputError(f"无法获取页面: {title}")
@@ -192,8 +185,7 @@ def convert_many(
     """
     if lang not in LANG_CONFIG:
         raise InvalidInputError(
-            f"Unsupported language: {lang}. "
-            f"Available: {list(LANG_CONFIG.keys())}"
+            f"Unsupported language: {lang}. Available: {list(LANG_CONFIG.keys())}"
         )
 
     # 1. 归一化输入：URL → (lang, title)

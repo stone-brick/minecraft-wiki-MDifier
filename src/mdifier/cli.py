@@ -20,13 +20,13 @@ from mdifier.wiki import LANG_CONFIG
 
 # BSD sysexits.h 退出码（getattr 兼容 Windows 缺失常量）
 EXIT_OK = 0
-EXIT_USAGE = getattr(os, "EX_USAGE", 64)        # 命令行参数错
-EXIT_DATAERR = getattr(os, "EX_DATAERR", 65)    # 数据错
+EXIT_USAGE = getattr(os, "EX_USAGE", 64)  # 命令行参数错
+EXIT_DATAERR = getattr(os, "EX_DATAERR", 65)  # 数据错
 EXIT_SOFTWARE = getattr(os, "EX_SOFTWARE", 70)  # 内部软件错
-EXIT_IOERR = getattr(os, "EX_IOERR", 74)        # 本地 I/O 错
+EXIT_IOERR = getattr(os, "EX_IOERR", 74)  # 本地 I/O 错
 EXIT_TEMPFAIL = getattr(os, "EX_TEMPFAIL", 75)  # 网络临时失败
-EXIT_NOPERM = getattr(os, "EX_NOPERM", 77)      # 权限错
-EXIT_CONFIG = getattr(os, "EX_CONFIG", 78)        # 配置错
+EXIT_NOPERM = getattr(os, "EX_NOPERM", 77)  # 权限错
+EXIT_CONFIG = getattr(os, "EX_CONFIG", 78)  # 配置错
 
 LANGUAGES = list(LANG_CONFIG.keys())
 
@@ -52,16 +52,14 @@ def main():
 @main.command()
 @click.argument("title_or_url", type=str, metavar="TITLE_OR_URL")
 @click.option(
-    "-o", "--output",
-    type=click.Path(),
-    default=None,
-    help="输出文件路径，默认为标准输出"
+    "-o", "--output", type=click.Path(), default=None, help="输出文件路径，默认为标准输出"
 )
 @click.option(
-    "-l", "--lang",
+    "-l",
+    "--lang",
     type=click.Choice(LANGUAGES, case_sensitive=False),
     default="zh",
-    help="语言（默认 zh，支持自动 URL 识别）"
+    help="语言（默认 zh，支持自动 URL 识别）",
 )
 def convert_cmd(
     title_or_url: str,
@@ -84,6 +82,7 @@ def convert_cmd(
         if output:
             try:
                 from pathlib import Path
+
                 # 解析为绝对路径：避免 Git Bash 的 MSYS 路径翻译
                 # 相对路径基于 cwd；绝对路径不变
                 out_path = Path(output).resolve()
@@ -120,17 +119,13 @@ def convert_cmd(
 @main.command()
 @click.argument("query", type=str)
 @click.option(
-    "-l", "--lang",
+    "-l",
+    "--lang",
     type=click.Choice(LANGUAGES, case_sensitive=False),
     default="zh",
-    help="语言（默认 zh）"
+    help="语言（默认 zh）",
 )
-@click.option(
-    "-n", "--num",
-    type=int,
-    default=10,
-    help="返回结果数量（默认 10）"
-)
+@click.option("-n", "--num", type=int, default=10, help="返回结果数量（默认 10）")
 def search_cmd(query: str, lang: str, num: int):
     """
     搜索Wiki页面
@@ -163,29 +158,45 @@ def search_cmd(query: str, lang: str, num: int):
 
 
 @main.command(name="batch")
-@click.option("titles", "-t", "--title", multiple=True,
-              help="页面标题（可多次使用）")
-@click.option("-i", "--input-file", type=click.Path(exists=True), default=None,
-              help="标题列表文件（每行一个；# 开头为注释）")
-@click.option("--from-search", default=None, help="通过搜索获取标题")
-@click.option("--search-limit", type=int, default=20,
-              help="--from-search 时返回的最大结果数")
+@click.option("titles", "-t", "--title", multiple=True, help="页面标题（可多次使用）")
 @click.option(
-    "-l", "--lang",
-    type=click.Choice(LANGUAGES, case_sensitive=False), default="zh",
-    help="默认语言（默认 zh）"
+    "-i",
+    "--input-file",
+    type=click.Path(exists=True),
+    default=None,
+    help="标题列表文件（每行一个；# 开头为注释）",
 )
-@click.option("-o", "--output-dir", type=click.Path(file_okay=False), default=None,
-              help="输出目录；为 None 则打印到 stdout")
+@click.option("--from-search", default=None, help="通过搜索获取标题")
+@click.option("--search-limit", type=int, default=20, help="--from-search 时返回的最大结果数")
+@click.option(
+    "-l",
+    "--lang",
+    type=click.Choice(LANGUAGES, case_sensitive=False),
+    default="zh",
+    help="默认语言（默认 zh）",
+)
+@click.option(
+    "-o",
+    "--output-dir",
+    type=click.Path(file_okay=False),
+    default=None,
+    help="输出目录；为 None 则打印到 stdout",
+)
 @click.option("--workers", type=int, default=4, help="跨页并发抓取数")
 @click.option("--no-progress", is_flag=True, default=False, help="禁用进度条")
 @click.option(
-    "--marker-format", default=None,
-    help="自定义模板标记，格式 'open/close'，如 ':::{name}:::/:::'"
+    "--marker-format", default=None, help="自定义模板标记，格式 'open/close'，如 ':::{name}:::/:::'"
 )
 def batch_cmd(
-    titles, input_file, from_search, search_limit,
-    lang, output_dir, workers, no_progress, marker_format
+    titles,
+    input_file,
+    from_search,
+    search_limit,
+    lang,
+    output_dir,
+    workers,
+    no_progress,
+    marker_format,
 ):
     """
     批量转换 Wiki 页面
@@ -200,9 +211,7 @@ def batch_cmd(
         if input_file:
             items.extend(_read_titles_file(input_file))
         if from_search:
-            items.extend(
-                r["title"] for r in search(from_search, lang=lang)[:search_limit]
-            )
+            items.extend(r["title"] for r in search(from_search, lang=lang)[:search_limit])
         if not items:
             click.secho("错误: 没有提供任何标题（用 -t / -i / --from-search）", fg="red", err=True)
             sys.exit(EXIT_USAGE)
@@ -221,7 +230,9 @@ def batch_cmd(
             try:
                 open_, close_ = marker_format.split("/", 1)
             except ValueError:
-                click.secho("错误: --marker-format 格式为 'open/close'，必须包含 '/'", fg="red", err=True)
+                click.secho(
+                    "错误: --marker-format 格式为 'open/close'，必须包含 '/'", fg="red", err=True
+                )
                 sys.exit(EXIT_USAGE)
             from mdifier.converter import MarkdownConverter as _MC
 
@@ -233,8 +244,11 @@ def batch_cmd(
 
             converter_factory = _make_converter
         result = convert_many(
-            deduped, lang=lang, max_workers=workers,
-            on_progress=progress, converter_factory=converter_factory,
+            deduped,
+            lang=lang,
+            max_workers=workers,
+            on_progress=progress,
+            converter_factory=converter_factory,
         )
         _emit_results(result, output_dir)
 
@@ -242,7 +256,8 @@ def batch_cmd(
         if result.unresolved:
             click.secho(
                 f"\n⚠️  警告：{len(result.unresolved)} 个模板未展开（驼峰映射缺失或模板不存在）：",
-                fg="yellow", err=True,
+                fg="yellow",
+                err=True,
             )
             for name in result.unresolved:
                 click.secho(f"  - {name}", fg="yellow", err=True)
@@ -271,6 +286,7 @@ def cache():
 def cache_info_cmd():
     """显示缓存统计信息（路径、大小、条目、时间戳）"""
     from mdifier.cache import cache_info
+
     info = cache_info()
     click.echo(f"路径:    {info['path']}")
     click.echo(f"存在:    {info['exists']}")
@@ -289,6 +305,7 @@ def cache_info_cmd():
 def cache_clear_cmd(yes):
     """清空整个缓存文件（强制下次重新请求）"""
     from mdifier.cache import cache_info, clear_cache
+
     info = cache_info()
     if not info["exists"]:
         click.echo("缓存不存在，无需清理", err=True)
@@ -300,7 +317,9 @@ def cache_clear_cmd(yes):
             abort=True,
         )
     if clear_cache():
-        click.secho(f"✓ 已清空缓存：{info['size_mb']} MB、{info['entries']} 条目", fg="green", err=True)
+        click.secho(
+            f"✓ 已清空缓存：{info['size_mb']} MB、{info['entries']} 条目", fg="green", err=True
+        )
     else:
         click.echo("缓存不存在", err=True)
 
@@ -309,6 +328,7 @@ def cache_clear_cmd(yes):
 def cache_prune_cmd():
     """清理已过期条目（保留 < 7 天的 fresh 条目）"""
     from mdifier.cache import CACHE_FILE, CACHE_TTL, cache_info
+
     info = cache_info()
     if not info["exists"]:
         click.echo("缓存不存在", err=True)
@@ -381,6 +401,7 @@ def _emit_results(result, output_dir: str | None) -> None:
         return
 
     from pathlib import Path
+
     # 解析为绝对路径：避免 Git Bash 的 MSYS 路径翻译
     out = Path(output_dir).resolve()
     try:
@@ -405,6 +426,7 @@ def _emit_results(result, output_dir: str | None) -> None:
 def _slug(title: str) -> str:
     """标题转文件名安全字符串"""
     import re
+
     s = re.sub(r'[\\/:*?"<>|]', "_", title)
     s = re.sub(r"\s+", "_", s.strip())
     return s or "untitled"
@@ -421,6 +443,7 @@ def _unique_path(out, name: str, used: set[str]):
         if cand.name not in used and not cand.exists():
             return cand
     import uuid
+
     return out / f"{stem}-{uuid.uuid4().hex[:6]}{suffix}"
 
 

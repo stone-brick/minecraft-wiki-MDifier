@@ -30,10 +30,7 @@ def load_cache() -> dict:
         data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
         now = time.time()
         # 过滤过期项
-        return {
-            k: v for k, v in data.items()
-            if now - v.get("_ts", 0) < CACHE_TTL
-        }
+        return {k: v for k, v in data.items() if now - v.get("_ts", 0) < CACHE_TTL}
     except (json.JSONDecodeError, OSError):
         return {}
 
@@ -46,10 +43,7 @@ def save_cache(cache: dict) -> None:
     """
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     enriched = {k: {**v, "_ts": time.time()} for k, v in cache.items()}
-    CACHE_FILE.write_text(
-        json.dumps(enriched, ensure_ascii=False),
-        encoding="utf-8"
-    )
+    CACHE_FILE.write_text(json.dumps(enriched, ensure_ascii=False), encoding="utf-8")
 
 
 def clear_cache() -> bool:

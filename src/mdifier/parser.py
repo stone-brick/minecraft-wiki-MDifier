@@ -11,6 +11,7 @@ from enum import Enum, auto
 
 class NodeType(Enum):
     """AST节点类型"""
+
     TEXT = auto()
     HEADING = auto()
     PARAGRAPH = auto()
@@ -27,6 +28,7 @@ class NodeType(Enum):
 @dataclass
 class Node:
     """AST节点"""
+
     type: NodeType
     content: str = ""
     children: list["Node"] = field(default_factory=list)
@@ -39,6 +41,7 @@ class Node:
 @dataclass
 class TemplateInfo:
     """模板信息"""
+
     name: str  # 模板名称（不含命名空间）
     params: dict[str, str]  # 参数名: 值
 
@@ -51,21 +54,13 @@ class WikiParser:
     """
 
     # 链接匹配：[[链接|显示文本]]
-    LINK_PATTERN = re.compile(
-        r'\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]'
-    )
+    LINK_PATTERN = re.compile(r"\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]")
 
     # 图片匹配：[[文件:xxx|参数]]
-    IMAGE_PATTERN = re.compile(
-        r'\[\[文件:([^\]|]+?)(?:\|([^\]]+?))?\]\]',
-        re.IGNORECASE
-    )
+    IMAGE_PATTERN = re.compile(r"\[\[文件:([^\]|]+?)(?:\|([^\]]+?))?\]\]", re.IGNORECASE)
 
     # 标题匹配：== 标题 ==
-    HEADING_PATTERN = re.compile(
-        r'^(=+)\s*(.+?)\s*(=+)$',
-        re.MULTILINE
-    )
+    HEADING_PATTERN = re.compile(r"^(=+)\s*(.+?)\s*(=+)$", re.MULTILINE)
 
     def __init__(self):
         self.templates: dict[str, TemplateInfo] = {}
@@ -83,9 +78,9 @@ class WikiParser:
         self.templates.clear()
 
         # 预处理：移除注释 <!-- -->
-        wikitext = re.sub(r'<!--.*?-->', '', wikitext, flags=re.DOTALL)
+        wikitext = re.sub(r"<!--.*?-->", "", wikitext, flags=re.DOTALL)
 
-        lines = wikitext.split('\n')
+        lines = wikitext.split("\n")
         nodes = []
         current_paragraph: list[str] = []
         in_table = False
@@ -94,12 +89,9 @@ class WikiParser:
         def flush_paragraph():
             nonlocal current_paragraph
             if current_paragraph:
-                text = ' '.join(current_paragraph)
+                text = " ".join(current_paragraph)
                 if text.strip():
-                    nodes.append(Node(
-                        type=NodeType.PARAGRAPH,
-                        content=self._process_inline(text)
-                    ))
+                    nodes.append(Node(type=NodeType.PARAGRAPH, content=self._process_inline(text)))
                 current_paragraph = []
 
         for line in lines:
@@ -120,21 +112,23 @@ class WikiParser:
                 flush_paragraph()
                 level = len(heading_match.group(1))
                 text = heading_match.group(2)
-                nodes.append(Node(
-                    type=NodeType.HEADING,
-                    content=self._process_inline(text),
-                    attrs={"level": level}
-                ))
+                nodes.append(
+                    Node(
+                        type=NodeType.HEADING,
+                        content=self._process_inline(text),
+                        attrs={"level": level},
+                    )
+                )
                 continue
 
             # 表格
-            if stripped.startswith('{|') or stripped.startswith('!!'):
+            if stripped.startswith("{|") or stripped.startswith("!!"):
                 flush_paragraph()
                 in_table = True
                 table_nodes.append(self._parse_table_row(stripped))
                 continue
 
-            if in_table and stripped.startswith('|}'):
+            if in_table and stripped.startswith("|}"):
                 in_table = False
                 nodes.extend(table_nodes)
                 table_nodes = []
@@ -145,13 +139,13 @@ class WikiParser:
                 continue
 
             # 列表
-            if stripped.startswith('*') or stripped.startswith('#'):
+            if stripped.startswith("*") or stripped.startswith("#"):
                 flush_paragraph()
                 nodes.append(self._parse_list(stripped))
                 continue
 
             # 分隔线
-            if stripped.startswith('----'):
+            if stripped.startswith("----"):
                 flush_paragraph()
                 nodes.append(Node(type=NodeType.HORIZONTAL_RULE))
                 continue
@@ -179,16 +173,10 @@ class WikiParser:
         text = self._extract_templates(text)
 
         # 处理图片
-        text = self.IMAGE_PATTERN.sub(
-            lambda m: self._format_image(m),
-            text
-        )
+        text = self.IMAGE_PATTERN.sub(lambda m: self._format_image(m), text)
 
         # 处理链接
-        text = self.LINK_PATTERN.sub(
-            lambda m: self._format_link(m),
-            text
-        )
+        text = self.LINK_PATTERN.sub(lambda m: self._format_link(m), text)
 
         return text
 
@@ -208,15 +196,15 @@ class WikiParser:
         template_start = -1
 
         while i < len(text):
-            if i + 1 < len(text) and text[i:i+2] == '{{':
+            if i + 1 < len(text) and text[i : i + 2] == "{{":
                 if depth == 0:
                     template_start = i
                 depth += 2
                 i += 2
-            elif i + 1 < len(text) and text[i:i+2] == '}}':
+            elif i + 1 < len(text) and text[i : i + 2] == "}}":
                 depth -= 2
                 if depth == 0 and template_start >= 0:
-                    template_str = text[template_start+2:i]
+                    template_str = text[template_start + 2 : i]
                     info = self._parse_template(template_str)
                     result.append(f"{{TEMPLATE:{info.name}}}")
                     template_start = -1
@@ -226,7 +214,7 @@ class WikiParser:
                     result.append(text[i])
                 i += 1
 
-        return ''.join(result)
+        return "".join(result)
 
     def _parse_template(self, template_str: str) -> TemplateInfo:
         """
@@ -238,18 +226,18 @@ class WikiParser:
         Returns:
             TemplateInfo对象
         """
-        parts = template_str.split('|')
+        parts = template_str.split("|")
         name = parts[0].strip()
 
         # 移除命名空间前缀
-        if ':' in name:
-            name = name.split(':', 1)[1]
+        if ":" in name:
+            name = name.split(":", 1)[1]
 
         params = {}
         for i, part in enumerate(parts[1:], start=1):
             part = part.strip()
-            if '=' in part:
-                key, value = part.split('=', 1)
+            if "=" in part:
+                key, value = part.split("=", 1)
                 params[key.strip()] = value.strip()
             else:
                 params[str(i)] = part
@@ -272,15 +260,15 @@ class WikiParser:
         display = match.group(2) or target
 
         # 外部链接
-        if target.startswith('http'):
-            return f'[{display}]({target})'
+        if target.startswith("http"):
+            return f"[{display}]({target})"
 
         # 内部链接（Wiki页面）
         # 移除命名空间前缀
-        if ':' in target:
-            return f'[{display}]({target})'
+        if ":" in target:
+            return f"[{display}]({target})"
 
-        return f'[{display}]({target})'
+        return f"[{display}]({target})"
 
     def _format_image(self, match: re.Match) -> str:
         """
@@ -296,8 +284,8 @@ class WikiParser:
         caption = match.group(2) or ""
 
         # 从文件名提取描述
-        desc = caption.split('|')[-1].strip() if caption else filename
-        return f'![{desc}]({filename})'
+        desc = caption.split("|")[-1].strip() if caption else filename
+        return f"![{desc}]({filename})"
 
     def _parse_table_row(self, row: str) -> Node:
         """
@@ -311,29 +299,21 @@ class WikiParser:
         """
         cells = []
         # 移除表格标记
-        row = re.sub(r'^\|\-', '', row)
-        row = re.sub(r'^\|\}', '', row)
-        row = re.sub(r'^!!', '', row)
+        row = re.sub(r"^\|\-", "", row)
+        row = re.sub(r"^\|\}", "", row)
+        row = re.sub(r"^!!", "", row)
 
         # 分割单元格
-        parts = re.split(r'\|\|', row)
+        parts = re.split(r"\|\|", row)
         for part in parts:
             part = part.strip()
             if not part:
                 continue
             # 移除单元格标记
-            part = re.sub(r'^\|', '', part)
-            cells.append(Node(
-                type=NodeType.TEXT,
-                content=self._process_inline(part)
-            ))
+            part = re.sub(r"^\|", "", part)
+            cells.append(Node(type=NodeType.TEXT, content=self._process_inline(part)))
 
-        return Node(
-            type=NodeType.TABLE,
-            content="",
-            children=cells,
-            attrs={"headers": False}
-        )
+        return Node(type=NodeType.TABLE, content="", children=cells, attrs={"headers": False})
 
     def _parse_list(self, line: str) -> Node:
         """
@@ -346,23 +326,15 @@ class WikiParser:
             列表节点
         """
         items = []
-        parts = line.split('*') + line.split('#')
+        parts = line.split("*") + line.split("#")
         parts = [p.strip() for p in parts if p.strip()]
 
-        list_type = "ul" if '*' in line else "ol"
+        list_type = "ul" if "*" in line else "ol"
 
         for item in parts:
-            items.append(Node(
-                type=NodeType.LIST_ITEM,
-                content=self._process_inline(item)
-            ))
+            items.append(Node(type=NodeType.LIST_ITEM, content=self._process_inline(item)))
 
-        return Node(
-            type=NodeType.LIST,
-            content="",
-            children=items,
-            attrs={"list_type": list_type}
-        )
+        return Node(type=NodeType.LIST, content="", children=items, attrs={"list_type": list_type})
 
     def get_templates(self) -> dict[str, TemplateInfo]:
         """

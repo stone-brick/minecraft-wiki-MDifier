@@ -88,6 +88,7 @@ class MarkdownConverter:
             self._template_cache = template_cache
         elif use_persistent_cache:
             from mdifier.cache import load_cache
+
             self._template_cache = load_cache()
         else:
             self._template_cache = {}
@@ -106,6 +107,7 @@ class MarkdownConverter:
         if not self._use_persistent_cache:
             return
         from mdifier.cache import save_cache
+
         with self._cache_lock:
             save_cache(self._template_cache)
 
@@ -159,9 +161,7 @@ class MarkdownConverter:
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             # 提交所有任务
             future_to_name = {
-                executor.submit(
-                    self._expand_template, info.name, info.params
-                ): name
+                executor.submit(self._expand_template, info.name, info.params): name
                 for name, info in templates.items()
             }
 
@@ -172,9 +172,7 @@ class MarkdownConverter:
                     expanded[name] = future.result()
                 except Exception:
                     # 单个模板失败不应中断整体
-                    expanded[name] = self._fallback_template(
-                        name, templates[name].params
-                    )
+                    expanded[name] = self._fallback_template(name, templates[name].params)
 
         return expanded
 
@@ -214,7 +212,7 @@ class MarkdownConverter:
                 "text": expanded["text"],
                 "html": expanded["html"],
                 "format": expanded.get("format", "text"),
-                "table": expanded.get("table")
+                "table": expanded.get("table"),
             }
         except Exception:
             result = self._fallback_template(name, params)
@@ -259,14 +257,11 @@ class MarkdownConverter:
             "text": f"[{name}: {params_str}]",
             "html": None,
             "format": "text",
-            "table": None
-            }
+            "table": None,
+        }
 
     def _generate_markdown(
-        self,
-        nodes: list[Node],
-        expanded_templates: dict[str, dict],
-        title: str
+        self, nodes: list[Node], expanded_templates: dict[str, dict], title: str
     ) -> str:
         """
         生成Markdown
@@ -279,12 +274,12 @@ class MarkdownConverter:
         Returns:
             Markdown格式字符串
         """
-        lines = [f'# {title}', '']
+        lines = [f"# {title}", ""]
 
         for node in nodes:
             lines.append(self._render_node(node, expanded_templates))
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def _render_node(self, node: Node, expanded_templates: dict[str, dict]) -> str:
         """
@@ -299,7 +294,7 @@ class MarkdownConverter:
         """
         renderer_name = NODE_RENDERERS.get(node.type)
         if not renderer_name:
-            return ''
+            return ""
         renderer = getattr(self, renderer_name)
         # 根据渲染器签名决定是否传 expanded_templates
         if renderer_name in _NODE_RENDERERS_NEED_TEMPLATES:
@@ -308,48 +303,44 @@ class MarkdownConverter:
 
     def _render_horizontal_rule(self, node: Node) -> str:
         """水平线"""
-        return '---\n'
+        return "---\n"
 
     def _render_heading(self, node: Node) -> str:
         """渲染标题节点"""
-        level = min(node.attrs.get('level', 2), 6)
-        return f'{"#" * level} {node.content}\n'
+        level = min(node.attrs.get("level", 2), 6)
+        return f"{'#' * level} {node.content}\n"
 
     def _render_paragraph(self, node: Node, expanded_templates: dict[str, dict]) -> str:
         """渲染段落节点"""
         content = self._replace_template_placeholders(node.content, expanded_templates)
-        return f'{content}\n'
+        return f"{content}\n"
 
     def _render_list(self, node: Node, expanded_templates: dict[str, dict]) -> str:
         """渲染列表节点"""
         lines = []
-        list_type = node.attrs.get('list_type', 'ul')
-        marker = '- ' if list_type == 'ul' else '1. '
+        list_type = node.attrs.get("list_type", "ul")
+        marker = "- " if list_type == "ul" else "1. "
         for item in node.children:
             if item.type == NodeType.LIST_ITEM:
                 content = self._replace_template_placeholders(item.content, expanded_templates)
-                lines.append(f'{marker}{content}')
-        lines.append('')
-        return '\n'.join(lines)
+                lines.append(f"{marker}{content}")
+        lines.append("")
+        return "\n".join(lines)
 
     def _render_table(self, node: Node) -> str:
         """渲染表格节点"""
         if not node.children:
-            return ''
-        lines = ['| ' + ' | '.join(c.content for c in node.children) + ' |']
-        lines.append('| ' + ' | '.join(['---'] * len(node.children)) + ' |')
-        lines.append('')
-        return '\n'.join(lines)
+            return ""
+        lines = ["| " + " | ".join(c.content for c in node.children) + " |"]
+        lines.append("| " + " | ".join(["---"] * len(node.children)) + " |")
+        lines.append("")
+        return "\n".join(lines)
 
     def _render_text(self, node: Node, expanded_templates: dict[str, dict]) -> str:
         """渲染文本节点"""
         return self._replace_template_placeholders(node.content, expanded_templates)
 
-    def _replace_template_placeholders(
-        self,
-        text: str,
-        expanded_templates: dict[str, dict]
-    ) -> str:
+    def _replace_template_placeholders(self, text: str, expanded_templates: dict[str, dict]) -> str:
         """
         替换文本中的模板占位符
 
@@ -361,7 +352,8 @@ class MarkdownConverter:
             替换后的文本
         """
         import re
-        pattern = re.compile(r'\{TEMPLATE:([^{}]+?)\}')
+
+        pattern = re.compile(r"\{TEMPLATE:([^{}]+?)\}")
 
         def replace_match(match):
             template_name = match.group(1).lower()
@@ -402,8 +394,10 @@ class MarkdownConverter:
             # 没有特殊 class 直接输出表格，不包裹标记
             return "\n".join(lines)
         return (
-            self.template_marker_open.format(name=class_name) + "\n"
-            + "\n".join(lines) + "\n"
+            self.template_marker_open.format(name=class_name)
+            + "\n"
+            + "\n".join(lines)
+            + "\n"
             + self.template_marker_close.format(name=class_name)
         )
 
@@ -422,8 +416,10 @@ class MarkdownConverter:
             # 没有特殊 class 的模板直接输出文本，不包裹标记
             return rendered
         return (
-            self.template_marker_open.format(name=class_name) + "\n"
-            + rendered + "\n"
+            self.template_marker_open.format(name=class_name)
+            + "\n"
+            + rendered
+            + "\n"
             + self.template_marker_close.format(name=class_name)
         )
 

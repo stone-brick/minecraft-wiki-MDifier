@@ -45,6 +45,7 @@ URL_PATTERNS: list[tuple[str, str]] = [
 @dataclass
 class WikiPage:
     """Wiki页面数据类"""
+
     title: str
     content: str  # 解析后的wikitext或HTML
     source: str  # "api" 或 "html"
@@ -56,16 +57,15 @@ class WikiFetcher:
     def __init__(self, lang: str = "zh"):
         if lang not in LANG_CONFIG:
             raise InvalidInputError(
-                f"Unsupported language: {lang}. "
-                f"Available: {list(LANG_CONFIG.keys())}"
+                f"Unsupported language: {lang}. Available: {list(LANG_CONFIG.keys())}"
             )
         self.lang = lang
         self.api_url = LANG_CONFIG[lang]["api"]
         self.base_url = LANG_CONFIG[lang]["base"]
         self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "Minecraft-Wiki-MDifier/0.1.0 (Python Wiki Converter)"
-        })
+        self.session.headers.update(
+            {"User-Agent": "Minecraft-Wiki-MDifier/0.1.0 (Python Wiki Converter)"}
+        )
 
     def search(self, query: str) -> list[dict]:
         """
@@ -142,11 +142,7 @@ class WikiFetcher:
         page_title = parse_result.get("title", title)
         wikitext = parse_result.get("wikitext", {}).get("*", "")
 
-        return WikiPage(
-            title=page_title,
-            content=wikitext,
-            source="api"
-        )
+        return WikiPage(title=page_title, content=wikitext, source="api")
 
     def fetch_via_html(self, title: str) -> WikiPage:
         """
@@ -198,11 +194,7 @@ class WikiFetcher:
 
         html_content = str(content_div)
 
-        return WikiPage(
-            title=page_title,
-            content=html_content,
-            source="html"
-        )
+        return WikiPage(title=page_title, content=html_content, source="html")
 
     def fetch(self, title: str) -> WikiPage:
         """
