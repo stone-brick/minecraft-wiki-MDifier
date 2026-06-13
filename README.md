@@ -4,6 +4,8 @@
 
 ## 安装
 
+**需要 Python >= 3.13**，依赖：`requests`, `beautifulsoup4`, `click`, `markdownify`。
+
 ```bash
 pip install -e .
 ```
@@ -94,16 +96,20 @@ mdifier convert "https://minecraft.wiki/wiki/Iron_Ingot"
 # 搜索页面
 mdifier search "钻石"
 mdifier search "diamond" --lang en
+mdifier search "钻石" -n 20  # 返回结果数（默认 10）
 
 # 批量转换：多个标题 → 独立 .md 文件
 mdifier batch -t 钻石 -t 铁锭 -t 附魔台 -o ./out
 mdifier batch -t Iron_Ingot -t Diamond --lang en -o ./en_out
 
-# 批量转换：从文件读取标题列表（每行一个，# 开头为注释）
+# 批量转换：从文件读取标题列表（每行一个，# 开头为注释，空行跳过）
 mdifier batch -i pages.txt -o ./out --workers 8
 
-# 批量转换：从搜索结果中取前 N 个
+# 批量转换：从搜索结果中取前 N 个（--search-limit 默认 20）
 mdifier batch --from-search "红石" --search-limit 30 -o ./out
+
+# 批量：禁用进度条
+mdifier batch -i pages.txt -o ./out --no-progress
 
 # 缓存管理
 mdifier cache info    # 查看缓存状态
@@ -115,6 +121,16 @@ mdifier cache prune   # 仅清理过期条目（保留未过期）
 mdifier batch -t 钻石 --marker-format ':::{name}:::/:::'
 mdifier batch -i pages.txt -o ./out --marker-format '<template:{name} start>/<template:{name} end>'
 mdifier batch -t Iron_Ingot --marker-format '<details><summary>{name}</summary>/</details>'
+```
+
+如果 `pip install` 后找不到 `mdifier` 命令，也可直接运行脚本（无需安装）：
+
+```bash
+# 转换单页
+python src/mdifier/convert.py --title "钻石" --output diamond.md
+
+# 搜索
+python src/mdifier/search.py "钻石" --num 5
 ```
 
 ### Python 库
@@ -245,6 +261,7 @@ except InvalidInputError as e:
 | `mcui`（合成台/熔炉/织布机/锻造台） | 3x3 网格文本 + 物品描述 |
 | `Hatnote`、`Quote` | 用 markdownify 转为 Markdown 格式 |
 | 其他未识别模板 | 通用 markdownify 转换 |
+| 展开失败（API 异常） | 回退文本 `[模板名: k=v]`，标记为 `class="error"` |
 
 **输出示例**：
 
@@ -325,6 +342,24 @@ print(c.is_cancelled())          # True
 print(c.unresolved_templates)    # frozenset({'HistoryTable', ...})
 ```
 
+### 批量输出文件命名
+
+批量输出文件（`-o out_dir/`）按以下规则生成文件名：
+
+- 页面标题经 `_slug()` 处理：非法文件名字符（`\ / : * ? " < > |`）→ `_`；空格→`_`；emoji 等高位 Unicode → 移除
+- 标题为空时回退为 `untitled`
+- 同名冲突：自动加 `-2`、`-3` 后缀，超过 999 次冲突则用 uuid 前 6 位
+
+### 输入文件格式（`-i`）
+
+```
+# 注释行（# 开头）
+钻石
+铁锭
+    # 空行自动跳过
+Iron Ingot
+```
+
 ### 跨调用共享缓存（不持久化）
 
 单页 `convert` 也支持传入 `template_cache`，同一进程内多次转换共享模板展开结果：
@@ -351,6 +386,18 @@ convert("铁锭", template_cache=shared)  # 增量 17 条，24 条共享
 | `mdifier cache prune` | 保留未过期（< 7 天），仅删除过期 | 日常维护 |
 
 注：`cache clear` 默认会交互确认（除非 `-y`）。
+
+**Python API 等效**：
+
+```python
+from mdifier.cache import cache_info, clear_cache, save_cache
+
+# 手动将进程内缓存写入磁盘（convert_many 自动调用）
+save_cache(my_cache_dict)
+
+# 等价于 cache clear
+clear_cache()
+```
 
 ### `cache_info()` 返回字段
 
