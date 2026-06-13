@@ -21,10 +21,11 @@ FormatDetector = Callable[[object], str | None]
 FORMAT_DETECTORS: list[FormatDetector] = [
     # 1. infobox 表格
     lambda e: "infobox_table" if e.find(class_="infobox-row") else None,
-    # 2. mcui（elem 本身或内部）
-    lambda e: "mcui" if "mcui" in (e.get("class") or []) or e.find(class_="mcui") else None,
-    # 3. 一般表格（elem 本身是 table 或内部有 table）
-    lambda e: "table" if e.name == "table" or e.find("table") else None,
+    # 2. mcui（elem 本身有 mcui class，或内部有 mcui 元素）
+    #    优先于一般表格检测，确保含 mcui 单元格的 wikitable 走 mcui 分支
+    lambda e: "mcui" if ("mcui" in (e.get("class") or []) or e.find(class_="mcui")) else None,
+    # 3. 一般表格（elem 是 table 且内部无 mcui）
+    lambda e: "table" if e.name == "table" and not e.find(class_="mcui") else None,
 ]
 
 
@@ -175,22 +176,38 @@ class TemplateExpander:
             # mcui 格式（合成台/熔炉/织布机/锻造台）
             elem_classes = elem.get("class") or []
             if "mcui" in elem_classes:
-                # elem 本身就是 mcui
+                # elem 本身就是 mcui，整体单格
                 text = self._parse_mcui(elem)
                 rows.append([text])
             else:
-                # elem 是容器，内部有 mcui
-                for mcui in elem.find_all(class_="mcui"):
-                    text = self._parse_mcui(mcui)
-                    rows.append([text])
+                # elem 是 table，内部有 mcui 单元格，保留完整行结构
+                table = elem if elem.name == "table" else elem.find("table")
+                if table:
+                    for tr in table.find_all("tr"):
+                        cells = []
+                        for cell in tr.find_all(["th", "td"]):
+                            mcui = cell.find(class_="mcui")
+                            if mcui:
+                                cells.append(self._parse_mcui(mcui))
+                            else:
+                                cells.append(cell.get_text(separator=" ", strip=True))
+                        if cells:
+                            rows.append(cells)
+                else:
+                    # 没有 table 结构，降级为单个 mcui
+                    for mcui in elem.find_all(class_="mcui"):
+                        text = self._parse_mcui(mcui)
+                        rows.append([text])
         else:
             # 一般表格：解析HTML table
             # elem可能是 table 或包含 table 的容器
             table = elem if elem.name == "table" else elem.find("table")
             if table:
                 for tr in table.find_all("tr"):
+                    raw_ths = tr.find_all("th")
+                    raw_tds = tr.find_all("td")
                     cells = []
-                    for cell in tr.find_all(["th", "td"]):
+                    for cell in raw_ths + raw_tds:
                         mcui = cell.find(class_="mcui")
                         if mcui:
                             text = self._parse_mcui(mcui)
