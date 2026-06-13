@@ -14,6 +14,13 @@ from mdifier.parser import Node, NodeType, TemplateInfo, WikiParser
 from mdifier.template_expander import TemplateExpander
 from mdifier.wiki import WikiPage
 
+# 匹配 <span class="sprite-file">...</span>，其中包含 EnvSprite img
+# alt 格式："EnvSprite xxx.png：Minecraft中xxx的精灵图"，对 AI 无意义
+_SPRITE_FILE_PATTERN = re.compile(
+    r'<span class="sprite-file"[^>]*>.*?</span>',
+    re.DOTALL,
+)
+
 
 def _escape_cache_value(v: str) -> str:
     """转义缓存键中的分隔符，防止 cache_key 碰撞（"a|b" vs "a"/"b"）。"""
@@ -430,6 +437,9 @@ class MarkdownConverter:
             return ""
         if not html:
             return text
+
+        # 移除 EnvSprite 的 sprite-file span（alt 文本 "EnvSprite xxx.png：Minecraft中xxx的精灵图" 对 AI 无意义）
+        html = _SPRITE_FILE_PATTERN.sub("", html)
 
         rendered = md(html, heading_style="atx", bullet_char="-")
         name = template_data.get("template_name") or template_data.get("class")
