@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 
 from mdifier.converter import MarkdownConverter
+from mdifier.exceptions import InvalidInputError
 from mdifier.wiki import LANG_CONFIG, WikiFetcher, parse_url
 
 
@@ -50,7 +51,7 @@ def convert(
     """
     # 验证 lang
     if lang is not None and lang not in LANG_CONFIG:
-        raise ValueError(
+        raise InvalidInputError(
             f"Unsupported language: {lang}. "
             f"Available: {list(LANG_CONFIG.keys())}"
         )
@@ -70,7 +71,7 @@ def convert(
     page = fetcher.fetch(title)
 
     if page is None:
-        raise ValueError(f"无法获取页面: {title}")
+        raise InvalidInputError(f"无法获取页面: {title}")
 
     # 转换
     converter = MarkdownConverter(lang=lang, template_cache=template_cache)
@@ -97,7 +98,7 @@ def convert_detailed(title_or_url: str, lang: str | None = None) -> ConvertResul
     """
     # 验证 lang
     if lang is not None and lang not in LANG_CONFIG:
-        raise ValueError(
+        raise InvalidInputError(
             f"Unsupported language: {lang}. "
             f"Available: {list(LANG_CONFIG.keys())}"
         )
@@ -117,7 +118,7 @@ def convert_detailed(title_or_url: str, lang: str | None = None) -> ConvertResul
     page = fetcher.fetch(title)
 
     if page is None:
-        raise ValueError(f"无法获取页面: {title}")
+        raise InvalidInputError(f"无法获取页面: {title}")
 
     # 转换
     converter = MarkdownConverter(lang=lang)
@@ -144,7 +145,7 @@ def _convert_one(
 ) -> ConvertResult:
     """单页转换辅助函数（供 ThreadPoolExecutor 调用）"""
     if page is None:
-        raise ValueError(f"无法获取页面: {title}")
+        raise InvalidInputError(f"无法获取页面: {title}")
     return ConvertResult(
         title=page.title,
         markdown=converter.convert_wiki(page),
@@ -190,7 +191,7 @@ def convert_many(
         >>> convert_many(['钻石'], converter_factory=lambda l, cache: c)
     """
     if lang not in LANG_CONFIG:
-        raise ValueError(
+        raise InvalidInputError(
             f"Unsupported language: {lang}. "
             f"Available: {list(LANG_CONFIG.keys())}"
         )
@@ -251,7 +252,8 @@ def convert_many(
                 try:
                     final_results[idx] = fut.result()
                 except Exception as e:
-                    final_failed.append((t, str(e)))
+                    # 含异常类型名，方便用户定位问题
+                    final_failed.append((t, f"{type(e).__name__}: {e}"))
                 done += 1
                 if on_progress:
                     on_progress(done, total, t)

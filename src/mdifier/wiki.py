@@ -14,6 +14,13 @@ from dataclasses import dataclass
 import requests
 from bs4 import BeautifulSoup
 
+from mdifier.exceptions import (
+    InvalidInputError,
+    NetworkError,
+    PageNotFoundError,
+    WikiAPIError,
+)
+
 # 语言配置：集中管理 URL 和解析模式
 LANG_CONFIG: dict[str, dict[str, str]] = {
     "zh": {
@@ -48,7 +55,7 @@ class WikiFetcher:
 
     def __init__(self, lang: str = "zh"):
         if lang not in LANG_CONFIG:
-            raise ValueError(
+            raise InvalidInputError(
                 f"Unsupported language: {lang}. "
                 f"Available: {list(LANG_CONFIG.keys())}"
             )
@@ -92,7 +99,7 @@ class WikiFetcher:
             ]
         return []
 
-    def fetch_via_api(self, title: str) -> WikiPage | None:
+    def fetch_via_api(self, title: str) -> WikiPage:
         """
         通过MediaWiki API获取页面内容
 
@@ -100,7 +107,12 @@ class WikiFetcher:
             title: 页面标题
 
         Returns:
-            WikiPage对象，获取失败返回None
+            WikiPage对象
+
+        Raises:
+            NetworkError: 网络连接失败
+            PageNotFoundError: 页面不存在（API 404）
+            WikiAPIError: API 返回异常结构
         """
         params = {
             "action": "parse",
@@ -108,13 +120,23 @@ class WikiFetcher:
             "format": "json",
             "prop": "wikitext",
         }
-        response = self.session.get(self.api_url, params=params)
-        if response.status_code != 200:
-            return None
+        try:
+            response = self.session.get(self.api_url, params=params, timeout=10)
+        except requests.RequestException as e:
+            raise NetworkError(f"无法连接 {self.api_url}: {e}") from e
 
-        data = response.json()
+        if response.status_code == 404:
+            raise PageNotFoundError(f"页面不存在（API 404）: {title}")
+        if response.status_code != 200:
+            raise WikiAPIError(f"API 返回 {response.status_code}: {title}")
+
+        try:
+            data = response.json()
+        except ValueError as e:
+            raise WikiAPIError(f"API 返回非 JSON 数据: {title}") from e
+
         if "parse" not in data:
-            return None
+            raise WikiAPIError(f"API 返回无 parse 字段: {title}")
 
         parse_result = data["parse"]
         page_title = parse_result.get("title", title)
@@ -126,7 +148,7 @@ class WikiFetcher:
             source="api"
         )
 
-    def fetch_via_html(self, title: str) -> WikiPage | None:
+    def fetch_via_html(self, title: str) -> WikiPage:
         """
         通过HTML抓取获取页面内容（降级方案）
 
@@ -134,15 +156,26 @@ class WikiFetcher:
             title: 页面标题
 
         Returns:
-            WikiPage对象，获取失败返回None
+            WikiPage对象
+
+        Raises:
+            NetworkError: 网络连接失败
+            PageNotFoundError: 页面不存在（HTTP 404）
+            WikiAPIError: HTML 解析失败
         """
         # 将标题转换为URL路径
         url_title = title.replace(" ", "_")
         url = f"{self.base_url}/{url_title}"
 
-        response = self.session.get(url)
+        try:
+            response = self.session.get(url, timeout=10)
+        except requests.RequestException as e:
+            raise NetworkError(f"无法连接 {url}: {e}") from e
+
+        if response.status_code == 404:
+            raise PageNotFoundError(f"页面不存在（HTTP 404）: {title}")
         if response.status_code != 200:
-            return None
+            raise WikiAPIError(f"HTML 返回 {response.status_code}: {title}")
 
         soup = BeautifulSoup(response.text, "html.parser")
 
@@ -153,7 +186,7 @@ class WikiFetcher:
         # 获取主要内容区域
         content_div = soup.find("div", id="mw-content-text")
         if not content_div:
-            return None
+            raise WikiAPIError(f"HTML 无 mw-content-text 区域: {title}")
 
         # 移除不需要的元素
         for elem in content_div.find_all(["script", "style", "noscript"]):
@@ -171,7 +204,7 @@ class WikiFetcher:
             source="html"
         )
 
-    def fetch(self, title: str) -> WikiPage | None:
+    def fetch(self, title: str) -> WikiPage:
         """
         获取Wiki页面，优先使用API
 
@@ -180,18 +213,34 @@ class WikiFetcher:
 
         Returns:
             WikiPage对象
-        """
-        # 优先尝试API
-        page = self.fetch_via_api(title)
-        if page and page.content.strip():
-            return page
 
-        # API失败，降级到HTML抓取
+        Raises:
+            NetworkError: 网络层失败
+            PageNotFoundError: API 和 HTML 都返回 404
+            WikiAPIError: API 和 HTML 都返回异常
+        """
+        # 优先尝试 API
+        try:
+            page = self.fetch_via_api(title)
+            if page and page.content.strip():
+                return page
+        except PageNotFoundError:
+            # 404 时降级到 HTML 抓取
+            pass
+        except NetworkError:
+            # 网络错误不重试
+            raise
+        except WikiAPIError:
+            # API 异常，降级到 HTML
+            pass
+
+        # API 失败或返回空，降级到 HTML 抓取
         page = self.fetch_via_html(title)
         if page and page.content.strip():
             return page
 
-        return None
+        # HTML 也没拿到内容
+        raise PageNotFoundError(f"页面不存在或内容为空: {title}")
 
     def fetch_many(
         self,

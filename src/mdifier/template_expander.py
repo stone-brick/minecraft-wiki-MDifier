@@ -30,7 +30,8 @@ class TemplateExpander:
 
     def __init__(self, lang: str = "zh"):
         if lang not in LANG_CONFIG:
-            raise ValueError(
+            from mdifier.exceptions import InvalidInputError
+            raise InvalidInputError(
                 f"Unsupported language: {lang}. "
                 f"Available: {list(LANG_CONFIG.keys())}"
             )
