@@ -397,6 +397,7 @@ class MarkdownConverter:
             + body
             + "\n"
             + self.template_marker_close.format(name=class_name)
+            + "\n"
         )
 
     def _render_template_table(self, template_data: dict) -> str:
