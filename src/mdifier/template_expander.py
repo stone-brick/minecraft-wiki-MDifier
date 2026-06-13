@@ -8,6 +8,8 @@ from collections.abc import Callable
 
 import requests
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from mdifier.exceptions import InvalidInputError
 from mdifier.formatters import MinecraftColorFormatter
@@ -38,6 +40,14 @@ class TemplateExpander:
         self.api_url = LANG_CONFIG[lang]["api"]
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
+        retry = Retry(
+            total=3,
+            backoff_factor=0.5,
+            status_forcelist={429, 500, 502, 503, 504},
+            raise_on_status=False,
+        )
+        self.session.mount("https://", HTTPAdapter(max_retries=retry))
+        self.session.mount("http://", HTTPAdapter(max_retries=retry))
         self.formatter = MinecraftColorFormatter()
 
     def expand(self, template_call: str) -> dict:
