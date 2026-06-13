@@ -229,6 +229,7 @@ class MarkdownConverter:
                 "html": expanded["html"],
                 "format": expanded.get("format", "text"),
                 "table": expanded.get("table"),
+                "template_name": expanded.get("template_name"),
             }
         except Exception:
             result = self._fallback_template(name, params)
@@ -415,11 +416,11 @@ class MarkdownConverter:
             col_count = len(table[0])
             lines.insert(1, "| " + " | ".join(["---"] * col_count) + " |")
 
-        # 用模板标记包裹
-        class_name = template_data.get("class")
-        if not class_name:
+        # 优先用语义模板名，回退到 HTML class
+        name = template_data.get("template_name") or template_data.get("class")
+        if not name:
             return "\n".join(lines)
-        return self._wrap_template(class_name, "\n".join(lines))
+        return self._wrap_template(name, "\n".join(lines))
 
     def _render_html_generic(self, template_data: dict) -> str:
         """使用 markdownify 将 HTML 转为 Markdown"""
@@ -431,7 +432,7 @@ class MarkdownConverter:
             return text
 
         rendered = md(html, heading_style="atx", bullet_char="-")
-        class_name = template_data.get("class")
-        if not class_name:
+        name = template_data.get("template_name") or template_data.get("class")
+        if not name:
             return rendered
-        return self._wrap_template(class_name, rendered)
+        return self._wrap_template(name, rendered)

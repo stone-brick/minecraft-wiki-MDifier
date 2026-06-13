@@ -77,14 +77,15 @@ class TemplateExpander:
         data = resp.json()
         html = data["parse"]["text"]["*"]
 
-        return self._parse_expanded_html(html)
+        return self._parse_expanded_html(html, template_call)
 
-    def _parse_expanded_html(self, html: str) -> dict:
+    def _parse_expanded_html(self, html: str, template_call: str | None = None) -> dict:
         """
         解析展开后的HTML，提取class和内容
 
         Args:
             html: 渲染后的HTML内容
+            template_call: 原始模板调用字符串（如 "{{crafting usage|Iron Ingot}}"）
 
         Returns:
             dict: {
@@ -92,7 +93,8 @@ class TemplateExpander:
                 "class": 主要元素的class,
                 "text": 主要元素的文本内容,
                 "format": 格式类型,
-                "table": 表格数据（如果有的话）
+                "table": 表格数据（如果有的话）,
+                "template_name": 语义模板名（如 "crafting usage"）
             }
         """
         soup = BeautifulSoup(html, "html.parser")
@@ -105,6 +107,14 @@ class TemplateExpander:
         # 在容器内找第一个真正的模板元素（不是 mw-parser-output）
         elem = container.find(class_=lambda c: c and "mw-parser-output" not in c)
 
+        # 从 template_call 提取语义名称
+        template_name = None
+        if template_call:
+            name_part = template_call.lstrip("{").rstrip("}").split("|")[0].strip()
+            if ":" in name_part:
+                name_part = name_part.split(":", 1)[1]
+            template_name = name_part
+
         if elem is None:
             # 如果没找到，返回整个HTML
             return {
@@ -113,6 +123,7 @@ class TemplateExpander:
                 "text": soup.get_text(strip=True),
                 "format": "text",
                 "table": None,
+                "template_name": template_name,
             }
 
         classes = elem.get("class", [])
@@ -127,6 +138,7 @@ class TemplateExpander:
             "text": elem.get_text(strip=True),
             "format": fmt,
             "table": None,
+            "template_name": template_name,
         }
 
         # 解析表格
