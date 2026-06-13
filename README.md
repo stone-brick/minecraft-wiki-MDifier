@@ -133,7 +133,7 @@ md_en = convert("Iron Ingot", lang="en")
 result: ConvertResult = convert_detailed("铁锭")
 print(f"标题: {result.title}")
 print(f"来源: {result.source}")  # "api" 或 "html"
-print(f"模板: {result.templates}")  # 当前为空 dict（保留扩展位）
+print(f"模板: {result.templates}")  # 保留扩展位，当前为空 dict
 print(f"Markdown 长度: {len(result.markdown)}")
 
 # 跨调用共享缓存（同一进程内多次 convert 不重复请求模板）
@@ -184,24 +184,36 @@ for r in results[:5]:
 ### 错误处理
 
 ```python
-# 单页 convert 抛 ValueError
+# 单页 convert 抛 InvalidInputError（继承自 ValueError）
 try:
     md = convert("nonexistent_xyz_123")
-except ValueError as e:
+except InvalidInputError as e:
     print(f"失败: {e}")  # "无法获取页面: nonexistent_xyz_123"
 
 # 批量 convert_many 不抛，仅聚合到 result.failed
 result = convert_many(["钻石", "nonexistent_xyz_123"])
 for t, err in result.failed:
     print(f"  失败: {t}: {err}")
-# CLI 模式下 result.failed 非空时 exit code = 1
+# CLI 模式下 result.failed 非空时 exit code = 65 (EX_DATAERR)
 
-# 语言不支持抛 ValueError
+# 语言不支持抛 InvalidInputError
 try:
     convert("X", lang="xx")
-except ValueError as e:
+except InvalidInputError as e:
     print(e)  # "Unsupported language: xx. Available: ['zh', 'en']"
 ```
+
+**自定义异常层级**：
+
+| 异常 | 父类 | 含义 |
+|------|------|------|
+| `MdifierError` | `Exception` | 基类 |
+| `InvalidInputError` | `MdifierError`, `ValueError` | 用户输入错误 |
+| `FetchError` | `MdifierError`, `requests.RequestException` | 网络错误基类 |
+| `NetworkError` | `FetchError` | 连接失败/超时 |
+| `WikiAPIError` | `FetchError` | API 异常结构 |
+| `PageNotFoundError` | `FetchError` | 页面不存在 |
+| `CacheError` | `MdifierError`, `OSError` | 缓存读写失败 |
 
 ## 功能特点
 
@@ -307,6 +319,10 @@ threading.Timer(0.5, c.cancel).start()
 # 0.5 秒后自动取消批量任务
 convert_many(['钻石', '铁锭', '附魔台'],
              converter_factory=lambda l, cache: c)
+
+# 取消后可检查状态和未展开模板
+print(c.is_cancelled())          # True
+print(c.unresolved_templates)    # frozenset({'HistoryTable', ...})
 ```
 
 ### 跨调用共享缓存（不持久化）
@@ -383,7 +399,7 @@ src/mdifier/
 2. `WikiParser` → 解析 AST，提取模板到 `templates` 字典
 3. `TemplateExpander` → **并发**调用 API 展开每个模板的渲染 HTML
 4. `MarkdownConverter` → 按格式分发到对应渲染器，生成最终 Markdown
-5. 跨运行：`MarkdownConverter.__init__` 从 `cache.py` 加载磁盘缓存
+5. 跨运行：`get_or_load_persistent_cache()` 模块级单例懒加载磁盘缓存；批量结束仅 `save_cache()` 一次
 
 ## 开发
 
