@@ -106,8 +106,17 @@ class MarkdownConverter:
         self._cancelled = False
 
     def cancel(self) -> None:
-        """请求取消批量转换（下次检查点生效）"""
+        """请求取消批量转换（仅 convert_many 有效，单页 convert_wiki 不响应）"""
         self._cancelled = True
+
+    @property
+    def unresolved_templates(self) -> frozenset[str]:
+        """返回本次转换中未展开的模板名集合（只读视图）"""
+        return frozenset(self._unresolved)
+
+    def is_cancelled(self) -> bool:
+        """返回取消标志当前状态"""
+        return self._cancelled
 
     def flush_cache(self) -> None:
         """将当前模板缓存保存到磁盘（供后续运行复用）"""
@@ -390,11 +399,11 @@ class MarkdownConverter:
             + self.template_marker_close.format(name=class_name)
         )
 
-    def _render_template_table(self, info: dict) -> str:
+    def _render_template_table(self, template_data: dict) -> str:
         """渲染模板表格为Markdown"""
-        table = info.get("table", [])
+        table = template_data.get("table", [])
         if not table:
-            return info.get("text", "")
+            return template_data.get("text", "")
 
         lines = []
         for row in table:
@@ -406,36 +415,22 @@ class MarkdownConverter:
             lines.insert(1, "| " + " | ".join(["---"] * col_count) + " |")
 
         # 用模板标记包裹
-        class_name = info.get("class")
+        class_name = template_data.get("class")
         if not class_name:
             return "\n".join(lines)
         return self._wrap_template(class_name, "\n".join(lines))
 
-    def _render_html_generic(self, info: dict) -> str:
+    def _render_html_generic(self, template_data: dict) -> str:
         """使用 markdownify 将 HTML 转为 Markdown"""
-        html = info.get("html", "")
-        text = info.get("text", "")
+        html = template_data.get("html", "")
+        text = template_data.get("text", "")
         if not html and not text:
             return ""
         if not html:
             return text
 
         rendered = md(html, heading_style="atx", bullet_char="-")
-        class_name = info.get("class")
+        class_name = template_data.get("class")
         if not class_name:
             return rendered
         return self._wrap_template(class_name, rendered)
-
-
-def convert(page: WikiPage) -> str:
-    """
-    便捷函数：转换WikiPage为Markdown
-
-    Args:
-        page: WikiPage对象
-
-    Returns:
-        Markdown格式字符串
-    """
-    converter = MarkdownConverter()
-    return converter.convert_wiki(page)

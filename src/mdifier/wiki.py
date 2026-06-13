@@ -300,7 +300,7 @@ def parse_url(url: str) -> tuple[str, str]:
     raise InvalidInputError(f"Unrecognized URL: {url}")
 
 
-def convert(title_or_url: str, lang: str | None = None) -> WikiPage | None:
+def fetch_page(title_or_url: str, lang: str | None = None) -> WikiPage | None:
     """
     便捷函数：获取Wiki页面
 

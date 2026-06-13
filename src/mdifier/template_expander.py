@@ -9,6 +9,7 @@ from collections.abc import Callable
 import requests
 from bs4 import BeautifulSoup
 
+from mdifier.exceptions import InvalidInputError
 from mdifier.formatters import MinecraftColorFormatter
 from mdifier.wiki import LANG_CONFIG, USER_AGENT
 
@@ -30,8 +31,6 @@ class TemplateExpander:
 
     def __init__(self, lang: str = "zh"):
         if lang not in LANG_CONFIG:
-            from mdifier.exceptions import InvalidInputError
-
             raise InvalidInputError(
                 f"Unsupported language: {lang}. Available: {list(LANG_CONFIG.keys())}"
             )
@@ -232,9 +231,9 @@ class TemplateExpander:
             # mcui-inputPattern (Loom 特殊命名)
             mcui_input_pattern = mcui.find(class_="mcui-inputPattern")
             if mcui_input_pattern:
-                pat = self._parse_single_input(mcui_input_pattern)
-                if pat:
-                    inputs.append(pat)
+                pattern = self._parse_single_input(mcui_input_pattern)
+                if pattern:
+                    inputs.append(pattern)
 
         inputs = [s for s in inputs if s]
         if inputs:

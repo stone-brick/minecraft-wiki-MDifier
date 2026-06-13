@@ -36,8 +36,8 @@ class TestCache:
 
         save_cache({"k": {"text": "x"}})
         loaded = load_cache()
-        assert "_ts" in loaded["k"]
-        assert loaded["k"]["_ts"] > 0
+        assert "ts" in loaded["k"]
+        assert loaded["k"]["ts"] > 0
 
     def test_expired_entries_filtered(self, cache_dir):
         """过期条目（> 7 天）被过滤"""

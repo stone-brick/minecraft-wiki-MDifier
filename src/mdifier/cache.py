@@ -9,6 +9,7 @@
 
 import json
 import time
+from datetime import UTC
 from pathlib import Path
 
 from mdifier.exceptions import CacheError
@@ -41,7 +42,7 @@ def load_cache() -> dict:
     """从磁盘加载缓存；过期或不存在则返回空 dict
 
     Returns:
-        {cache_key: {name, class, text, html, format, table, _ts}}
+        {cache_key: {name, class, text, html, format, table, ts}}
     """
     if not CACHE_FILE.exists():
         return {}
@@ -49,7 +50,7 @@ def load_cache() -> dict:
         data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
         now = time.time()
         # 过滤过期项
-        return {k: v for k, v in data.items() if now - v.get("_ts", 0) < CACHE_TTL}
+        return {k: v for k, v in data.items() if now - v.get("ts", 0) < CACHE_TTL}
     except (json.JSONDecodeError, OSError):
         return {}
 
@@ -61,7 +62,7 @@ def save_cache(cache: dict) -> None:
         cache: 模板缓存 dict
     """
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    enriched = {k: {**v, "_ts": time.time()} for k, v in cache.items()}
+    enriched = {k: {**v, "ts": time.time()} for k, v in cache.items()}
     try:
         CACHE_FILE.write_text(json.dumps(enriched, ensure_ascii=False), encoding="utf-8")
     except OSError as e:
@@ -119,16 +120,16 @@ def cache_info() -> dict:
         data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
         info["entries"] = len(data)
         now = time.time()
-        ts_list = [v.get("_ts", 0) for v in data.values() if "_ts" in v]
+        ts_list = [v.get("ts", 0) for v in data.values() if "ts" in v]
         for v in data.values():
-            ts = v.get("_ts", 0)
+            ts = v.get("ts", 0)
             if now - ts < CACHE_TTL:
                 info["fresh_entries"] += 1
             else:
                 info["expired_entries"] += 1
         if ts_list:
-            info["oldest_ts"] = datetime.fromtimestamp(min(ts_list)).isoformat()
-            info["newest_ts"] = datetime.fromtimestamp(max(ts_list)).isoformat()
+            info["oldest_ts"] = datetime.fromtimestamp(min(ts_list), tz=UTC).isoformat()
+            info["newest_ts"] = datetime.fromtimestamp(max(ts_list), tz=UTC).isoformat()
     except (json.JSONDecodeError, OSError):
         pass
     return info

@@ -8,7 +8,9 @@
     mdifier search "关键词"              # 搜索页面
 """
 
+import re
 import sys
+from pathlib import Path
 
 import click
 
@@ -76,8 +78,6 @@ def convert_cmd(
 
         if output:
             try:
-                from pathlib import Path
-
                 # 解析为绝对路径：避免 Git Bash 的 MSYS 路径翻译
                 # 相对路径基于 cwd；绝对路径不变
                 out_path = Path(output).resolve()
@@ -135,12 +135,12 @@ def search_cmd(query: str, lang: str, num: int):
             click.echo("未找到结果")
             return
 
-        for i, r in enumerate(results, 1):
-            title = r.get("title", "")
+        for i, result in enumerate(results, 1):
+            title = result.get("title", "")
             if not title:
                 continue
-            desc = r.get("description", "")
-            url = r.get("url", "")
+            desc = result.get("description", "")
+            url = result.get("url", "")
 
             click.echo(f"{i}. {title}")
             if desc:
@@ -216,10 +216,10 @@ def batch_cmd(
 
         # 去重保留顺序
         seen, deduped = set(), []
-        for t in items:
-            if t not in seen:
-                seen.add(t)
-                deduped.append(t)
+        for title in items:
+            if title not in seen:
+                seen.add(title)
+                deduped.append(title)
 
         progress = _make_progress(len(deduped), enabled=not no_progress)
         # 解析 --marker-format 为 converter_factory
@@ -368,23 +368,24 @@ def _make_progress(total: int, enabled: bool):
     try:
         from tqdm import tqdm
     except ImportError:
-        last = [0]
+        last_emitted = 0
         threshold = max(1, total // 20)
 
-        def cb(done, total, title):
-            if done == total or done - last[0] >= threshold:
+        def progress_callback(done, total, title):
+            nonlocal last_emitted
+            if done == total or done - last_emitted >= threshold:
                 click.echo(f"\r进度: {done}/{total}", nl=False, err=True)
-                last[0] = done
+                last_emitted = done
 
-        return cb
+        return progress_callback
 
     bar = tqdm(total=total, unit="page", dynamic_ncols=True)
 
-    def cb(done, total, title):
+    def progress_callback(done, total, title):
         bar.update(1)
         bar.set_postfix_str(title[:30])
 
-    return cb
+    return progress_callback
 
 
 def _emit_results(result, output_dir: str | None) -> None:
@@ -397,21 +398,19 @@ def _emit_results(result, output_dir: str | None) -> None:
             click.echo(r.markdown)
         return
 
-    from pathlib import Path
-
     # 解析为绝对路径：避免 Git Bash 的 MSYS 路径翻译
-    out = Path(output_dir).resolve()
+    out_dir = Path(output_dir).resolve()
     try:
-        out.mkdir(parents=True, exist_ok=True)
+        out_dir.mkdir(parents=True, exist_ok=True)
     except PermissionError as e:
-        click.secho(f"错误: 无写权限创建目录 ({out}): {e}", fg="red", err=True)
+        click.secho(f"错误: 无写权限创建目录 ({out_dir}): {e}", fg="red", err=True)
         return
     except OSError as e:
-        click.secho(f"错误: 创建目录失败 ({out}): {e}", fg="red", err=True)
+        click.secho(f"错误: 创建目录失败 ({out_dir}): {e}", fg="red", err=True)
         return
     used_names: set[str] = set()
     for r in result.results:
-        path = _unique_path(out, _slug(r.title) + ".md", used_names)
+        path = _unique_path(out_dir, _slug(r.title) + ".md", used_names)
         try:
             path.write_text(r.markdown, encoding="utf-8")
         except (FileNotFoundError, PermissionError, OSError) as e:
@@ -422,26 +421,26 @@ def _emit_results(result, output_dir: str | None) -> None:
 
 def _slug(title: str) -> str:
     """标题转文件名安全字符串"""
-    import re
-
     s = re.sub(r'[\\/:*?"<>|]', "_", title)
     s = re.sub(r"\s+", "_", s.strip())
+    # 移除 emoji、全角空格等特殊 Unicode 字符
+    s = re.sub(r"[\U00003000-\U0001FFFF]", "", s)
     return s or "untitled"
 
 
-def _unique_path(out, name: str, used: set[str]):
+def _unique_path(out_dir, name: str, used: set[str]):
     """生成唯一文件路径（冲突加 -2、-3 后缀）"""
-    p = out / name
+    p = out_dir / name
     if p.name not in used and not p.exists():
         return p
     stem, suffix = p.stem, p.suffix
     for i in range(2, 1000):
-        cand = out / f"{stem}-{i}{suffix}"
+        cand = out_dir / f"{stem}-{i}{suffix}"
         if cand.name not in used and not cand.exists():
             return cand
     import uuid
 
-    return out / f"{stem}-{uuid.uuid4().hex[:6]}{suffix}"
+    return out_dir / f"{stem}-{uuid.uuid4().hex[:6]}{suffix}"
 
 
 if __name__ == "__main__":

@@ -54,6 +54,8 @@ def convert(
     """
     将Minecraft Wiki页面转换为Markdown
 
+    注意：批量转换请用 convert_many（共享模板缓存 + 并发优化）。
+
     Args:
         title_or_url: 页面标题或完整URL
         lang: 语言，'zh'或'en'，None则自动检测
