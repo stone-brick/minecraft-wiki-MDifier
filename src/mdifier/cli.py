@@ -339,7 +339,7 @@ def cache_prune_cmd():
 
     cache = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
     now = time.time()
-    pruned = {k: v for k, v in cache.items() if now - v.get("_ts", 0) < CACHE_TTL}
+    pruned = {k: v for k, v in cache.items() if now - v.get("ts", 0) < CACHE_TTL}
     removed = len(cache) - len(pruned)
     CACHE_FILE.write_text(
         json.dumps(pruned, ensure_ascii=False),
@@ -423,8 +423,8 @@ def _slug(title: str) -> str:
     """标题转文件名安全字符串"""
     s = re.sub(r'[\\/:*?"<>|]', "_", title)
     s = re.sub(r"\s+", "_", s.strip())
-    # 移除 emoji、全角空格等特殊 Unicode 字符
-    s = re.sub(r"[\U00003000-\U0001FFFF]", "", s)
+    # 移除非BMP字符（emoji等在U+10000以上平面，不含CJK汉字）
+    s = "".join(ch for ch in s if ord(ch) <= 0xFFFF)
     return s or "untitled"
 
 
