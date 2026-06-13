@@ -51,8 +51,8 @@ coverage.xml
 *.test
 *.out
 
-# 测试输出目录
-tests/
+# 测试 Python 缓存
+tests/__pycache__/
 
 # Claude Code 本地配置
 .claude/
