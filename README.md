@@ -59,6 +59,20 @@ mkdir -p output && mdifier batch -t 钻石 -t 铁锭 -o output/
 
 保存路径**会显示为绝对路径**（避免你猜测它在哪）。
 
+### CLI 退出码（BSD sysexits）
+
+| 退出码 | 名称 | 含义 |
+|--------|------|------|
+| 0 | 成功 | 全部 OK |
+| 64 (`EX_USAGE`) | 命令行参数错 | lang、--marker-format 格式 |
+| 65 (`EX_DATAERR`) | 数据错 | 页面不存在、批量部分失败 |
+| 70 (`EX_SOFTWARE`) | 内部软件错 | 未预期异常 |
+| 74 (`EX_IOERR`) | 本地 I/O 错 | 写入文件失败、目录创建失败 |
+| 75 (`EX_TEMPFAIL`) | 网络临时失败 | Wiki API 连不上（可重试）|
+| 77 (`EX_NOPERM`) | 权限错 | 无写权限 |
+
+错误消息用 `click.secho(..., fg='red')` 染色（管道/非 tty 自动失效）。
+
 ## 使用方式
 
 ### CLI

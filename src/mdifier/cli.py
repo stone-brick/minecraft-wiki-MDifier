@@ -8,6 +8,7 @@
     mdifier search "关键词"                # 搜索页面
 """
 
+import os
 import sys
 
 import click
@@ -16,6 +17,16 @@ from mdifier import __version__
 from mdifier.exceptions import FetchError, InvalidInputError, PageNotFoundError
 from mdifier.lib import convert, convert_many, search
 from mdifier.wiki import LANG_CONFIG
+
+# BSD sysexits.h 退出码（getattr 兼容 Windows 缺失常量）
+EXIT_OK = 0
+EXIT_USAGE = getattr(os, "EX_USAGE", 64)        # 命令行参数错
+EXIT_DATAERR = getattr(os, "EX_DATAERR", 65)    # 数据错
+EXIT_SOFTWARE = getattr(os, "EX_SOFTWARE", 70)  # 内部软件错
+EXIT_IOERR = getattr(os, "EX_IOERR", 74)        # 本地 I/O 错
+EXIT_TEMPFAIL = getattr(os, "EX_TEMPFAIL", 75)  # 网络临时失败
+EXIT_NOPERM = getattr(os, "EX_NOPERM", 77)      # 权限错
+EXIT_CONFIG = getattr(os, "EX_CONFIG", 78)        # 配置错
 
 LANGUAGES = list(LANG_CONFIG.keys())
 
@@ -81,29 +92,29 @@ def convert_cmd(
                 out_path.write_text(markdown, encoding="utf-8")
                 click.echo(f"已保存到: {out_path}")
             except FileNotFoundError as e:
-                click.echo(f"错误: 路径无效 ({output}): {e}", err=True)
-                sys.exit(1)
+                click.secho(f"错误: 路径无效 ({output}): {e}", fg="red", err=True)
+                sys.exit(EXIT_IOERR)
             except PermissionError as e:
-                click.echo(f"错误: 无写权限 ({output}): {e}", err=True)
-                sys.exit(1)
+                click.secho(f"错误: 无写权限 ({output}): {e}", fg="red", err=True)
+                sys.exit(EXIT_NOPERM)
             except OSError as e:
-                click.echo(f"错误: 写入文件失败 ({output}): {e}", err=True)
-                sys.exit(1)
+                click.secho(f"错误: 写入文件失败 ({output}): {e}", fg="red", err=True)
+                sys.exit(EXIT_IOERR)
         else:
             click.echo(markdown)
 
     except InvalidInputError as e:
-        click.echo(f"错误: {e}", err=True)
-        sys.exit(1)
+        click.secho(f"错误: {e}", fg="red", err=True)
+        sys.exit(EXIT_USAGE)
     except PageNotFoundError as e:
-        click.echo(f"页面未找到: {e}", err=True)
-        sys.exit(1)
+        click.secho(f"页面未找到: {e}", fg="red", err=True)
+        sys.exit(EXIT_DATAERR)
     except FetchError as e:
-        click.echo(f"网络错误: {e}", err=True)
-        sys.exit(2)
+        click.secho(f"网络错误: {e}", fg="red", err=True)
+        sys.exit(EXIT_TEMPFAIL)
     except Exception as e:
-        click.echo(f"未知错误: {type(e).__name__}: {e}", err=True)
-        sys.exit(1)
+        click.secho(f"未知错误: {type(e).__name__}: {e}", fg="red", err=True)
+        sys.exit(EXIT_SOFTWARE)
 
 
 @main.command()
@@ -147,8 +158,8 @@ def search_cmd(query: str, lang: str, num: int):
             click.echo()
 
     except Exception as e:
-        click.echo(f"错误: {e}", err=True)
-        sys.exit(1)
+        click.secho(f"错误: {e}", fg="red", err=True)
+        sys.exit(EXIT_SOFTWARE)
 
 
 @main.command(name="batch")
@@ -193,8 +204,8 @@ def batch_cmd(
                 r["title"] for r in search(from_search, lang=lang)[:search_limit]
             )
         if not items:
-            click.echo("错误: 没有提供任何标题（用 -t / -i / --from-search）", err=True)
-            sys.exit(2)
+            click.secho("错误: 没有提供任何标题（用 -t / -i / --from-search）", fg="red", err=True)
+            sys.exit(EXIT_USAGE)
 
         # 去重保留顺序
         seen, deduped = set(), []
@@ -210,8 +221,8 @@ def batch_cmd(
             try:
                 open_, close_ = marker_format.split("/", 1)
             except ValueError:
-                click.echo("错误: --marker-format 格式为 'open/close'，必须包含 '/'", err=True)
-                sys.exit(2)
+                click.secho("错误: --marker-format 格式为 'open/close'，必须包含 '/'", fg="red", err=True)
+                sys.exit(EXIT_USAGE)
             from mdifier.converter import MarkdownConverter as _MC
 
             def _make_converter(item_lang: str, cache: dict | None):
@@ -229,13 +240,13 @@ def batch_cmd(
 
         # 报告未展开的模板
         if result.unresolved:
-            click.echo(
+            click.secho(
                 f"\n⚠️  警告：{len(result.unresolved)} 个模板未展开（驼峰映射缺失或模板不存在）：",
-                err=True,
+                fg="yellow", err=True,
             )
             for name in result.unresolved:
-                click.echo(f"  - {name}", err=True)
-            click.echo("建议添加到 MarkdownConverter.CAMEL_CASE_TEMPLATES", err=True)
+                click.secho(f"  - {name}", fg="yellow", err=True)
+            click.secho("建议添加到 MarkdownConverter.CAMEL_CASE_TEMPLATES", fg="yellow", err=True)
 
         if result.failed:
             click.echo(
@@ -244,11 +255,11 @@ def batch_cmd(
             )
             for t, err in result.failed:
                 click.echo(f"  - {t}: {err}", err=True)
-            sys.exit(1)
+            sys.exit(EXIT_DATAERR)
         click.echo(f"完成: {len(result.results)} 成功", err=True)
     except Exception as e:
-        click.echo(f"未知错误: {e}", err=True)
-        sys.exit(2)
+        click.secho(f"未知错误: {e}", fg="red", err=True)
+        sys.exit(EXIT_SOFTWARE)
 
 
 @main.group()
@@ -289,7 +300,7 @@ def cache_clear_cmd(yes):
             abort=True,
         )
     if clear_cache():
-        click.echo(f"✓ 已清空缓存：{info['size_mb']} MB、{info['entries']} 条目", err=True)
+        click.secho(f"✓ 已清空缓存：{info['size_mb']} MB、{info['entries']} 条目", fg="green", err=True)
     else:
         click.echo("缓存不存在", err=True)
 
@@ -317,7 +328,7 @@ def cache_prune_cmd():
         json.dumps(pruned, ensure_ascii=False),
         encoding="utf-8",
     )
-    click.echo(f"✓ 清理完成：移除 {removed} 条过期，保留 {len(pruned)} 条", err=True)
+    click.secho(f"✓ 清理完成：移除 {removed} 条过期，保留 {len(pruned)} 条", fg="green", err=True)
 
 
 def _read_titles_file(path: str) -> list[str]:
@@ -375,10 +386,10 @@ def _emit_results(result, output_dir: str | None) -> None:
     try:
         out.mkdir(parents=True, exist_ok=True)
     except PermissionError as e:
-        click.echo(f"错误: 无写权限创建目录 ({out}): {e}", err=True)
+        click.secho(f"错误: 无写权限创建目录 ({out}): {e}", fg="red", err=True)
         return
     except OSError as e:
-        click.echo(f"错误: 创建目录失败 ({out}): {e}", err=True)
+        click.secho(f"错误: 创建目录失败 ({out}): {e}", fg="red", err=True)
         return
     used_names: set[str] = set()
     for r in result.results:
@@ -386,7 +397,7 @@ def _emit_results(result, output_dir: str | None) -> None:
         try:
             path.write_text(r.markdown, encoding="utf-8")
         except (FileNotFoundError, PermissionError, OSError) as e:
-            click.echo(f"警告: 写入失败 ({path}): {e}", err=True)
+            click.secho(f"警告: 写入失败 ({path}): {e}", fg="yellow", err=True)
             continue
         used_names.add(path.name)
 

@@ -230,14 +230,22 @@ class WikiFetcher:
         except NetworkError:
             # 网络错误不重试
             raise
+        except requests.RequestException as e:
+            # 兜底：未预期的 requests 异常 → 包装为 NetworkError
+            raise NetworkError(f"网络请求失败: {e}") from e
         except WikiAPIError:
             # API 异常，降级到 HTML
             pass
 
         # API 失败或返回空，降级到 HTML 抓取
-        page = self.fetch_via_html(title)
-        if page and page.content.strip():
-            return page
+        try:
+            page = self.fetch_via_html(title)
+            if page and page.content.strip():
+                return page
+        except NetworkError:
+            raise
+        except requests.RequestException as e:
+            raise NetworkError(f"网络请求失败: {e}") from e
 
         # HTML 也没拿到内容
         raise PageNotFoundError(f"页面不存在或内容为空: {title}")
