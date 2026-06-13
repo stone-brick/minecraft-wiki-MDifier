@@ -76,8 +76,8 @@ class MarkdownConverter:
     }
 
     # 模板标记格式（可被 CLI 覆盖）
-    template_marker_open: str = "<template:{name} start>"
-    template_marker_close: str = "<template:{name} end>"
+    template_marker_open: str = ":::{name}"
+    template_marker_close: str = ":::"
 
     def __init__(
         self,

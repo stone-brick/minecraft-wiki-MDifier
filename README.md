@@ -121,9 +121,8 @@ mdifier cache prune   # 仅清理过期条目（保留未过期）
 
 # 自定义模板标记（喂给不同 LLM prompt 风格）
 # 格式：open/close，用单个 / 分隔，{name} 是模板类名占位符
-mdifier batch -t 钻石 --marker-format ':::{name}:::/:::'
-mdifier batch -i pages.txt -o ./out --marker-format '<template:{name} start>/<template:{name} end>'
-mdifier batch -t Iron_Ingot --marker-format '<details><summary>{name}</summary>/</details>'
+mdifier batch -t 钻石 --marker-format '<details><summary>{name}</summary>/</details>'
+mdifier batch -t Iron_Ingot --marker-format '<template:{name} start>/<template:{name} end>'
 ```
 
 没装 pip 或找不到 `mdifier` 命令时，直接用 `python -m` 运行模块：
@@ -298,7 +297,7 @@ except InvalidInputError as e:
 
 ### 自定义模板标记
 
-可改为 `:::info`、HTML `details` 等风格。`open` 和 `close` 各自可独立配置：
+可改为 HTML `details` 等风格。`open` 和 `close` 各自可独立配置：
 
 ```python
 from mdifier.converter import MarkdownConverter
@@ -320,7 +319,7 @@ c.template_marker_close = "</details>"
 CLI 端用 `--marker-format`（格式：`open/close`，用单个 `/` 分隔，`{name}` 是模板类名占位符）：
 
 ```bash
-mdifier batch -t 钻石 --marker-format ':::{name}:::/:::'
+mdifier batch -t 钻石 --marker-format '<details><summary>{name}</summary>/</details>'
 mdifier batch -i pages.txt --marker-format '<template:{name} start>/<template:{name} end>'
 ```
 

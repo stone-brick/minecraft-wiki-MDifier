@@ -88,7 +88,7 @@ class TestMarkdownConverter:
         }
         text = "before {TEMPLATE:hatnote} after"
         result = self.c._replace_template_placeholders(text, expanded)
-        assert "<template:hatnote start>" in result
+        assert ":::hatnote" in result
         assert "x" in result
         assert "before" in result
         assert "after" in result
