@@ -19,12 +19,6 @@ from mdifier.wiki import LANG_CONFIG, USER_AGENT
 # 注册表形式，按优先级顺序匹配；首个返回非 None 的获胜
 FormatDetector = Callable[[object], str | None]
 FORMAT_DETECTORS: list[FormatDetector] = [
-    # 0. en wiki infobox：div 有 infobox class，内部有 infobox-rows table
-    lambda e: (
-        "infobox_table"
-        if e.name == "div" and "infobox" in (e.get("class") or []) and e.find(class_="infobox-rows")
-        else None
-    ),
     # 1. zh wiki infobox 表格
     lambda e: "infobox_table" if e.find(class_="infobox-row") else None,
     # 2. mcui（elem 本身有 mcui class，或内部有 mcui 元素）
@@ -113,7 +107,7 @@ class TemplateExpander:
         # 在容器内找第一个真正的模板元素（不是 mw-parser-output）
         elem = container.find(class_=lambda c: c and "mw-parser-output" not in c)
 
-        # 提取 history-json pre 数据（在移除前，en wiki 元数据块）
+        # 提取 history-json pre 数据（en wiki 元数据块）
         infobox_json = None
         for pre in soup.find_all("pre", class_=lambda c: c and "history-json" in c):
             try:
@@ -122,7 +116,6 @@ class TemplateExpander:
                 infobox_json = json.loads(pre.get_text(strip=True))
             except Exception:
                 pass
-            pre.decompose()
 
         # 从 template_call 提取语义名称
         template_name = None
@@ -146,8 +139,8 @@ class TemplateExpander:
         classes = elem.get("class", [])
         main_class = classes[0] if classes else None
 
-        # 检测格式
-        fmt = self._detect_format(elem)
+        # 检测格式（infobox_json 已提取，pre 尚未移除）
+        fmt = self._detect_format(elem, infobox_json)
 
         result = {
             "html": str(elem),
@@ -162,18 +155,27 @@ class TemplateExpander:
         if fmt in ("infobox_table", "table", "mcui"):
             result["table"] = self._parse_table(elem, fmt, infobox_json)
 
+        # infobox_table 已提取 history-json 数据，移除 pre 避免 markdownify 生成代码块
+        if fmt == "infobox_table":
+            for pre in soup.find_all("pre", class_=lambda c: c and "history-json" in c):
+                pre.decompose()
+
         return result
 
-    def _detect_format(self, elem) -> str:
+    def _detect_format(self, elem, infobox_json: dict | None = None) -> str:
         """
         检测HTML格式类型
 
         Args:
             elem: BeautifulSoup元素
+            infobox_json: history-json 数据（如果存在）
 
         Returns:
             格式类型: "text", "infobox_table", "table", "mcui"
         """
+        # 第 0 条：同时有 infobox-rows table 和 history-json pre → history-json 模式
+        if infobox_json is not None and elem.find(class_="infobox-rows"):
+            return "infobox_table"
         for detector in FORMAT_DETECTORS:
             fmt = detector(elem)
             if fmt:
