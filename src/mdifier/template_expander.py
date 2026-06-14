@@ -30,13 +30,15 @@ FORMAT_DETECTORS: list[FormatDetector] = [
 
 # Bucket API 模板注册表：模板名（小写）→ Bucket 查询配置
 # 仅 en wiki 支持 action=bucket
+# header/columns 为 None 时从第一条返回数据动态生成
+# where 格式：[("bucket_field", "param_name")]
+#   param_name: "item"=物品名参数, "1"=位置参数, "_page_title"=页面标题
+# 注意：ID table / Biome ID table 不走 bucket API（action=parse 就有数据）
 BUCKET_TEMPLATES: dict[str, dict] = {
     "trade uses": {
         "bucket_fn": "trade",
-        "where": [("wanted_item", "{item}")],
-        # 表头（对应 columns）
+        "where": [("wanted_item", "item")],
         "header": ["Villager", "Level", "Villager wants", "Player receives", "JE", "BE"],
-        # 输出列顺序
         "columns": [
             "profession",
             "level",
@@ -45,6 +47,31 @@ BUCKET_TEMPLATES: dict[str, dict] = {
             "java_probability",
             "bedrock_probability",
         ],
+    },
+    "trade sources": {
+        "bucket_fn": "trade",
+        "where": [("wanted_item", "item")],
+        "header": ["Villager", "Level", "Villager wants", "Player receives", "JE", "BE"],
+        "columns": [
+            "profession",
+            "level",
+            "wanted_item",
+            "given_item",
+            "java_probability",
+            "bedrock_probability",
+        ],
+    },
+    "crafting usage": {
+        "bucket_fn": "crafting_recipe",
+        "where": [("ingredient", "item")],
+        "header": None,
+        "columns": None,
+    },
+    "mob spawn table": {
+        "bucket_fn": "spawn_table",
+        "where": [("mob", "item")],
+        "header": None,
+        "columns": None,
     },
 }
 
@@ -154,8 +181,17 @@ class TemplateExpander:
         if not info:
             return None
 
-        # 提取物品名：优先 item=，其次 1=，最后用 page_title
-        item = params.get("item") or params.get("1") or page_title or None
+        # where 配置格式：[("field", "param_name")]
+        # param_name 可以是 "item", "1", "nameid" 等
+        # 特殊值 "_page_title" 表示使用 page_title
+        for _, param_name in info["where"]:
+            if param_name == "_page_title":
+                item = page_title
+            else:
+                item = params.get(param_name) or params.get("1") or page_title
+            if item:
+                break
+
         if not item:
             return None
 
@@ -214,8 +250,29 @@ class TemplateExpander:
         import json
 
         info = BUCKET_TEMPLATES.get(template_name.lower(), {})
-        columns = info.get("columns", [])
-        header = info.get("header", [])
+        columns = info.get("columns")
+        header = info.get("header")
+
+        # 如果 columns/header 为 None，从第一条数据动态生成
+        if columns is None or header is None:
+            first_data = None
+            for entry in bucket_data:
+                try:
+                    first_data = json.loads(entry.get("json", "{}"))
+                    break
+                except json.JSONDecodeError:
+                    continue
+
+            if first_data:
+                if columns is None:
+                    # 使用第一层 keys 作为 columns
+                    columns = list(first_data.keys())
+                if header is None:
+                    # 将 keys 转换为友好表头：profession → Profession
+                    header = [self._format_header_key(k) for k in columns]
+            else:
+                columns = []
+                header = []
 
         rows = []
         # 添加表头行
@@ -232,7 +289,6 @@ class TemplateExpander:
             row = []
             for col in columns:
                 if col == "wanted_item":
-                    # 格式：数量 × 物品名
                     quant = data.get("wanted_quant", "1")
                     item = data.get("wanted_item", "?")
                     if quant and quant != "1":
@@ -240,7 +296,6 @@ class TemplateExpander:
                     else:
                         row.append(item)
                 elif col == "given_item":
-                    # 格式：数量 × 物品名
                     quant = data.get("given_quant", "1")
                     item = data.get("given_item", "?")
                     if quant and quant != "1":
@@ -250,10 +305,16 @@ class TemplateExpander:
                 else:
                     row.append(data.get(col, ""))
 
-            if any(row):  # 跳过空行
+            if any(row):
                 rows.append(row)
 
         return rows
+
+    def _format_header_key(self, key: str) -> str:
+        """将字段名转换为友好的表头：profession → Profession"""
+        # 简单首字母大写转换，下划线/驼峰拆词
+        result = key.replace("_", " ").replace("-", " ")
+        return result.title()
 
     def _expand_via_parse(self, template_call: str) -> dict:
         """
