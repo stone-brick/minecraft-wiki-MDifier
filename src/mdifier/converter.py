@@ -171,17 +171,20 @@ class MarkdownConverter:
         templates = self.parser.get_templates()
 
         # 阶段3: 展开模板
-        expanded_templates = self._expand_all_templates(templates)
+        expanded_templates = self._expand_all_templates(templates, title)
 
         # 阶段4: 生成Markdown
         return self._generate_markdown(nodes, expanded_templates, title)
 
-    def _expand_all_templates(self, templates: dict[str, TemplateInfo]) -> dict[str, dict]:
+    def _expand_all_templates(
+        self, templates: dict[str, TemplateInfo], page_title: str | None = None
+    ) -> dict[str, dict]:
         """
         并发展开所有模板（10x 加速）
 
         Args:
             templates: 模板字典
+            page_title: 页面标题（用于 bucket 查询默认值）
 
         Returns:
             展开后的模板字典
@@ -191,7 +194,7 @@ class MarkdownConverter:
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             # 提交所有任务
             future_to_name = {
-                executor.submit(self._expand_template, key, info.params): key
+                executor.submit(self._expand_template, key, info.params, page_title): key
                 for key, info in templates.items()
             }
 
@@ -206,13 +209,16 @@ class MarkdownConverter:
 
         return expanded
 
-    def _expand_template(self, name: str, params: dict[str, str]) -> dict:
+    def _expand_template(
+        self, name: str, params: dict[str, str], page_title: str | None = None
+    ) -> dict:
         """
         展开单个模板（带跨页缓存）
 
         Args:
             name: 模板名称
             params: 模板参数
+            page_title: 页面标题（用于 bucket 查询默认值）
 
         Returns:
             展开结果 dict
@@ -237,7 +243,7 @@ class MarkdownConverter:
         # 缓存未命中 → 实际调用
         template_call = "{{" + cache_key + "}}"
         try:
-            expanded = self.expander.expand(template_call)
+            expanded = self.expander.expand(template_call, page_title)
             result = {
                 "name": name,
                 "class": expanded["class"],

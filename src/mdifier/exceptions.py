@@ -48,5 +48,11 @@ class PageNotFoundError(FetchError):
         super().__init__(message)
 
 
+class BucketAPIError(MdifierError):
+    """Bucket API 调用失败"""
+
+    pass
+
+
 class CacheError(MdifierError, OSError):
     """缓存文件读写失败"""

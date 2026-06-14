@@ -27,16 +27,18 @@ from mdifier.exceptions import (
 USER_AGENT = f"Minecraft-Wiki-MDifier/{__version__} (Python Wiki Converter)"
 
 # 语言配置：集中管理 URL 和解析模式
-LANG_CONFIG: dict[str, dict[str, str]] = {
+LANG_CONFIG: dict[str, dict[str, str | bool]] = {
     "zh": {
         "api": "https://zh.minecraft.wiki/api.php",
         "base": "https://zh.minecraft.wiki",
         "static_base": "https://zh.minecraft.wiki",
+        "has_bucket_api": False,  # zh wiki 暂不支持 action=bucket
     },
     "en": {
         "api": "https://minecraft.wiki/api.php",
         "base": "https://minecraft.wiki",
         "static_base": "https://minecraft.wiki",
+        "has_bucket_api": True,
     },
 }
 

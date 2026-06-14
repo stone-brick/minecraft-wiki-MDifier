@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from mdifier.exceptions import InvalidInputError
+from mdifier.exceptions import BucketAPIError, InvalidInputError
 from mdifier.formatters import MinecraftColorFormatter
 from mdifier.wiki import LANG_CONFIG, USER_AGENT
 
@@ -27,6 +27,26 @@ FORMAT_DETECTORS: list[FormatDetector] = [
     # 3. 一般表格（elem 是 table 且内部无 mcui）
     lambda e: "table" if e.name == "table" and not e.find(class_="mcui") else None,
 ]
+
+# Bucket API 模板注册表：模板名（小写）→ Bucket 查询配置
+# 仅 en wiki 支持 action=bucket
+BUCKET_TEMPLATES: dict[str, dict] = {
+    "trade uses": {
+        "bucket_fn": "trade",
+        "where": [("wanted_item", "{item}")],
+        # 表头（对应 columns）
+        "header": ["Villager", "Level", "Villager wants", "Player receives", "JE", "BE"],
+        # 输出列顺序
+        "columns": [
+            "profession",
+            "level",
+            "wanted_item",
+            "given_item",
+            "java_probability",
+            "bedrock_probability",
+        ],
+    },
+}
 
 
 class TemplateExpander:
@@ -51,12 +71,13 @@ class TemplateExpander:
         self.session.mount("http://", HTTPAdapter(max_retries=retry))
         self.formatter = MinecraftColorFormatter()
 
-    def expand(self, template_call: str) -> dict:
+    def expand(self, template_call: str, page_title: str | None = None) -> dict:
         """
         展开模板调用
 
         Args:
             template_call: 模板调用字符串，如 "{{Hatnote|text}}"
+            page_title: 页面标题（用于 bucket 查询的默认值）
 
         Returns:
             dict: {
@@ -66,6 +87,183 @@ class TemplateExpander:
                 "format": 格式类型 ("text", "infobox_table", "table"),
                 "table": 表格数据（如果有的话）
             }
+        """
+        # 解析模板名和参数
+        template_name, params = self._parse_template_call(template_call)
+
+        # 尝试 Bucket API（仅 en wiki 且命中注册表）
+        if self.lang == "en" and self._needs_bucket_api(template_name):
+            bucket_query = self._build_bucket_query(template_name, params, page_title)
+            if bucket_query:
+                try:
+                    return self._expand_via_bucket(bucket_query, template_name)
+                except BucketAPIError:
+                    pass  # 降级到 action=parse
+
+        # 降级到 action=parse
+        return self._expand_via_parse(template_call)
+
+    def _parse_template_call(self, template_call: str) -> tuple[str, dict[str, str]]:
+        """
+        从模板调用字符串解析模板名和参数
+
+        Args:
+            template_call: 如 "{{Hatnote|text}}" 或 "{{Trade uses|Iron Ingot}}"
+
+        Returns:
+            (模板名, 参数字典)
+        """
+        # 去掉 {{ 和 }}
+        inner = template_call.strip().lstrip("{").rstrip("}").rstrip("{").rstrip("}")
+        parts = inner.split("|")
+        name = parts[0].strip()
+        # 移除命名空间前缀
+        if ":" in name:
+            name = name.split(":", 1)[1]
+
+        params = {}
+        for i, part in enumerate(parts[1:], start=1):
+            part = part.strip()
+            if "=" in part:
+                key, value = part.split("=", 1)
+                params[key.strip()] = value.strip()
+            else:
+                params[str(i)] = part
+
+        return name, params
+
+    def _needs_bucket_api(self, template_name: str) -> bool:
+        """判断模板是否需要走 bucket API"""
+        return template_name.lower() in BUCKET_TEMPLATES
+
+    def _build_bucket_query(
+        self, template_name: str, params: dict[str, str], page_title: str | None = None
+    ) -> str | None:
+        """
+        从模板参数构建 bucket 查询语句
+
+        Args:
+            template_name: 模板名（如 "Trade uses"）
+            params: 模板参数
+            page_title: 页面标题（作为默认值）
+
+        Returns:
+            bucket 查询语句，或 None（缺少必需参数时）
+        """
+        info = BUCKET_TEMPLATES.get(template_name.lower())
+        if not info:
+            return None
+
+        # 提取物品名：优先 item=，其次 1=，最后用 page_title
+        item = params.get("item") or params.get("1") or page_title or None
+        if not item:
+            return None
+
+        where_clauses = []
+        for field, _ in info["where"]:
+            where_clauses.append(f'"{field}", "{item}"')
+        where_str = ",".join(where_clauses)
+        # Lua where 语法：{{field, value}} 表示数组的数组
+        # f-string 中 { 需要转义为 {{，所以 {{ { }} }} 写作 {{{{ { }} }}}
+        return f'bucket("{info["bucket_fn"]}").select("json").where({{{{{where_str}}}}}).run()'
+
+    def _expand_via_bucket(self, query: str, template_name: str) -> dict:
+        """
+        调用 bucket API 并转换结果
+
+        Args:
+            query: bucket 查询语句
+            template_name: 模板名（用于获取字段映射）
+
+        Returns:
+            标准展开结果 dict
+        """
+        params = {
+            "action": "bucket",
+            "query": query,
+            "format": "json",
+        }
+        resp = self.session.get(self.api_url, params=params)
+        data = resp.json()
+
+        bucket_data = data.get("bucket", [])
+        table = self._convert_bucket_json_to_table(bucket_data, template_name)
+
+        return {
+            "html": "",
+            "class": template_name.lower().replace(" ", "_"),
+            "text": "",
+            "format": "table",
+            "table": table,
+            "template_name": template_name,
+        }
+
+    def _convert_bucket_json_to_table(
+        self, bucket_data: list[dict], template_name: str
+    ) -> list[list[str]]:
+        """
+        将 bucket API 返回的嵌套 JSON 转换为 table 格式
+
+        Args:
+            bucket_data: API 返回的 [{"json": "{...}"}, ...]
+            template_name: 模板名（用于获取字段映射）
+
+        Returns:
+            table 二维数组（含表头行）
+        """
+        import json
+
+        info = BUCKET_TEMPLATES.get(template_name.lower(), {})
+        columns = info.get("columns", [])
+        header = info.get("header", [])
+
+        rows = []
+        # 添加表头行
+        if header:
+            rows.append(header)
+
+        for entry in bucket_data:
+            json_str = entry.get("json", "{}")
+            try:
+                data = json.loads(json_str)
+            except json.JSONDecodeError:
+                continue
+
+            row = []
+            for col in columns:
+                if col == "wanted_item":
+                    # 格式：数量 × 物品名
+                    quant = data.get("wanted_quant", "1")
+                    item = data.get("wanted_item", "?")
+                    if quant and quant != "1":
+                        row.append(f"{quant}× {item}")
+                    else:
+                        row.append(item)
+                elif col == "given_item":
+                    # 格式：数量 × 物品名
+                    quant = data.get("given_quant", "1")
+                    item = data.get("given_item", "?")
+                    if quant and quant != "1":
+                        row.append(f"{quant}× {item}")
+                    else:
+                        row.append(item)
+                else:
+                    row.append(data.get(col, ""))
+
+            if any(row):  # 跳过空行
+                rows.append(row)
+
+        return rows
+
+    def _expand_via_parse(self, template_call: str) -> dict:
+        """
+        通过 action=parse API 展开模板
+
+        Args:
+            template_call: 模板调用字符串
+
+        Returns:
+            标准展开结果 dict
         """
         params = {
             "action": "parse",
