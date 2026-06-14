@@ -7,7 +7,7 @@ Convert Minecraft Wiki pages to AI-friendly Markdown
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.13+-green.svg)](https://python.org)
 
-**[中文](./README.md)**
+**[中文](./README.md)** · **[日本語](./README-ja.md)**
 
 </div>
 

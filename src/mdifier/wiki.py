@@ -40,12 +40,19 @@ LANG_CONFIG: dict[str, dict[str, str | bool]] = {
         "static_base": "https://minecraft.wiki",
         "has_bucket_api": True,
     },
+    "ja": {
+        "api": "https://ja.minecraft.wiki/api.php",
+        "base": "https://ja.minecraft.wiki",
+        "static_base": "https://ja.minecraft.wiki",
+        "has_bucket_api": True,
+    },
 }
 
 # URL 解析模式：(正则, 匹配的语言)
 # 注意：MediaWiki 默认 URL 是 /wiki/{title}，但用户可能省略 /wiki/
 URL_PATTERNS: list[tuple[str, str]] = [
     (r"https?://zh\.minecraft\.wiki/(?:wiki/)?(?P<title>.+)", "zh"),
+    (r"https?://ja\.minecraft\.wiki/(?:wiki/)?(?P<title>.+)", "ja"),
     (r"https?://minecraft\.wiki/(?:wiki/)?(?P<title>.+)", "en"),
     (r"https?://en\.minecraft\.wiki/(?:wiki/)?(?P<title>.+)", "en"),
 ]
