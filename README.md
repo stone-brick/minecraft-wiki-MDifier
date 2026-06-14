@@ -1,6 +1,13 @@
-# Minecraft Wiki MDifier
+<div align="center">
 
-将 Minecraft Wiki 页面转换为 AI 助手易读的 Markdown 格式。
+# ⚡ Minecraft Wiki MDifier
+
+将 Minecraft Wiki 页面转换为 AI 助手易读的 Markdown 格式
+
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.13+-green.svg)](https://python.org)
+
+</div>
 
 ## 安装
 
