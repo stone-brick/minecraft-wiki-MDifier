@@ -31,10 +31,12 @@ LANG_CONFIG: dict[str, dict[str, str]] = {
     "zh": {
         "api": "https://zh.minecraft.wiki/api.php",
         "base": "https://zh.minecraft.wiki",
+        "static_base": "https://zh.minecraft.wiki",
     },
     "en": {
         "api": "https://minecraft.wiki/api.php",
         "base": "https://minecraft.wiki",
+        "static_base": "https://minecraft.wiki",
     },
 }
 

@@ -77,7 +77,9 @@ def convert(
     """
     page, lang = _resolve_and_fetch(title_or_url, lang)
     converter = MarkdownConverter(lang=lang, template_cache=template_cache)
-    return converter.convert_wiki(page)
+    result = converter.convert_wiki(page)
+    converter.flush_cache()
+    return result
 
 
 def convert_detailed(title_or_url: str, lang: str | None = None) -> ConvertResult:
@@ -176,11 +178,8 @@ def convert_many(
     for it in items:
         if it.startswith("http"):
             parsed_lang, title = parse_url(it)
-            # 用户显式指定 lang 时优先
-            if parsed_lang and parsed_lang != lang:
-                parsed.append((lang, title))
-            else:
-                parsed.append((parsed_lang, title))
+            # 始终使用 URL 中解析出的语言（URL 语言优先于 --lang 参数）
+            parsed.append((parsed_lang, title))
         else:
             parsed.append((lang, it))
 

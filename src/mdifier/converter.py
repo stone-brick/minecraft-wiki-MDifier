@@ -12,7 +12,7 @@ from markdownify import markdownify as md
 
 from mdifier.parser import Node, NodeType, TemplateInfo, WikiParser
 from mdifier.template_expander import TemplateExpander
-from mdifier.wiki import WikiPage
+from mdifier.wiki import LANG_CONFIG, WikiPage
 
 # 匹配 <span class="sprite-file">...</span>，其中包含 EnvSprite img
 # alt 格式："EnvSprite xxx.png：Minecraft中xxx的精灵图"，对 AI 无意义
@@ -95,6 +95,7 @@ class MarkdownConverter:
     ):
         self.parser = WikiParser()
         self.expander = TemplateExpander(lang=lang)
+        self.lang = lang
         self.max_workers = max_workers
         self._use_persistent_cache = use_persistent_cache
         # 跨页共享的模板缓存（外部注入实现多批次共享）
@@ -219,6 +220,7 @@ class MarkdownConverter:
             else:
                 parts.append(f"{_escape_cache_value(key)}={_escape_cache_value(value)}")
         cache_key = "|".join(parts)
+        cache_key = f"{self.lang}:{cache_key}"
 
         # 缓存命中
         with self._cache_lock:
@@ -442,6 +444,12 @@ class MarkdownConverter:
         html = _SPRITE_FILE_PATTERN.sub("", html)
 
         rendered = md(html, heading_style="atx", bullet_char="-")
+
+        # 替换相对路径为完整 URL
+        static_base = LANG_CONFIG[self.lang]["static_base"]
+        rendered = rendered.replace("/images/", f"{static_base}/images/")
+        rendered = rendered.replace("/w/", f"{static_base}/w/")
+
         name = template_data.get("template_name") or template_data.get("class")
         if not name:
             return rendered
