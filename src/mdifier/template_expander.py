@@ -388,7 +388,14 @@ class TemplateExpander:
 
     def _format_item(self, item) -> str:
         """格式化单个物品（含数量）"""
-        title = self.formatter.clean(item.get("title", "?"))
+        # 优先用 invslot-item 直接的 title 属性（zh wiki 风格）
+        # 降级：在嵌套的 <a title="..."> 中查找（en wiki 风格）
+        title = item.get("title")
+        if not title:
+            link = item.find("a", title=True)
+            title = link.get("title") if link else None
+        title = self.formatter.clean(title) if title else "?"
+
         # 查找所在 invslot 的 stacksize
         parent = item.find_parent(class_="invslot")
         if parent:
@@ -409,7 +416,11 @@ class TemplateExpander:
             elif "invslot" in cls:
                 item = child.find(class_="invslot-item")
                 if item:
-                    title = self.formatter.clean(item.get("title", "?"))
+                    title = item.get("title")
+                    if not title:
+                        link = item.find("a", title=True)
+                        title = link.get("title") if link else None
+                    title = self.formatter.clean(title) if title else "?"
                     ss = child.find(class_="invslot-stacksize")
                     count = f"x{ss.get_text()}" if ss else ""
                     return f"{title}{count}"
