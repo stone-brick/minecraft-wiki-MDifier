@@ -197,25 +197,26 @@ class WikiParser:
         """
         result = []
         i = 0
-        depth = 0
+        stack: list[int] = []  # 栈：记录每次 {{ 出现时的位置
         template_start = -1
 
         while i < len(text):
             if i + 1 < len(text) and text[i : i + 2] == "{{":
-                if depth == 0:
+                if not stack:
                     template_start = i
-                depth += 2
+                stack.append(i)
                 i += 2
             elif i + 1 < len(text) and text[i : i + 2] == "}}":
-                depth -= 2
-                if depth == 0 and template_start >= 0:
-                    template_str = text[template_start + 2 : i]
-                    key = self._parse_template(template_str)
-                    result.append(f"{{TEMPLATE:{key}}}")
-                    template_start = -1
+                if stack:
+                    stack.pop()
+                    if not stack and template_start >= 0:
+                        template_str = text[template_start + 2 : i]
+                        key = self._parse_template(template_str)
+                        result.append(f"{{TEMPLATE:{key}}}")
+                        template_start = -1
                 i += 2
             else:
-                if depth == 0:
+                if not stack:
                     result.append(text[i])
                 i += 1
 
