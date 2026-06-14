@@ -118,9 +118,11 @@ class TemplateExpander:
         # 解析模板名和参数
         template_name, params = self._parse_template_call(template_call)
 
-        # 尝试 Bucket API（仅 en wiki 且命中注册表）
-        if self.lang == "en" and self._needs_bucket_api(template_name):
-            bucket_query = self._build_bucket_query(template_name, params, page_title)
+        # 尝试 Bucket API（仅支持 bucket 的 wiki 且命中注册表）
+        if self._needs_bucket_api(template_name):
+            # 获取英文名用于 bucket 查询（zh wiki 需要翻译页面名）
+            english_title = self._get_english_title(page_title) if self.lang == "zh" else page_title
+            bucket_query = self._build_bucket_query(template_name, params, english_title)
             if bucket_query:
                 try:
                     return self._expand_via_bucket(bucket_query, template_name)
@@ -290,20 +292,23 @@ class TemplateExpander:
             for col in columns:
                 if col == "wanted_item":
                     quant = data.get("wanted_quant", "1")
-                    item = data.get("wanted_item", "?")
+                    item = self._translate_field(data, "wanted_item")
                     if quant and quant != "1":
                         row.append(f"{quant}× {item}")
                     else:
                         row.append(item)
                 elif col == "given_item":
                     quant = data.get("given_quant", "1")
-                    item = data.get("given_item", "?")
+                    item = self._translate_field(data, "given_item")
                     if quant and quant != "1":
                         row.append(f"{quant}× {item}")
                     else:
                         row.append(item)
                 else:
-                    row.append(data.get(col, ""))
+                    val = (
+                        self._translate_field(data, col) if self.lang == "zh" else data.get(col, "")
+                    )
+                    row.append(val if val else "")
 
             if any(row):
                 rows.append(row)
@@ -315,6 +320,56 @@ class TemplateExpander:
         # 简单首字母大写转换，下划线/驼峰拆词
         result = key.replace("_", " ").replace("-", " ")
         return result.title()
+
+    def _translate_field(self, data: dict, key: str) -> str:
+        """
+        翻译字段，优先使用 i18n 版本（zh wiki）
+
+        Args:
+            data: bucket JSON 数据
+            key: 字段名（如 "profession", "level"）
+
+        Returns:
+            翻译后的值
+        """
+        # i18n key 格式：profession_i18n, level_i18n
+        i18n_key = f"{key}_i18n"
+        if i18n_key in data and data[i18n_key]:
+            return data[i18n_key]
+        return data.get(key, "")
+
+    def _get_english_title(self, title: str | None) -> str | None:
+        """
+        通过 langlinks API 获取页面的英文名（用于 zh wiki bucket 查询）
+
+        Args:
+            title: 页面标题
+
+        Returns:
+            英文标题，或 None（如果获取失败）
+        """
+        if not title:
+            return None
+
+        params = {
+            "action": "query",
+            "titles": title,
+            "prop": "langlinks",
+            "lllang": "en",
+            "format": "json",
+        }
+        try:
+            resp = self.session.get(self.api_url, params=params)
+            data = resp.json()
+            pages = data.get("query", {}).get("pages", {})
+            for page in pages.values():
+                langlinks = page.get("langlinks", [])
+                for link in langlinks:
+                    if link.get("lang") == "en":
+                        return link.get("*")
+        except Exception:
+            pass
+        return None
 
     def _expand_via_parse(self, template_call: str) -> dict:
         """

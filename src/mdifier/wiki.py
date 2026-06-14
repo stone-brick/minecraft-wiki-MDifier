@@ -32,7 +32,7 @@ LANG_CONFIG: dict[str, dict[str, str | bool]] = {
         "api": "https://zh.minecraft.wiki/api.php",
         "base": "https://zh.minecraft.wiki",
         "static_base": "https://zh.minecraft.wiki",
-        "has_bucket_api": False,  # zh wiki 暂不支持 action=bucket
+        "has_bucket_api": True,  # zh wiki 也支持 action=bucket
     },
     "en": {
         "api": "https://minecraft.wiki/api.php",
