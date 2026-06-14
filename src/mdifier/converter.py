@@ -21,6 +21,12 @@ _SPRITE_FILE_PATTERN = re.compile(
     re.DOTALL,
 )
 
+# 匹配 <pre class="history-json ..."> 块，内含 MediaWiki 嵌入的 JSON 数据，对 AI 无意义
+_HISTORY_JSON_PATTERN = re.compile(
+    r'<pre class="history-json[^"]*"[^>]*>.*?</pre>',
+    re.DOTALL,
+)
+
 
 def _escape_cache_value(v: str) -> str:
     """转义缓存键中的分隔符，防止 cache_key 碰撞（"a|b" vs "a"/"b"）。"""

@@ -19,7 +19,13 @@ from mdifier.wiki import LANG_CONFIG, USER_AGENT
 # 注册表形式，按优先级顺序匹配；首个返回非 None 的获胜
 FormatDetector = Callable[[object], str | None]
 FORMAT_DETECTORS: list[FormatDetector] = [
-    # 1. infobox 表格
+    # 0. en wiki infobox：div 有 infobox class，内部有 infobox-rows table
+    lambda e: (
+        "infobox_table"
+        if e.name == "div" and "infobox" in (e.get("class") or []) and e.find(class_="infobox-rows")
+        else None
+    ),
+    # 1. zh wiki infobox 表格
     lambda e: "infobox_table" if e.find(class_="infobox-row") else None,
     # 2. mcui（elem 本身有 mcui class，或内部有 mcui 元素）
     #    优先于一般表格检测，确保含 mcui 单元格的 wikitable 走 mcui 分支
@@ -107,6 +113,17 @@ class TemplateExpander:
         # 在容器内找第一个真正的模板元素（不是 mw-parser-output）
         elem = container.find(class_=lambda c: c and "mw-parser-output" not in c)
 
+        # 提取 history-json pre 数据（在移除前，en wiki 元数据块）
+        infobox_json = None
+        for pre in soup.find_all("pre", class_=lambda c: c and "history-json" in c):
+            try:
+                import json
+
+                infobox_json = json.loads(pre.get_text(strip=True))
+            except Exception:
+                pass
+            pre.decompose()
+
         # 从 template_call 提取语义名称
         template_name = None
         if template_call:
@@ -143,7 +160,7 @@ class TemplateExpander:
 
         # 解析表格
         if fmt in ("infobox_table", "table", "mcui"):
-            result["table"] = self._parse_table(elem, fmt)
+            result["table"] = self._parse_table(elem, fmt, infobox_json)
 
         return result
 
@@ -163,13 +180,14 @@ class TemplateExpander:
                 return fmt
         return "text"
 
-    def _parse_table(self, elem, fmt: str) -> list[list[str]]:
+    def _parse_table(self, elem, fmt: str, infobox_json: dict | None = None) -> list[list[str]]:
         """
         解析HTML表格
 
         Args:
             elem: BeautifulSoup元素
             fmt: 格式类型
+            infobox_json: en wiki history-json 数据（可选）
 
         Returns:
             表格数据，每行是字符串列表
@@ -177,13 +195,42 @@ class TemplateExpander:
         rows = []
 
         if fmt == "infobox_table":
-            # Infobox 表格：每行包含 label 和 field
-            for row in elem.find_all(class_="infobox-row"):
-                label = row.find(class_="infobox-row-label")
-                field = row.find(class_="infobox-row-field")
-                label_text = label.get_text(strip=True) if label else ""
-                field_text = field.get_text(strip=True) if field else ""
-                rows.append([label_text, field_text])
+            # zh wiki：infobox-row div 结构
+            infobox_rows = elem.find_all(class_="infobox-row")
+            if infobox_rows:
+                for row in infobox_rows:
+                    label = row.find(class_="infobox-row-label")
+                    field = row.find(class_="infobox-row-field")
+                    label_text = label.get_text(strip=True) if label else ""
+                    field_text = field.get_text(strip=True) if field else ""
+                    rows.append([label_text, field_text])
+            else:
+                # en wiki：infobox-rows table + history-json pre 结构
+                if infobox_json:
+                    # 从 JSON 提取数据（field 是 HTML，需转换）
+                    from bs4 import BeautifulSoup as BS
+
+                    for entry in infobox_json.get("rows", []):
+                        field_html = entry.get("field", "")
+                        if field_html:
+                            field_text = BS(field_html, "html.parser").get_text(
+                                separator=" ", strip=True
+                            )
+                        else:
+                            field_text = entry.get("field_plain", "")
+                        label_text = entry.get("label", "")
+                        rows.append([label_text, field_text])
+                else:
+                    # 降级：解析 infobox-rows table（表格只有 "?" 占位符时）
+                    table = elem.find("table", class_=lambda c: c and "infobox-rows" in c)
+                    if table:
+                        for tr in table.find_all("tr"):
+                            ths = tr.find_all("th")
+                            tds = tr.find_all("td")
+                            if ths and tds:
+                                label_text = ths[0].get_text(strip=True)
+                                field_text = tds[0].get_text(strip=True)
+                                rows.append([label_text, field_text])
         elif fmt == "mcui":
             # mcui 格式（合成台/熔炉/织布机/锻造台）
             elem_classes = elem.get("class") or []
