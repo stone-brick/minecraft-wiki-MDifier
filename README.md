@@ -435,7 +435,7 @@ src/mdifier/
 ├── search.py             # 独立搜索脚本
 ├── wiki.py               # MediaWiki API 获取 + HTML 降级
 ├── parser.py             # Wikitext 解析器（模板/链接/标题）
-├── template_expander.py  # 模板展开：HTML 解析 + 格式检测 + mcui 解析
+├── template_expander.py  # 模板展开：action=bucket 或 action=parse + 格式检测
 ├── formatters.py         # Minecraft 颜色代码 → 语义化标签
 ├── converter.py          # Markdown 生成：dict dispatch 渲染
 └── cache.py              # 模板展开缓存持久化
@@ -445,7 +445,7 @@ src/mdifier/
 
 1. `WikiFetcher` → MediaWiki API 获取 wikitext
 2. `WikiParser` → 解析 AST，提取模板到 `templates` 字典
-3. `TemplateExpander` → **并发**调用 API 展开每个模板的渲染 HTML
+3. `TemplateExpander` → 对 Lua 数据查询模板（Trade uses 等）优先尝试 `action=bucket`，失败则降级到 `action=parse`
 4. `MarkdownConverter` → 按格式分发到对应渲染器，生成最终 Markdown
 5. 跨运行：`get_or_load_persistent_cache()` 模块级单例懒加载磁盘缓存；批量结束仅 `save_cache()` 一次
 
