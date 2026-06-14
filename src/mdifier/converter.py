@@ -191,8 +191,8 @@ class MarkdownConverter:
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             # 提交所有任务
             future_to_name = {
-                executor.submit(self._expand_template, info.name, info.params): name
-                for name, info in templates.items()
+                executor.submit(self._expand_template, key, info.params): key
+                for key, info in templates.items()
             }
 
             # 收集结果
@@ -217,8 +217,9 @@ class MarkdownConverter:
         Returns:
             展开结果 dict
         """
-        # 构建缓存键：模板名 + 完整参数（不同物品的同模板结果不同）
-        api_name = self._resolve_template_name(name)
+        # 提取模板名（可能带序号 ItemLink:0 -> ItemLink）
+        template_name = name.split(":")[0] if ":" in name else name
+        api_name = self._resolve_template_name(template_name)
         parts = [api_name]
         for key, value in params.items():
             if key.isdigit():

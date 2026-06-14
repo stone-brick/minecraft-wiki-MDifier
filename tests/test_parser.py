@@ -28,15 +28,15 @@ class TestWikiParser:
         """模板提取"""
         self.parser.parse("{{Hatnote|text}}")
         templates = self.parser.get_templates()
-        assert "hatnote" in templates
-        assert templates["hatnote"].params == {"1": "text"}
+        assert "hatnote:0" in templates
+        assert templates["hatnote:0"].params == {"1": "text"}
 
     def test_template_with_named_params(self):
         """模板带命名参数"""
         self.parser.parse("{{Infobox item|1=name|image=img.png}}")
         templates = self.parser.get_templates()
-        assert "infobox item" in templates
-        t = templates["infobox item"]
+        assert "infobox item:0" in templates
+        t = templates["infobox item:0"]
         assert t.params == {"1": "name", "image": "img.png"}
 
     def test_horizontal_rule(self):

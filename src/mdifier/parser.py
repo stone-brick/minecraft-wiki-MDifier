@@ -64,6 +64,7 @@ class WikiParser:
 
     def __init__(self):
         self.templates: dict[str, TemplateInfo] = {}
+        self._template_counter: dict[str, int] = {}
 
     def parse(self, wikitext: str) -> list[Node]:
         """
@@ -209,8 +210,8 @@ class WikiParser:
                 depth -= 2
                 if depth == 0 and template_start >= 0:
                     template_str = text[template_start + 2 : i]
-                    info = self._parse_template(template_str)
-                    result.append(f"{{TEMPLATE:{info.name}}}")
+                    key = self._parse_template(template_str)
+                    result.append(f"{{TEMPLATE:{key}}}")
                     template_start = -1
                 i += 2
             else:
@@ -220,15 +221,15 @@ class WikiParser:
 
         return "".join(result)
 
-    def _parse_template(self, template_str: str) -> TemplateInfo:
+    def _parse_template(self, template_str: str) -> str:
         """
-        解析模板字符串
+        解析模板字符串并存储，支持同名多次出现
 
         Args:
             template_str: 模板内容（不含{{}}）
 
         Returns:
-            TemplateInfo对象
+            唯一标识键（如 "ItemLink:0", "ItemLink:1"）
         """
         parts = template_str.split("|")
         name = parts[0].strip()
@@ -246,9 +247,13 @@ class WikiParser:
             else:
                 params[str(i)] = part
 
+        # 生成唯一键：name:序号（同名模板多次出现时序号递增）
+        key = f"{name.lower()}:{self._template_counter.get(name.lower(), 0)}"
+        self._template_counter[name.lower()] = self._template_counter.get(name.lower(), 0) + 1
+
         info = TemplateInfo(name=name, params=params)
-        self.templates[name.lower()] = info
-        return info
+        self.templates[key] = info
+        return key
 
     def _format_link(self, match: re.Match) -> str:
         """
