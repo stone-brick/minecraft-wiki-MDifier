@@ -14,9 +14,9 @@ from dataclasses import dataclass
 import requests
 from bs4 import BeautifulSoup
 
-from mdifier._session import create_session
-from mdifier._validators import validate_lang
-from mdifier.exceptions import (
+from minecraft_wiki_mdifier._session import create_session
+from minecraft_wiki_mdifier._validators import validate_lang
+from minecraft_wiki_mdifier.exceptions import (
     InvalidInputError,
     NetworkError,
     PageNotFoundError,

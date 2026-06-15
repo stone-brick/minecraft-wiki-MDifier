@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from mdifier.exceptions import InvalidInputError
-from mdifier.template_expander import TemplateExpander
+from minecraft_wiki_mdifier.exceptions import InvalidInputError
+from minecraft_wiki_mdifier.template_expander import TemplateExpander
 
 
 class TestExpanderInit:
@@ -32,7 +32,7 @@ class TestExpanderInit:
 class TestExpand:
     """expand() 方法测试"""
 
-    @patch("mdifier.template_expander.requests.Session")
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
     def test_expand_basic(self, MockSession):
         """展开成功返回标准 dict（含 html/class/text/format/table/template_name）"""
         mock_instance = MockSession.return_value
@@ -52,7 +52,7 @@ class TestExpand:
         assert "template_name" in result
         assert result["class"] == "hatnote"
 
-    @patch("mdifier.template_expander.requests.Session")
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
     def test_expand_unknown_template(self, MockSession):
         """未知模板返回 class="new" 标记"""
         mock_instance = MockSession.return_value
@@ -73,7 +73,7 @@ class TestDetectFormat:
 
     def test_infobox_table_priority_over_mcui(self):
         """infobox_table 优先级高于 mcui"""
-        from mdifier.template_expander import FORMAT_DETECTORS
+        from minecraft_wiki_mdifier.template_expander import FORMAT_DETECTORS
 
         # 同时有 infobox-row 和 mcui class 的 elem
         elem = MagicMock()
@@ -98,7 +98,7 @@ class TestDetectFormat:
 class TestParseTable:
     """_parse_table() 测试（间接测试，通过 expand 接口）"""
 
-    @patch("mdifier.template_expander.requests.Session")
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
     def test_table_format_detected(self, MockSession):
         """table 格式被正确检测"""
         mock_instance = MockSession.return_value
@@ -114,7 +114,7 @@ class TestParseTable:
 
         assert result["format"] == "table"
 
-    @patch("mdifier.template_expander.requests.Session")
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
     def test_infobox_format_detected(self, MockSession):
         """infobox_table 格式被正确检测"""
         mock_instance = MockSession.return_value
@@ -138,7 +138,7 @@ class TestParseTable:
 class TestBucketAPI:
     """Bucket API（Lua 数据查询）测试"""
 
-    @patch("mdifier.template_expander.requests.Session")
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
     def test_expand_via_bucket_success(self, MockSession):
         """Bucket API 返回数据时正确解析为 table"""
         mock_instance = MockSession.return_value
@@ -161,7 +161,7 @@ class TestBucketAPI:
         assert result["table"] is not None
         assert len(result["table"]) >= 2  # 表头行 + 数据行
 
-    @patch("mdifier.template_expander.requests.Session")
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
     def test_expand_via_bucket_no_query_falls_back_to_parse(self, MockSession):
         """Trade uses 无参数时 _build_bucket_query 返回 None，触发降级到 parse"""
         mock_instance = MockSession.return_value
@@ -176,7 +176,7 @@ class TestBucketAPI:
 
         assert result["class"] == "hatnote"
 
-    @patch("mdifier.template_expander.requests.Session")
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
     def test_expand_via_bucket_with_i18n(self, MockSession):
         """zh wiki 返回 i18n 字段时正确翻译"""
         mock_instance = MockSession.return_value

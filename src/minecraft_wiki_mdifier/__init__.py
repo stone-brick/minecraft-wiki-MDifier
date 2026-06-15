@@ -6,7 +6,7 @@ Minecraft Wiki MDifier
 
 __version__ = "0.1.0"
 
-from mdifier.lib import (
+from minecraft_wiki_mdifier.lib import (
     BatchConvertResult,
     ConvertResult,
     convert,

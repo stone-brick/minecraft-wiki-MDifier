@@ -14,11 +14,12 @@ from pathlib import Path
 
 import click
 
-from mdifier import __version__
-from mdifier.converter import MarkdownConverter
-from mdifier.exceptions import FetchError, InvalidInputError, PageNotFoundError
-from mdifier.lib import convert, convert_detailed, convert_many, search
-from mdifier.wiki import LANG_CONFIG
+from minecraft_wiki_mdifier.converter import MarkdownConverter
+from minecraft_wiki_mdifier.exceptions import FetchError, InvalidInputError, PageNotFoundError
+from minecraft_wiki_mdifier.lib import convert, convert_detailed, convert_many, search
+from minecraft_wiki_mdifier.wiki import LANG_CONFIG
+
+from . import __version__
 
 # BSD sysexits.h 退出码（Python 3.13+ 统一支持）
 EXIT_OK = 0
@@ -304,7 +305,7 @@ def cache():
 @cache.command(name="info")
 def cache_info_cmd():
     """显示缓存统计信息（路径、大小、条目、时间戳）"""
-    from mdifier.cache import cache_info
+    from minecraft_wiki_mdifier.cache import cache_info
 
     info = cache_info()
     click.echo(f"路径:    {info['path']}")
@@ -323,7 +324,7 @@ def cache_info_cmd():
 @click.option("-y", "--yes", is_flag=True, help="跳过确认提示")
 def cache_clear_cmd(yes):
     """清空整个缓存文件（强制下次重新请求）"""
-    from mdifier.cache import cache_info, clear_cache
+    from minecraft_wiki_mdifier.cache import cache_info, clear_cache
 
     info = cache_info()
     if not info["exists"]:
@@ -346,7 +347,7 @@ def cache_clear_cmd(yes):
 @cache.command(name="prune")
 def cache_prune_cmd():
     """清理已过期条目（保留 < 7 天的 fresh 条目）"""
-    from mdifier.cache import CACHE_FILE, CACHE_TTL, cache_info
+    from minecraft_wiki_mdifier.cache import CACHE_FILE, CACHE_TTL, cache_info
 
     info = cache_info()
     if not info["exists"]:

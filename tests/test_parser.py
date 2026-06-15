@@ -1,6 +1,6 @@
 """测试 WikiParser"""
 
-from mdifier.parser import NodeType, WikiParser
+from minecraft_wiki_mdifier.parser import NodeType, WikiParser
 
 
 class TestWikiParser:

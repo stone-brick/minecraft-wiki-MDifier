@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from mdifier.wiki import WikiPage
+from minecraft_wiki_mdifier.wiki import WikiPage
 
 
 def _make_page(title: str, content: str = "{{Hatnote|x}}") -> WikiPage:
@@ -18,8 +18,8 @@ def _make_convert_result(title: str) -> SimpleNamespace:
 class TestConvertMany:
     def test_lang_validation(self):
         """不支持的 lang 抛 InvalidInputError"""
-        from mdifier import convert_many
-        from mdifier.exceptions import InvalidInputError
+        from minecraft_wiki_mdifier import convert_many
+        from minecraft_wiki_mdifier.exceptions import InvalidInputError
 
         try:
             convert_many(["X"], lang="xx")
@@ -30,9 +30,12 @@ class TestConvertMany:
 
     def test_dedup(self):
         """重复标题不去重——dedup 在 CLI 层"""
-        from mdifier import convert_many
+        from minecraft_wiki_mdifier import convert_many
 
-        with patch("mdifier.lib.WikiFetcher") as MF, patch("mdifier.lib._convert_one") as CO:
+        with (
+            patch("minecraft_wiki_mdifier.lib.WikiFetcher") as MF,
+            patch("minecraft_wiki_mdifier.lib._convert_one") as CO,
+        ):
 
             def mock_fetch(titles, **kwargs):
                 return [_make_page(t) for t in titles]
@@ -47,9 +50,12 @@ class TestConvertMany:
 
     def test_failed_aggregation(self):
         """失败页面聚合到 result.failed，含异常类型名"""
-        from mdifier import convert_many
+        from minecraft_wiki_mdifier import convert_many
 
-        with patch("mdifier.lib.WikiFetcher") as MF, patch("mdifier.lib._convert_one") as CO:
+        with (
+            patch("minecraft_wiki_mdifier.lib.WikiFetcher") as MF,
+            patch("minecraft_wiki_mdifier.lib._convert_one") as CO,
+        ):
 
             def mock_fetch(titles, **kwargs):
                 return [_make_page(t) for t in titles]
@@ -72,10 +78,13 @@ class TestConvertMany:
 
     def test_progress_callback(self):
         """进度回调被正确调用（顺序不保证，因为 as_completed）"""
-        from mdifier import convert_many
+        from minecraft_wiki_mdifier import convert_many
 
         calls = []
-        with patch("mdifier.lib.WikiFetcher") as MF, patch("mdifier.lib._convert_one") as CO:
+        with (
+            patch("minecraft_wiki_mdifier.lib.WikiFetcher") as MF,
+            patch("minecraft_wiki_mdifier.lib._convert_one") as CO,
+        ):
 
             def mock_fetch(titles, **kwargs):
                 return [_make_page(t) for t in titles]
@@ -100,12 +109,12 @@ class TestConvertMany:
 
     def test_unresolved_collection(self):
         """_unresolved 被收集到 result.unresolved"""
-        from mdifier import convert_many
+        from minecraft_wiki_mdifier import convert_many
 
         with (
-            patch("mdifier.lib.WikiFetcher") as MF,
-            patch("mdifier.lib._convert_one") as CO,
-            patch("mdifier.lib.MarkdownConverter") as MC,
+            patch("minecraft_wiki_mdifier.lib.WikiFetcher") as MF,
+            patch("minecraft_wiki_mdifier.lib._convert_one") as CO,
+            patch("minecraft_wiki_mdifier.lib.MarkdownConverter") as MC,
         ):
 
             def mock_fetch(titles, **kwargs):
@@ -122,9 +131,12 @@ class TestConvertMany:
 class TestConvertDetailed:
     def test_templates_are_populated(self):
         """convert_detailed 返回的 templates 非空"""
-        from mdifier import convert_detailed
+        from minecraft_wiki_mdifier import convert_detailed
 
-        with patch("mdifier.lib.WikiFetcher") as MF, patch("mdifier.lib.MarkdownConverter") as MC:
+        with (
+            patch("minecraft_wiki_mdifier.lib.WikiFetcher") as MF,
+            patch("minecraft_wiki_mdifier.lib.MarkdownConverter") as MC,
+        ):
             MF.return_value.fetch.return_value = _make_page("铁锭")
             MC.return_value.convert_wiki.return_value = "# 铁锭\nbody"
             MC.return_value._template_cache = {"Hatnote": {"class": "hatnote", "text": "note"}}

@@ -6,13 +6,13 @@ from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
 
-from mdifier.cli import main
+from minecraft_wiki_mdifier.cli import main
 
 
 class TestConvertDetail:
     def test_default_ouputs_markdown(self):
         """默认输出纯 markdown（无 --detail）"""
-        with patch("mdifier.cli.convert") as mock_convert:
+        with patch("minecraft_wiki_mdifier.cli.convert") as mock_convert:
             mock_convert.return_value = "# 铁锭\ncontent"
             runner = CliRunner()
             result = runner.invoke(main, ["convert", "铁锭"])
@@ -23,7 +23,7 @@ class TestConvertDetail:
 
     def test_detail_outputs_json(self):
         """--detail 输出完整 JSON"""
-        with patch("mdifier.cli.convert_detailed") as mock:
+        with patch("minecraft_wiki_mdifier.cli.convert_detailed") as mock:
             mock.return_value = SimpleNamespace(
                 title="铁锭",
                 markdown="# 铁锭\ncontent",
@@ -45,7 +45,7 @@ class TestSearchCommand:
 
     def test_search_returns_results(self):
         """search 命令返回搜索结果"""
-        with patch("mdifier.cli.search") as mock_search:
+        with patch("minecraft_wiki_mdifier.cli.search") as mock_search:
             mock_search.return_value = [
                 {
                     "title": "Diamond",
@@ -66,7 +66,7 @@ class TestSearchCommand:
 
     def test_search_empty_results(self):
         """search 无结果时显示提示"""
-        with patch("mdifier.cli.search") as mock_search:
+        with patch("minecraft_wiki_mdifier.cli.search") as mock_search:
             mock_search.return_value = []
             runner = CliRunner()
             result = runner.invoke(main, ["search", "nonexistent"])
@@ -75,7 +75,7 @@ class TestSearchCommand:
 
     def test_search_with_lang(self):
         """search 命令传递 --lang 参数"""
-        with patch("mdifier.cli.search") as mock_search:
+        with patch("minecraft_wiki_mdifier.cli.search") as mock_search:
             mock_search.return_value = [
                 {
                     "title": "鉄インゴット",
@@ -91,7 +91,7 @@ class TestSearchCommand:
 
     def test_search_with_num(self):
         """search 命令限制结果数量"""
-        with patch("mdifier.cli.search") as mock_search:
+        with patch("minecraft_wiki_mdifier.cli.search") as mock_search:
             mock_search.return_value = [{"title": "A"}, {"title": "B"}, {"title": "C"}]
             runner = CliRunner()
             result = runner.invoke(main, ["search", "test", "-n", "2"])
@@ -106,7 +106,7 @@ class TestBatchCommand:
 
     def test_batch_with_titles(self):
         """batch -t 多标题批量转换"""
-        with patch("mdifier.cli.convert_many") as mock_batch:
+        with patch("minecraft_wiki_mdifier.cli.convert_many") as mock_batch:
             mock_result = MagicMock()
             mock_result.results = [
                 SimpleNamespace(title="Diamond", markdown="# Diamond\ncontent"),
@@ -122,7 +122,7 @@ class TestBatchCommand:
 
     def test_batch_partial_failure(self):
         """batch 部分失败时返回退出码 65（EX_DATAERR）"""
-        with patch("mdifier.cli.convert_many") as mock_batch:
+        with patch("minecraft_wiki_mdifier.cli.convert_many") as mock_batch:
             mock_result = MagicMock()
             mock_result.results = [SimpleNamespace(title="Diamond", markdown="# Diamond")]
             mock_result.failed = [("UnknownPage", Exception("Not found"))]
@@ -146,7 +146,7 @@ class TestCacheCommand:
 
     def test_cache_info(self):
         """cache info 显示统计信息"""
-        with patch("mdifier.cache.cache_info") as mock_info:
+        with patch("minecraft_wiki_mdifier.cache.cache_info") as mock_info:
             mock_info.return_value = {
                 "path": "/fake/cache",
                 "exists": False,
@@ -165,7 +165,7 @@ class TestCacheCommand:
 
     def test_cache_clear_without_force(self):
         """cache clear 无 -y 时提示确认"""
-        with patch("mdifier.cache.cache_info") as mock_info:
+        with patch("minecraft_wiki_mdifier.cache.cache_info") as mock_info:
             mock_info.return_value = {
                 "exists": True,
                 "size_mb": 1.5,
@@ -179,8 +179,8 @@ class TestCacheCommand:
     def test_cache_clear_with_force(self):
         """cache clear -y 直接清除"""
         with (
-            patch("mdifier.cache.clear_cache") as mock_clear,
-            patch("mdifier.cache.cache_info") as mock_info,
+            patch("minecraft_wiki_mdifier.cache.clear_cache") as mock_clear,
+            patch("minecraft_wiki_mdifier.cache.cache_info") as mock_info,
         ):
             mock_info.return_value = {
                 "exists": True,
@@ -195,8 +195,8 @@ class TestCacheCommand:
     def test_cache_prune(self):
         """cache prune 保留未过期条目"""
         with (
-            patch("mdifier.cache.cache_info") as mock_info,
-            patch("mdifier.cache.CACHE_FILE") as mock_cache_file,
+            patch("minecraft_wiki_mdifier.cache.cache_info") as mock_info,
+            patch("minecraft_wiki_mdifier.cache.CACHE_FILE") as mock_cache_file,
         ):
             mock_info.return_value = {
                 "exists": True,

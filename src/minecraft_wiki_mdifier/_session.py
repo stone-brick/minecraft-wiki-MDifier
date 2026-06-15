@@ -8,7 +8,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from mdifier import __version__
+from . import __version__
 
 USER_AGENT = f"Minecraft-Wiki-MDifier/{__version__} (Python Wiki Converter)"
 

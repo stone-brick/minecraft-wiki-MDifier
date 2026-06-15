@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from mdifier.exceptions import InvalidInputError, PageNotFoundError, WikiAPIError
-from mdifier.wiki import WikiFetcher, WikiPage, parse_url
+from minecraft_wiki_mdifier.exceptions import InvalidInputError, PageNotFoundError, WikiAPIError
+from minecraft_wiki_mdifier.wiki import WikiFetcher, WikiPage, parse_url
 
 
 class TestParseUrl:
@@ -82,7 +82,7 @@ class TestWikiPage:
 class TestFetchViaApi:
     """fetch_via_api() 测试"""
 
-    @patch("mdifier.wiki.requests.Session")
+    @patch("minecraft_wiki_mdifier.wiki.requests.Session")
     def test_api_200_ok(self, MockSession):
         """API 返回 200 OK → WikiPage(source="api")"""
         mock_instance = MockSession.return_value
@@ -97,7 +97,7 @@ class TestFetchViaApi:
         assert page.source == "api"
         assert page.content == "== 页面内容 =="
 
-    @patch("mdifier.wiki.requests.Session")
+    @patch("minecraft_wiki_mdifier.wiki.requests.Session")
     def test_api_404(self, MockSession):
         """API 404 → 抛出 PageNotFoundError"""
         mock_instance = MockSession.return_value
@@ -108,7 +108,7 @@ class TestFetchViaApi:
         with pytest.raises(PageNotFoundError):
             fetcher.fetch_via_api("不存在的页面")
 
-    @patch("mdifier.wiki.requests.Session")
+    @patch("minecraft_wiki_mdifier.wiki.requests.Session")
     def test_api_500(self, MockSession):
         """API 500 → 抛出 WikiAPIError"""
         mock_instance = MockSession.return_value
@@ -118,7 +118,7 @@ class TestFetchViaApi:
         with pytest.raises(WikiAPIError):
             fetcher.fetch_via_api("测试")
 
-    @patch("mdifier.wiki.requests.Session")
+    @patch("minecraft_wiki_mdifier.wiki.requests.Session")
     def test_api_non_json(self, MockSession):
         """API 非 JSON 响应 → 抛出 WikiAPIError"""
         mock_instance = MockSession.return_value
@@ -128,7 +128,7 @@ class TestFetchViaApi:
         with pytest.raises(WikiAPIError):
             fetcher.fetch_via_api("测试")
 
-    @patch("mdifier.wiki.requests.Session")
+    @patch("minecraft_wiki_mdifier.wiki.requests.Session")
     def test_api_no_parse_field(self, MockSession):
         """API 响应无 parse 字段 → 抛出 WikiAPIError"""
         mock_instance = MockSession.return_value
@@ -143,7 +143,7 @@ class TestFetchViaApi:
 class TestFetchViaHtml:
     """fetch_via_html() 测试"""
 
-    @patch("mdifier.wiki.requests.Session")
+    @patch("minecraft_wiki_mdifier.wiki.requests.Session")
     def test_html_200_ok(self, MockSession):
         """HTML 正常返回 → WikiPage(source="html")"""
         html = "<div id='mw-content-text'><p>页面内容</p></div>"
@@ -157,7 +157,7 @@ class TestFetchViaHtml:
         assert page.source == "html"
         assert "页面内容" in page.content
 
-    @patch("mdifier.wiki.requests.Session")
+    @patch("minecraft_wiki_mdifier.wiki.requests.Session")
     def test_html_no_mw_content(self, MockSession):
         """HTML 不含 mw-content-text → 抛出 PageNotFoundError"""
         mock_instance = MockSession.return_value
@@ -172,7 +172,7 @@ class TestFetchViaHtml:
 class TestFetchFallback:
     """fetch() API→HTML 降级逻辑测试"""
 
-    @patch("mdifier.wiki.requests.Session")
+    @patch("minecraft_wiki_mdifier.wiki.requests.Session")
     def test_api_404_falls_back_to_html(self, MockSession):
         """API 404 时降级到 HTML"""
         html = "<div id='mw-content-text'><p>降级内容</p></div>"
@@ -199,7 +199,7 @@ class TestFetchFallback:
     # 注：API 异常降级到 HTML 的逻辑在 fetch() 内部通过异常处理实现，
     # 由于 mock 绕过了实际调用路径，此处通过 test_api_404_falls_back_to_html 间接覆盖
 
-    @patch("mdifier.wiki.requests.Session")
+    @patch("minecraft_wiki_mdifier.wiki.requests.Session")
     def test_api_error_falls_back_to_html(self, MockSession):
         """API 返回错误结构时降级到 HTML（已有 parse 字段但含 error）"""
         html = "<div id='mw-content-text'><p>降级内容</p></div>"
@@ -224,7 +224,7 @@ class TestFetchFallback:
         assert page.source == "html"
         assert "降级内容" in page.content
 
-    @patch("mdifier.wiki.requests.Session")
+    @patch("minecraft_wiki_mdifier.wiki.requests.Session")
     def test_both_api_and_html_fail(self, MockSession):
         """API 返回空内容和 HTML 也失败时抛出 WikiAPIError"""
 
@@ -249,7 +249,7 @@ class TestFetchFallback:
 class TestFetchMany:
     """fetch_many() 测试"""
 
-    @patch("mdifier.wiki.WikiFetcher.fetch")
+    @patch("minecraft_wiki_mdifier.wiki.WikiFetcher.fetch")
     def test_fetch_many_returns_in_order(self, mock_fetch):
         """多页面并发，返回顺序与输入一致"""
 
@@ -265,7 +265,7 @@ class TestFetchMany:
         assert len(pages) == 3
         assert [p.title for p in pages] == ["A", "B", "C"]
 
-    @patch("mdifier.wiki.WikiFetcher.fetch")
+    @patch("minecraft_wiki_mdifier.wiki.WikiFetcher.fetch")
     def test_fetch_many_partial_failure(self, mock_fetch):
         """部分失败返回 None 不抛异常"""
 

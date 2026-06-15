@@ -4,7 +4,7 @@
 提供语言验证等通用验证逻辑，避免多处重复定义。
 """
 
-from mdifier.exceptions import InvalidInputError
+from minecraft_wiki_mdifier.exceptions import InvalidInputError
 
 
 def validate_lang(lang: str | None) -> None:
@@ -18,7 +18,7 @@ def validate_lang(lang: str | None) -> None:
         InvalidInputError: 不支持的语言代码
     """
     # 延迟导入避免循环依赖
-    from mdifier.wiki import LANG_CONFIG
+    from minecraft_wiki_mdifier.wiki import LANG_CONFIG
 
     if lang is not None and lang not in LANG_CONFIG:
         raise InvalidInputError(

@@ -1,6 +1,6 @@
 """测试 MinecraftColorFormatter"""
 
-from mdifier.formatters import MinecraftColorFormatter
+from minecraft_wiki_mdifier.formatters import MinecraftColorFormatter
 
 
 class TestMinecraftColorFormatter:

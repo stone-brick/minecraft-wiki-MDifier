@@ -12,7 +12,7 @@ import time
 from datetime import UTC
 from pathlib import Path
 
-from mdifier.exceptions import CacheError
+from minecraft_wiki_mdifier.exceptions import CacheError
 
 CACHE_DIR = Path.home() / ".cache" / "mdifier"
 CACHE_FILE = CACHE_DIR / "templates.json"

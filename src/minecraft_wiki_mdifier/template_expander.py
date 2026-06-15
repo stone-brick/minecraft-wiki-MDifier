@@ -9,12 +9,12 @@ from collections.abc import Callable
 import requests  # noqa: F401
 from bs4 import BeautifulSoup
 
-from mdifier._session import create_session
-from mdifier._validators import validate_lang
-from mdifier.exceptions import BucketAPIError
-from mdifier.formatters import MinecraftColorFormatter
-from mdifier.parser import _parse_template_name
-from mdifier.wiki import LANG_CONFIG
+from minecraft_wiki_mdifier._session import create_session
+from minecraft_wiki_mdifier._validators import validate_lang
+from minecraft_wiki_mdifier.exceptions import BucketAPIError
+from minecraft_wiki_mdifier.formatters import MinecraftColorFormatter
+from minecraft_wiki_mdifier.parser import _parse_template_name
+from minecraft_wiki_mdifier.wiki import LANG_CONFIG
 
 # 格式检测器：(elem) -> 格式字符串 | None
 # 注册表形式，按优先级顺序匹配；首个返回非 None 的获胜

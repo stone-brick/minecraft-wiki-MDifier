@@ -9,11 +9,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from itertools import count
 
-from mdifier._validators import validate_lang
-from mdifier.cache import get_or_load_persistent_cache, save_cache
-from mdifier.converter import MarkdownConverter
-from mdifier.exceptions import InvalidInputError
-from mdifier.wiki import WikiFetcher, WikiPage, parse_url
+from minecraft_wiki_mdifier._validators import validate_lang
+from minecraft_wiki_mdifier.cache import get_or_load_persistent_cache, save_cache
+from minecraft_wiki_mdifier.converter import MarkdownConverter
+from minecraft_wiki_mdifier.exceptions import InvalidInputError
+from minecraft_wiki_mdifier.wiki import WikiFetcher, WikiPage, parse_url
 
 
 @dataclass
@@ -64,7 +64,7 @@ def convert(
         Markdown格式字符串
 
     Example:
-        >>> from mdifier import convert
+        >>> from minecraft_wiki_mdifier import convert
         >>> md = convert("铁锭")
         >>> print(md)
 
@@ -92,7 +92,7 @@ def convert_detailed(title_or_url: str, lang: str | None = None) -> ConvertResul
         ConvertResult对象，包含标题、Markdown、来源和模板数据
 
     Example:
-        >>> from mdifier import convert_detailed
+        >>> from minecraft_wiki_mdifier import convert_detailed
         >>> result = convert_detailed("铁锭")
         >>> print(result.title)
         >>> print(result.markdown)
@@ -154,14 +154,14 @@ def convert_many(
         BatchConvertResult，含 results 和 failed 列表
 
     Example:
-        >>> from mdifier import convert_many
+        >>> from minecraft_wiki_mdifier import convert_many
         >>> result = convert_many(["钻石", "铁锭", "附魔台"])
         >>> for r in result.results:
         ...     print(f"=== {r.title} ===")
 
         >>> # 外部引用 converter 实现取消
         >>> import threading
-        >>> from mdifier.converter import MarkdownConverter
+        >>> from minecraft_wiki_mdifier.converter import MarkdownConverter
         >>> c = MarkdownConverter(lang='zh')
         >>> threading.Timer(0.5, c.cancel).start()
         >>> convert_many(['钻石'], converter_factory=lambda l, cache: c)
@@ -254,7 +254,7 @@ def search(query: str, lang: str = "zh") -> list[dict]:
         搜索结果列表，每项包含title、description、url
 
     Example:
-        >>> from mdifier import search
+        >>> from minecraft_wiki_mdifier import search
         >>> results = search("diamond")
         >>> for r in results:
         >>>     print(r['title'])

@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock
 
-from mdifier.converter import MarkdownConverter
-from mdifier.parser import Node, NodeType
+from minecraft_wiki_mdifier.converter import MarkdownConverter
+from minecraft_wiki_mdifier.parser import Node, NodeType
 
 
 class TestMarkdownConverter:

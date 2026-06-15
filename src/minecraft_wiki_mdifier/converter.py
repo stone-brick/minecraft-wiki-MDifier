@@ -10,9 +10,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from markdownify import markdownify as md
 
-from mdifier.parser import Node, NodeType, TemplateInfo, WikiParser
-from mdifier.template_expander import TemplateExpander
-from mdifier.wiki import LANG_CONFIG, WikiPage
+from minecraft_wiki_mdifier.parser import Node, NodeType, TemplateInfo, WikiParser
+from minecraft_wiki_mdifier.template_expander import TemplateExpander
+from minecraft_wiki_mdifier.wiki import LANG_CONFIG, WikiPage
 
 # 匹配 <span class="sprite-file">...</span>，其中包含 EnvSprite img
 # alt 格式："EnvSprite xxx.png：Minecraft中xxx的精灵图"，对 AI 无意义
@@ -103,7 +103,7 @@ class MarkdownConverter:
         if template_cache is not None:
             self._template_cache = template_cache
         elif use_persistent_cache:
-            from mdifier.cache import load_cache
+            from minecraft_wiki_mdifier.cache import load_cache
 
             self._template_cache = load_cache()
         else:
@@ -131,7 +131,7 @@ class MarkdownConverter:
         """将当前模板缓存保存到磁盘（供后续运行复用）"""
         if not self._use_persistent_cache:
             return
-        from mdifier.cache import save_cache
+        from minecraft_wiki_mdifier.cache import save_cache
 
         with self._cache_lock:
             save_cache(self._template_cache)

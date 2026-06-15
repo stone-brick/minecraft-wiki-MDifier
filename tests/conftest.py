@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from mdifier.wiki import WikiPage
+from minecraft_wiki_mdifier.wiki import WikiPage
 
 
 @pytest.fixture
@@ -36,7 +36,7 @@ def expander_mock():
 @pytest.fixture
 def cache_dir(tmp_path, monkeypatch):
     """把缓存目录临时重定向到 tmp_path"""
-    from mdifier import cache as cache_mod
+    from minecraft_wiki_mdifier import cache as cache_mod
 
     monkeypatch.setattr(cache_mod, "CACHE_DIR", tmp_path)
     monkeypatch.setattr(cache_mod, "CACHE_FILE", tmp_path / "templates.json")
