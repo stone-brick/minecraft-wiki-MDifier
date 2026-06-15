@@ -13,18 +13,15 @@ from dataclasses import dataclass
 
 import requests
 from bs4 import BeautifulSoup
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
-from mdifier import __version__
+from mdifier._session import create_session
+from mdifier._validators import validate_lang
 from mdifier.exceptions import (
     InvalidInputError,
     NetworkError,
     PageNotFoundError,
     WikiAPIError,
 )
-
-USER_AGENT = f"Minecraft-Wiki-MDifier/{__version__} (Python Wiki Converter)"
 
 # 语言配置：集中管理 URL 和解析模式
 LANG_CONFIG: dict[str, dict[str, str | bool]] = {
@@ -71,23 +68,11 @@ class WikiFetcher:
     """Wiki页面获取器"""
 
     def __init__(self, lang: str = "zh"):
-        if lang not in LANG_CONFIG:
-            raise InvalidInputError(
-                f"Unsupported language: {lang}. Available: {list(LANG_CONFIG.keys())}"
-            )
+        validate_lang(lang)
         self.lang = lang
         self.api_url = LANG_CONFIG[lang]["api"]
         self.base_url = LANG_CONFIG[lang]["base"]
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": USER_AGENT})
-        retry = Retry(
-            total=3,
-            backoff_factor=0.5,
-            status_forcelist={429, 500, 502, 503, 504},
-            raise_on_status=False,
-        )
-        self.session.mount("https://", HTTPAdapter(max_retries=retry))
-        self.session.mount("http://", HTTPAdapter(max_retries=retry))
+        self.session = create_session()
 
     def search(self, query: str) -> list[dict]:
         """
@@ -319,27 +304,3 @@ def parse_url(url: str) -> tuple[str, str]:
             return lang, title
 
     raise InvalidInputError(f"Unrecognized URL: {url}")
-
-
-def fetch_page(title_or_url: str, lang: str | None = None) -> WikiPage | None:
-    """
-    便捷函数：获取Wiki页面
-
-    Args:
-        title_or_url: 页面标题或URL
-        lang: 语言，None则自动从URL解析
-
-    Returns:
-        WikiPage对象
-    """
-    if title_or_url.startswith("http"):
-        parsed_lang, title = parse_url(title_or_url)
-        if lang is None:
-            lang = parsed_lang
-    else:
-        title = title_or_url
-        if lang is None:
-            lang = "zh"
-
-    fetcher = WikiFetcher(lang=lang)
-    return fetcher.fetch(title)

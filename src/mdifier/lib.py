@@ -9,10 +9,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from itertools import count
 
+from mdifier._validators import validate_lang
 from mdifier.cache import get_or_load_persistent_cache, save_cache
 from mdifier.converter import MarkdownConverter
 from mdifier.exceptions import InvalidInputError
-from mdifier.wiki import LANG_CONFIG, WikiFetcher, WikiPage, parse_url
+from mdifier.wiki import WikiFetcher, WikiPage, parse_url
 
 
 @dataclass
@@ -27,10 +28,7 @@ class ConvertResult:
 
 def _resolve_and_fetch(title_or_url: str, lang: str | None) -> tuple[WikiPage, str]:
     """共享的 lang 验证 + URL 解析 + fetch。返回 (page, resolved_lang)。"""
-    if lang is not None and lang not in LANG_CONFIG:
-        raise InvalidInputError(
-            f"Unsupported language: {lang}. Available: {list(LANG_CONFIG.keys())}"
-        )
+    validate_lang(lang)
     if title_or_url.startswith("http"):
         parsed_lang, title = parse_url(title_or_url)
         if lang is None:
@@ -168,25 +166,22 @@ def convert_many(
         >>> threading.Timer(0.5, c.cancel).start()
         >>> convert_many(['钻石'], converter_factory=lambda l, cache: c)
     """
-    if lang not in LANG_CONFIG:
-        raise InvalidInputError(
-            f"Unsupported language: {lang}. Available: {list(LANG_CONFIG.keys())}"
-        )
+    validate_lang(lang)
 
     # 1. 归一化输入：URL → (lang, title)
     parsed: list[tuple[str, str]] = []
-    for it in items:
-        if it.startswith("http"):
-            parsed_lang, title = parse_url(it)
+    for item in items:
+        if item.startswith("http"):
+            parsed_lang, title = parse_url(item)
             # 始终使用 URL 中解析出的语言（URL 语言优先于 --lang 参数）
             parsed.append((parsed_lang, title))
         else:
-            parsed.append((lang, it))
+            parsed.append((lang, item))
 
     # 2. 按 lang 分组
     by_lang: dict[str, list[tuple[int, str]]] = {}
-    for idx, (item_lang, t) in enumerate(parsed):
-        by_lang.setdefault(item_lang, []).append((idx, t))
+    for idx, (item_lang, title) in enumerate(parsed):
+        by_lang.setdefault(item_lang, []).append((idx, title))
 
     # 默认 converter 工厂
     def default_factory(item_lang: str, cache: dict | None) -> MarkdownConverter:

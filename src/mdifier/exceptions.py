@@ -23,29 +23,17 @@ class InvalidInputError(MdifierError, ValueError):
 class FetchError(MdifierError, requests.RequestException):
     """网络层错误的基类"""
 
-    def __init__(self, message: str | None = None):
-        super().__init__(message)
-
 
 class NetworkError(FetchError):
     """网络连接失败、SSL 错误、超时"""
-
-    def __init__(self, message: str | None = None):
-        super().__init__(message)
 
 
 class WikiAPIError(FetchError):
     """Wiki API 返回异常结构"""
 
-    def __init__(self, message: str | None = None):
-        super().__init__(message)
-
 
 class PageNotFoundError(FetchError):
     """页面不存在（404 或 API 返回无 parse 字段）"""
-
-    def __init__(self, message: str | None = None):
-        super().__init__(message)
 
 
 class BucketAPIError(MdifierError):

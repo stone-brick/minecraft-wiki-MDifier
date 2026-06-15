@@ -6,14 +6,15 @@
 
 from collections.abc import Callable
 
-import requests
+import requests  # noqa: F401
 from bs4 import BeautifulSoup
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
-from mdifier.exceptions import BucketAPIError, InvalidInputError
+from mdifier._session import create_session
+from mdifier._validators import validate_lang
+from mdifier.exceptions import BucketAPIError
 from mdifier.formatters import MinecraftColorFormatter
-from mdifier.wiki import LANG_CONFIG, USER_AGENT
+from mdifier.parser import _parse_template_name
+from mdifier.wiki import LANG_CONFIG
 
 # 格式检测器：(elem) -> 格式字符串 | None
 # 注册表形式，按优先级顺序匹配；首个返回非 None 的获胜
@@ -80,22 +81,10 @@ class TemplateExpander:
     """模板展开器"""
 
     def __init__(self, lang: str = "zh"):
-        if lang not in LANG_CONFIG:
-            raise InvalidInputError(
-                f"Unsupported language: {lang}. Available: {list(LANG_CONFIG.keys())}"
-            )
+        validate_lang(lang)
         self.lang = lang
         self.api_url = LANG_CONFIG[lang]["api"]
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": USER_AGENT})
-        retry = Retry(
-            total=3,
-            backoff_factor=0.5,
-            status_forcelist={429, 500, 502, 503, 504},
-            raise_on_status=False,
-        )
-        self.session.mount("https://", HTTPAdapter(max_retries=retry))
-        self.session.mount("http://", HTTPAdapter(max_retries=retry))
+        self.session = create_session()
         self.formatter = MinecraftColorFormatter()
 
     def expand(self, template_call: str, page_title: str | None = None) -> dict:
@@ -149,10 +138,7 @@ class TemplateExpander:
         # 去掉 {{ 和 }}
         inner = template_call.strip().lstrip("{").rstrip("}").rstrip("{").rstrip("}")
         parts = inner.split("|")
-        name = parts[0].strip()
-        # 移除命名空间前缀
-        if ":" in name:
-            name = name.split(":", 1)[1]
+        name = _parse_template_name(parts[0])
 
         params = {}
         for i, part in enumerate(parts[1:], start=1):

@@ -9,6 +9,22 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 
 
+def _parse_template_name(template_str: str) -> str:
+    """
+    从模板字符串提取模板名，移除命名空间前缀
+
+    Args:
+        template_str: 模板内容（如 "Hatnote|text" 或 "ItemLink:0"）
+
+    Returns:
+        纯模板名（如 "Hatnote" 或 "ItemLink"）
+    """
+    name = template_str.split("|")[0].strip()
+    if ":" in name:
+        name = name.split(":", 1)[1]
+    return name
+
+
 class NodeType(Enum):
     """AST节点类型"""
 
@@ -232,12 +248,8 @@ class WikiParser:
         Returns:
             唯一标识键（如 "ItemLink:0", "ItemLink:1"）
         """
+        name = _parse_template_name(template_str)
         parts = template_str.split("|")
-        name = parts[0].strip()
-
-        # 移除命名空间前缀
-        if ":" in name:
-            name = name.split(":", 1)[1]
 
         params = {}
         for i, part in enumerate(parts[1:], start=1):
