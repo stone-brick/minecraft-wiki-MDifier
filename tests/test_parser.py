@@ -50,3 +50,41 @@ class TestWikiParser:
         nodes = self.parser.parse("[[Diamond]]")
         text_nodes = [n for n in nodes if n.type == NodeType.PARAGRAPH]
         assert any("Diamond" in n.content for n in text_nodes)
+
+    def test_table_parsing(self):
+        """表格解析"""
+        nodes = self.parser.parse(
+            "{| class='wikitable'\n! header1 !! header2\n|-\n| cell1 || cell2\n|}"
+        )
+        table_nodes = [n for n in nodes if n.type == NodeType.TABLE]
+        assert len(table_nodes) >= 1  # 表格节点存在
+        assert table_nodes[0].children is not None
+
+    def test_unordered_list(self):
+        """无序列表 * item"""
+        nodes = self.parser.parse("* Item 1\n* Item 2")
+        list_nodes = [n for n in nodes if n.type == NodeType.LIST]
+        assert len(list_nodes) >= 1
+        assert list_nodes[0].attrs.get("list_type") == "ul"
+
+    def test_ordered_list(self):
+        """有序列表 # item"""
+        nodes = self.parser.parse("# First\n# Second")
+        list_nodes = [n for n in nodes if n.type == NodeType.LIST]
+        assert len(list_nodes) >= 1
+        assert list_nodes[0].attrs.get("list_type") == "ol"
+
+    def test_nested_template(self):
+        """嵌套模板 {{outer|{{inner}}|x=y}"""
+        self.parser.parse("{{outer|{{inner}}|x=y}}")
+        templates = self.parser.get_templates()
+        # 嵌套模板应被正确解析
+        assert len(templates) >= 1
+
+    def test_template_with_multiple_params(self):
+        """模板多参数解析"""
+        self.parser.parse("{{Crafting|a=|b=|c=|d=|e=|f=|g=|h=|i=Diamond}}")
+        templates = self.parser.get_templates()
+        assert len(templates) >= 1
+        t = list(templates.values())[0]
+        assert "i" in t.params or "1" in t.params

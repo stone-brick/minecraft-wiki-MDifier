@@ -92,3 +92,150 @@ class TestMarkdownConverter:
         assert "x" in result
         assert "before" in result
         assert "after" in result
+
+
+class TestRenderTemplateTable:
+    """_render_template_table 测试"""
+
+    def setup_method(self):
+        """构造 converter，用 mock expander 避免网络"""
+        self.c = MarkdownConverter(lang="zh", use_persistent_cache=False)
+        self.c.expander = MagicMock()
+
+    def test_render_table_with_infobox_data(self):
+        """infobox 表格数据渲染为 Markdown"""
+        template_data = {
+            "table": [
+                ["Label 1", "Value 1"],
+                ["Label 2", "Value 2"],
+            ],
+            "template_name": "infobox item",
+            "class": "infobox",
+        }
+        result = self.c._render_template_table(template_data)
+        assert ":::infobox item" in result
+        assert "| Label 1 |" in result
+        assert "| Value 1 |" in result
+        assert "| --- |" in result  # 表头分隔行
+
+    def test_render_table_with_mcui_data(self):
+        """mcui 配方格式渲染为 3x3 网格"""
+        template_data = {
+            "table": [
+                ["A", "B", "C"],
+                ["D", "E", "F"],
+                ["G", "H", "I"],
+            ],
+            "template_name": "Crafting",
+            "class": "mcui",
+        }
+        result = self.c._render_template_table(template_data)
+        assert ":::Crafting" in result
+        assert "| A | B | C |" in result
+        assert "| D | E | F |" in result
+
+    def test_render_table_empty_falls_back_to_text(self):
+        """table 为空时回退到 text"""
+        template_data = {
+            "table": [],
+            "text": "No table data",
+            "class": "hatnote",
+        }
+        result = self.c._render_template_table(template_data)
+        assert "No table data" in result
+
+    def test_render_table_with_trade_data(self):
+        """Trade uses 表格数据（多列）"""
+        template_data = {
+            "table": [
+                ["Villager", "Level", "Wanted", "Receives"],
+                ["Armorer", "Apprentice", "4× Iron Ingot", "Emerald"],
+                ["Weaponsmith", "Journeyman", "3× Iron Ingot", "Emerald"],
+            ],
+            "template_name": "Trade uses",
+            "class": "trade_uses",
+        }
+        result = self.c._render_template_table(template_data)
+        assert ":::Trade uses" in result
+        assert "| Armorer |" in result
+        assert "| Apprentice |" in result
+        assert "| 4× Iron Ingot |" in result
+
+    def test_render_table_without_template_name(self):
+        """无 template_name 时只输出表格内容"""
+        template_data = {
+            "table": [["A", "B"]],
+            "class": None,
+        }
+        result = self.c._render_template_table(template_data)
+        assert "| A | B |" in result
+        assert ":::" not in result
+
+
+class TestRenderParagraph:
+    """_render_paragraph 测试"""
+
+    def setup_method(self):
+        self.c = MarkdownConverter(lang="zh", use_persistent_cache=False)
+        self.c.expander = MagicMock()
+
+    def test_render_paragraph_with_links(self):
+        """段落中的链接被正确渲染"""
+        node = Node(
+            type=NodeType.PARAGRAPH,
+            content="see [[Diamond]] for details",
+            attrs={},
+        )
+        # WikiParser 会将 [[Diamond]] 转换为 [Diamond](页面链接)
+        # 替换后的内容应该是转换后的 Markdown 链接格式
+        result = self.c._render_paragraph(node, {})
+        assert "see" in result
+        assert "details" in result
+
+    def test_render_paragraph_with_template_placeholder(self):
+        """段落中的模板占位符被替换"""
+        node = Node(
+            type=NodeType.PARAGRAPH,
+            content="note: {TEMPLATE:hatnote}",
+            attrs={},
+        )
+        expanded = {
+            "hatnote": {
+                "html": "<div>important note</div>",
+                "class": "hatnote",
+                "text": "important note",
+                "format": "text",
+                "table": None,
+            }
+        }
+        result = self.c._render_paragraph(node, expanded)
+        assert "important note" in result
+
+
+class TestRenderList:
+    """_render_list 测试"""
+
+    def setup_method(self):
+        self.c = MarkdownConverter(lang="zh", use_persistent_cache=False)
+        self.c.expander = MagicMock()
+
+    def test_render_unordered_list(self):
+        """无序列表"""
+        node = Node(type=NodeType.LIST, content="", attrs={"list_type": "ul"})
+        child = Node(type=NodeType.LIST_ITEM, content="Item 1", attrs={})
+        node.children.append(child)
+        child2 = Node(type=NodeType.LIST_ITEM, content="Item 2", attrs={})
+        node.children.append(child2)
+
+        result = self.c._render_list(node, {})
+        assert "- Item 1" in result
+        assert "- Item 2" in result
+
+    def test_render_ordered_list(self):
+        """有序列表"""
+        node = Node(type=NodeType.LIST, content="", attrs={"list_type": "ol"})
+        child = Node(type=NodeType.LIST_ITEM, content="First", attrs={})
+        node.children.append(child)
+
+        result = self.c._render_list(node, {})
+        assert "1. First" in result

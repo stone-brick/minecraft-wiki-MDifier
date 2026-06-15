@@ -133,3 +133,175 @@ class TestParseTable:
         assert result["format"] == "infobox_table"
         assert result["table"] is not None
         assert len(result["table"]) > 0
+
+
+class TestBucketAPI:
+    """Bucket API（Lua 数据查询）测试"""
+
+    @patch("mdifier.template_expander.requests.Session")
+    def test_expand_via_bucket_success(self, MockSession):
+        """Bucket API 返回数据时正确解析为 table"""
+        mock_instance = MockSession.return_value
+        mock_instance.get.return_value.json.return_value = {
+            "bucket": [
+                {
+                    "json": '{"wanted_item": "Iron Ingot", "given_item": "Emerald", "wanted_quant": "1", "given_quant": "1", "profession": "Armorer", "level": "Apprentice"}'
+                },
+                {
+                    "json": '{"wanted_item": "Iron Ingot", "given_item": "Emerald", "wanted_quant": "4", "given_quant": "1", "profession": "Weaponsmith", "level": "Journeyman"}'
+                },
+            ]
+        }
+        mock_instance.get.return_value.status_code = 200
+
+        expander = TemplateExpander("en")
+        result = expander.expand("{{Trade uses|Iron Ingot}}")
+
+        assert result["format"] == "table"
+        assert result["table"] is not None
+        assert len(result["table"]) >= 2  # 表头行 + 数据行
+
+    @patch("mdifier.template_expander.requests.Session")
+    def test_expand_via_bucket_no_query_falls_back_to_parse(self, MockSession):
+        """Trade uses 无参数时 _build_bucket_query 返回 None，触发降级到 parse"""
+        mock_instance = MockSession.return_value
+        mock_instance.get.return_value.json.return_value = {
+            "parse": {"text": {"*": '<div class="hatnote">Fallback content</div>'}}
+        }
+        mock_instance.get.return_value.status_code = 200
+
+        expander = TemplateExpander("zh")
+        # 无参数且无 page_title，_build_bucket_query 返回 None，直接走 parse
+        result = expander.expand("{{Trade uses}}")
+
+        assert result["class"] == "hatnote"
+
+    @patch("mdifier.template_expander.requests.Session")
+    def test_expand_via_bucket_with_i18n(self, MockSession):
+        """zh wiki 返回 i18n 字段时正确翻译"""
+        mock_instance = MockSession.return_value
+        mock_instance.get.return_value.json.return_value = {
+            "bucket": [
+                {
+                    "json": '{"wanted_item": "Iron Ingot", "profession_i18n": "盔甲匠", "level_i18n": "学徒", "wanted_quant": "1"}'
+                },
+            ]
+        }
+        mock_instance.get.return_value.status_code = 200
+
+        expander = TemplateExpander("zh")
+        result = expander.expand("{{Trade uses|Iron Ingot}}")
+
+        assert result["format"] == "table"
+        # i18n 翻译字段应该被使用
+        table = result["table"]
+        assert any("盔甲匠" in str(row) for row in table)
+
+    def test_needs_bucket_api(self):
+        """Trade uses 和 Crafting usage 需要走 bucket API"""
+        expander = TemplateExpander("zh")
+        assert expander._needs_bucket_api("trade uses") is True
+        assert expander._needs_bucket_api("crafting usage") is True
+        assert expander._needs_bucket_api("hatnote") is False
+
+    def test_build_bucket_query(self):
+        """Bucket 查询语句正确构建"""
+        expander = TemplateExpander("en")
+
+        # Trade uses 需要 wanted_item 字段
+        query = expander._build_bucket_query(
+            "trade uses",
+            {"1": "Iron Ingot"},
+            page_title="Iron Ingot",
+        )
+        assert query is not None
+        assert 'wanted_item"' in query
+        assert "Iron Ingot" in query
+
+    def test_build_bucket_query_with_english_title(self):
+        """zh wiki 使用 english_title 作为 fallback"""
+        expander = TemplateExpander("zh")
+
+        # 无参数时使用 page_title
+        query = expander._build_bucket_query(
+            "trade uses",
+            {},
+            page_title="Iron Ingot",
+            english_title="Iron Ingot",
+        )
+        assert query is not None
+        assert "Iron Ingot" in query
+
+    def test_build_bucket_query_missing_param(self):
+        """缺少必需参数时返回 None"""
+        expander = TemplateExpander("en")
+
+        # 无任何参数且无 page_title
+        query = expander._build_bucket_query(
+            "trade uses",
+            {},
+            page_title=None,
+        )
+        assert query is None
+
+    def test_convert_bucket_json_to_table(self):
+        """Bucket JSON 数据正确转换为 table"""
+        expander = TemplateExpander("en")
+        bucket_data = [
+            {
+                "json": '{"wanted_item": "Diamond", "given_item": "Emerald", "wanted_quant": "1", "given_quant": "1"}'
+            },
+            {
+                "json": '{"wanted_item": "Diamond", "given_item": "Emerald", "wanted_quant": "4", "given_quant": "1"}'
+            },
+        ]
+        table = expander._convert_bucket_json_to_table(bucket_data, "trade uses")
+
+        assert len(table) == 3  # 表头行 + 2 数据行
+        assert table[0][0] == "Villager"  # 表头来自 BUCKET_TEMPLATES 定义
+
+    def test_convert_bucket_json_to_table_with_quant(self):
+        """带数量前缀的字段正确格式化"""
+        expander = TemplateExpander("en")
+        bucket_data = [
+            {
+                "json": '{"wanted_item": "Iron Ingot", "wanted_quant": "4", "given_item": "Emerald", "given_quant": "1"}'
+            },
+        ]
+        table = expander._convert_bucket_json_to_table(bucket_data, "trade uses")
+
+        # 数量前缀应该被添加
+        assert any("4×" in str(row) for row in table)
+
+    def test_convert_bucket_json_to_table_zh_i18n(self):
+        """zh wiki 正确使用 i18n 字段翻译"""
+        expander = TemplateExpander("zh")
+        bucket_data = [
+            {
+                "json": '{"profession": "Armorer", "profession_i18n": "盔甲匠", "level": "Apprentice", "level_i18n": "学徒"}'
+            },
+        ]
+        table = expander._convert_bucket_json_to_table(bucket_data, "trade uses")
+
+        # i18n 字段应该被使用
+        assert any("盔甲匠" in str(row) for row in table)
+        assert any("学徒" in str(row) for row in table)
+
+    def test_format_header_key(self):
+        """字段名正确转换为友好表头"""
+        expander = TemplateExpander("en")
+        assert expander._format_header_key("wanted_item") == "Wanted Item"
+        assert expander._format_header_key("profession") == "Profession"
+        assert expander._format_header_key("wanted_quant") == "Wanted Quant"
+
+    def test_translate_field_with_i18n(self):
+        """_translate_field 优先使用 i18n 字段"""
+        expander = TemplateExpander("zh")
+        data = {"profession": "Armorer", "profession_i18n": "盔甲匠"}
+        assert expander._translate_field(data, "profession") == "盔甲匠"
+
+    def test_translate_field_without_i18n(self):
+        """无 i18n 字段时返回原始值"""
+        expander = TemplateExpander("en")
+        data = {"profession": "Armorer"}
+        assert expander._translate_field(data, "profession") == "Armorer"

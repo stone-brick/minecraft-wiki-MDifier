@@ -199,6 +199,52 @@ class TestFetchFallback:
     # 注：API 异常降级到 HTML 的逻辑在 fetch() 内部通过异常处理实现，
     # 由于 mock 绕过了实际调用路径，此处通过 test_api_404_falls_back_to_html 间接覆盖
 
+    @patch("mdifier.wiki.requests.Session")
+    def test_api_error_falls_back_to_html(self, MockSession):
+        """API 返回错误结构时降级到 HTML（已有 parse 字段但含 error）"""
+        html = "<div id='mw-content-text'><p>降级内容</p></div>"
+
+        def get_side_effect(url, **kwargs):
+            m = MagicMock()
+            if "api.php" in url:
+                m.status_code = 200
+                # 有 parse 字段但实际内容为空 → 空内容降级
+                m.json.return_value = {"parse": {"wikitext": {"*": ""}}}
+            else:
+                m.text = html
+                m.status_code = 200
+            return m
+
+        mock_instance = MockSession.return_value
+        mock_instance.get.side_effect = get_side_effect
+
+        fetcher = WikiFetcher("zh")
+        page = fetcher.fetch("测试页面")
+
+        assert page.source == "html"
+        assert "降级内容" in page.content
+
+    @patch("mdifier.wiki.requests.Session")
+    def test_both_api_and_html_fail(self, MockSession):
+        """API 返回空内容和 HTML 也失败时抛出 WikiAPIError"""
+
+        def get_side_effect(url, **kwargs):
+            m = MagicMock()
+            if "api.php" in url:
+                m.status_code = 200
+                m.json.return_value = {"parse": {"wikitext": {"*": ""}}}
+            else:
+                m.text = "<html><body>No mw-content-text</body></html>"
+                m.status_code = 200
+            return m
+
+        mock_instance = MockSession.return_value
+        mock_instance.get.side_effect = get_side_effect
+
+        fetcher = WikiFetcher("zh")
+        with pytest.raises(WikiAPIError):
+            fetcher.fetch("测试页面")
+
 
 class TestFetchMany:
     """fetch_many() 测试"""
