@@ -121,7 +121,7 @@ python -m minecraft_wiki_mdifier.cli search "diamond"
 ### Python Library
 
 ```python
-from minecraft_wiki_mdifier import convert, convert_detailed, convert_many, search
+from minecraft_wiki_mdifier import convert, convert_detailed, convert_many, search, BatchConvertResult, ConvertResult
 
 # Simple convert (English wiki default)
 md = convert("Iron Ingot")
@@ -200,7 +200,6 @@ except InvalidInputError as e:
 | `NetworkError` | `FetchError` | Connection failed/timeout |
 | `WikiAPIError` | `FetchError` | API returned error structure |
 | `PageNotFoundError` | `FetchError` | Page not found |
-| `BucketAPIError` | `MdifierError` | Bucket API call failed |
 | `BucketAPIError` | `MdifierError` | Bucket API call failed |
 | `CacheError` | `MdifierError`, `OSError` | Cache read/write failed |
 

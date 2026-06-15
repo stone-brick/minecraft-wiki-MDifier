@@ -86,7 +86,7 @@ mkdir -p output && mdifier batch -t Diamond -t Iron_Ingot -o output/
 mdifier convert "Iron Ingot"
 
 # 中国語 wiki
-mdifier convert "鉄锭" --lang zh -o iron.md
+mdifier convert "Iron Ingot" --lang zh -o iron.md
 
 # 日本語 wiki
 mdifier convert "鉄インゴット" --lang ja -o iron.md
@@ -124,13 +124,13 @@ python -m minecraft_wiki_mdifier.cli search "diamond"
 ### Python ライブラリ
 
 ```python
-from minecraft_wiki_mdifier import convert, convert_detailed, convert_many, search
+from minecraft_wiki_mdifier import convert, convert_detailed, convert_many, search, BatchConvertResult, ConvertResult
 
 # 简单変換（英語 wiki デフォルト）
 md = convert("Iron Ingot")
 
 # 中国語 wiki
-md_zh = convert("鉄锭", lang="zh")
+md_zh = convert("Iron Ingot", lang="zh")
 
 # 日本語 wiki
 md_ja = convert("鉄インゴット", lang="ja")
