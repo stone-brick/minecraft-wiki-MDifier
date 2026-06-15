@@ -243,9 +243,9 @@ except InvalidInputError as e:
 ## 功能特点
 
 - **双模式**：CLI（`mdifier`）+ Python 库
-- **多语言支持**：内置 `zh`（zh.minecraft.wiki）和 `en`（minecraft.wiki）
+- **多语言支持**：内置 `zh`（zh.minecraft.wiki）、`en`（minecraft.wiki）和 `ja`（ja.minecraft.wiki）
 - **批量转换**：`mdifier batch` 子命令支持 -t / -i / --from-search
-- **跨语言批量**：标题列表可混合 zh/en 页面，内部自动按语言分组
+- **跨语言批量**：标题列表可混合 zh/en/ja 页面，内部自动按语言分组
 - **持久化模板缓存**：相同模板只请求一次，跨运行共享（**5.4x 加速**）
 - **缓存管理**：`mdifier cache info/clear/prune` 子命令组
 - **自动 PascalCase**：仅对全小写、无空格/连字符的纯字母名生效（如 `for` → `For`、`id table` → `Id Table`）
@@ -503,7 +503,7 @@ mdifier cache clear -y
 from mdifier.converter import MarkdownConverter
 
 c = MarkdownConverter(
-    lang="zh",                   # 语言：zh 或 en
+    lang="zh",                   # 语言：zh / en / ja
     max_workers=10,              # 模板展开线程池大小
     template_cache={},           # 跨调用共享缓存（None 则新建）
     use_persistent_cache=True,   # 是否加载磁盘缓存（默认 True）

@@ -120,9 +120,13 @@ class TemplateExpander:
 
         # 尝试 Bucket API（仅支持 bucket 的 wiki 且命中注册表）
         if self._needs_bucket_api(template_name):
-            # 获取英文名用于 bucket 查询（zh wiki 需要翻译页面名）
-            english_title = self._get_english_title(page_title) if self.lang == "zh" else page_title
-            bucket_query = self._build_bucket_query(template_name, params, english_title)
+            # 获取英文名用于 bucket 查询（zh/ja wiki 需要翻译页面名）
+            english_title = (
+                self._get_english_title(page_title) if self.lang in ("zh", "ja") else page_title
+            )
+            bucket_query = self._build_bucket_query(
+                template_name, params, page_title, english_title
+            )
             if bucket_query:
                 try:
                     return self._expand_via_bucket(bucket_query, template_name)
@@ -166,7 +170,11 @@ class TemplateExpander:
         return template_name.lower() in BUCKET_TEMPLATES
 
     def _build_bucket_query(
-        self, template_name: str, params: dict[str, str], page_title: str | None = None
+        self,
+        template_name: str,
+        params: dict[str, str],
+        page_title: str | None = None,
+        english_title: str | None = None,
     ) -> str | None:
         """
         从模板参数构建 bucket 查询语句
@@ -175,6 +183,7 @@ class TemplateExpander:
             template_name: 模板名（如 "Trade uses"）
             params: 模板参数
             page_title: 页面标题（作为默认值）
+            english_title: 英文标题（用于 zh/ja wiki bucket 查询）
 
         Returns:
             bucket 查询语句，或 None（缺少必需参数时）
@@ -183,6 +192,8 @@ class TemplateExpander:
         if not info:
             return None
 
+        # 优先使用英文标题（zh/ja wiki 通过 langlinks 获取）
+        fallback = english_title or page_title
         # where 配置格式：[("field", "param_name")]
         # param_name 可以是 "item", "1", "nameid" 等
         # 特殊值 "_page_title" 表示使用 page_title
@@ -190,7 +201,7 @@ class TemplateExpander:
             if param_name == "_page_title":
                 item = page_title
             else:
-                item = params.get(param_name) or params.get("1") or page_title
+                item = params.get(param_name) or params.get("1") or fallback
             if item:
                 break
 
@@ -340,7 +351,7 @@ class TemplateExpander:
 
     def _get_english_title(self, title: str | None) -> str | None:
         """
-        通过 langlinks API 获取页面的英文名（用于 zh wiki bucket 查询）
+        通过 langlinks API 获取页面的英文名（用于 zh/ja wiki bucket 查询）
 
         Args:
             title: 页面标题

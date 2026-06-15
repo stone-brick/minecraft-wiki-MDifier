@@ -183,7 +183,7 @@ for title, err in result.failed:
 try:
     convert("X", lang="xx")
 except InvalidInputError as e:
-    print(e)  # "Unsupported language: xx. Available: ['zh', 'en']"
+    print(e)  # "Unsupported language: xx. Available: ['zh', 'en', 'ja']"
 ```
 
 **Exception hierarchy**:
@@ -202,9 +202,9 @@ except InvalidInputError as e:
 ## Features
 
 - **Dual mode**: CLI (`mdifier`) + Python library
-- **Multi-language**: Built-in `zh` (zh.minecraft.wiki) and `en` (minecraft.wiki)
+- **Multi-language**: Built-in `zh` (zh.minecraft.wiki), `en` (minecraft.wiki), and `ja` (ja.minecraft.wiki)
 - **Batch convert**: `mdifier batch` supports `-t` / `-i` / `--from-search`
-- **Cross-language batch**: Title list can mix zh/en pages, auto-grouped by language
+- **Cross-language batch**: Title list can mix zh/en/ja pages, auto-grouped by language
 - **Persistent template cache**: Same templates requested once, shared across runs (**5.4x speedup**)
 - **Cache management**: `mdifier cache info/clear/prune`
 - **Auto PascalCase**: Only for all-lowercase names without spaces/hyphens
