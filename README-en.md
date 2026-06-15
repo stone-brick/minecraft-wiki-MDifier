@@ -201,19 +201,21 @@ except InvalidInputError as e:
 | `WikiAPIError` | `FetchError` | API returned error structure |
 | `PageNotFoundError` | `FetchError` | Page not found |
 | `BucketAPIError` | `MdifierError` | Bucket API call failed |
+| `BucketAPIError` | `MdifierError` | Bucket API call failed |
 | `CacheError` | `MdifierError`, `OSError` | Cache read/write failed |
 
 ## Features
 
 - **Dual mode**: CLI (`mdifier`) + Python library
 - **Multi-language**: Built-in `zh` (zh.minecraft.wiki), `en` (minecraft.wiki), and `ja` (ja.minecraft.wiki)
+  - Note: ja wiki's Bucket i18n fields contain Chinese content; the program does not translate by default, outputting English text as-is
 - **Batch convert**: `mdifier batch` supports `-t` / `-i` / `--from-search`
 - **Cross-language batch**: Title list can mix zh/en/ja pages, auto-grouped by language
 - **Persistent template cache**: Same templates requested once, shared across runs (**5.4x speedup**)
 - **Cache management**: `mdifier cache info/clear/prune`
 - **Auto PascalCase**: Only for all-lowercase names without spaces/hyphens
 - **Unexpanded report**: Reports missing templates at batch end
-- **Configurable markers**: Custom `<template:xxx>` marker formats
+- **Configurable markers**: Custom `:::{name}` marker formats
 - **Batch cancellation**: `MarkdownConverter.cancel()` interrupts large batches
 - **Smart fetching**: MediaWiki API first, HTML fallback
 - **Network retry**: HTTP GET auto-retries 3x (exponential backoff 0.5s/1s/2s) for 5xx/429
@@ -355,7 +357,7 @@ convert("Iron Ingot", template_cache=shared)  # +17 new, 24 shared
 ## Project Structure
 
 ```
-src/mdifier/
+src/minecraft_wiki_mdifier/
 ├── __init__.py           # Exports convert/convert_detailed/convert_many/search
 ├── lib.py                # Library mode API (with convert_many)
 ├── cli.py                # CLI entry (click, with batch/cache subcommands)
@@ -364,7 +366,10 @@ src/mdifier/
 ├── template_expander.py   # Template expansion: action=bucket or action=parse + format detection
 ├── formatters.py         # Minecraft color codes → semantic labels
 ├── converter.py          # Markdown generation: dict dispatch rendering
-└── cache.py              # Template expansion cache persistence
+├── cache.py              # Template expansion cache persistence
+├── exceptions.py        # Custom exception hierarchy (incl. BucketAPIError)
+├── _session.py           # HTTP Session factory (retry config, User-Agent)
+└── _validators.py        # Language validator (avoids circular imports)
 ```
 
 ### Data Flow

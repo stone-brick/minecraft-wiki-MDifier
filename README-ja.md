@@ -214,13 +214,14 @@ except InvalidInputError as e:
 
 - **デュアルモード**: CLI (`mdifier`) + Python ライブラリ
 - **多言語対応**: 組み込みの `zh`（zh.minecraft.wiki）、`en`（minecraft.wiki）、`ja`（ja.minecraft.wiki）
+  - 注意：ja wiki の Bucket i18n フィールドには中国語のデータが含まれており、プログラムはデフォルトで翻訳せず、英語原文を出力します
 - **バッチ変換**: `mdifier batch` は `-t` / `-i` / `--from-search` をサポート
 - **言語横断バッチ**: タイトルリストは zh/en/ja を混在可能、自动グループ化
 - **永続テンプレートキャッシュ**: 同じテンプレートは一度만 요청され、実行間で共有（**5.4x 高速化**）
 - **キャッシュ管理**: `mdifier cache info/clear/prune`
 - **自動 PascalCase**: スペース/ハイフンがない全て小文字名のみ
 - **未展開レポート**: バッチ終了時に欠落テンプレートを報告
-- **設定可能なマーカー**: カスタム `<template:xxx>` マーカー形式
+- **設定可能なマーカー**: カスタム `:::{name}` マーカー形式
 - **バッチキャンセル**: `MarkdownConverter.cancel()` で大規模バッチを中断
 - **スマート取得**: MediaWiki API優先、HTML フォールバック
 - **ネットワークリトライ**: HTTP GET は 5xx/429 時に3回自動リトライ（指数バックオフ 0.5s/1s/2s）
@@ -362,16 +363,19 @@ convert("Iron Ingot", template_cache=shared)  # +17 新規、24 共有
 ## プロジェクト構造
 
 ```
-src/mdifier/
+src/minecraft_wiki_mdifier/
 ├── __init__.py           # convert/convert_detailed/convert_many/search をエクスポート
 ├── lib.py                # ライブラリモード API（convert_many を含む）
 ├── cli.py                # CLI エントリ（click、batch/cache サブコマンド付き）
 ├── wiki.py               # MediaWiki API 取得 + HTML フォールバック
 ├── parser.py             # Wikitext パーサー（テンプレート/リンク/見出し）
-├── template_expander.py   # テンプレート展開: action=bucket または action=parse + 形式検出
+├── template_expander.py  # テンプレート展開: action=bucket または action=parse + 形式検出
 ├── formatters.py         # Minecraft カラーコード → 意味ラベル
 ├── converter.py          # Markdown 生成: ディスパッチレンダリング
-└── cache.py              # テンプレート展開キャッシュの永続化
+├── cache.py              # テンプレート展開キャッシュの永続化
+├── exceptions.py         # カスタム例外階層（BucketAPIError を含む）
+├── _session.py          # HTTP Session ファクトリ（リトライ設定、User-Agent）
+└── _validators.py       # 言語バリデータ（循環依存回避）
 ```
 
 ### データフロー

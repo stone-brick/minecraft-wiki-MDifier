@@ -40,13 +40,13 @@ export PATH="$PATH:/d/Program\ Files/Python/Python313/Scripts"
 ```bash
 # 通常 pip install 会自动装到 ~/.local/bin
 export PATH="$PATH:$HOME/.local/bin"
-# 或：python -m mdifier.cli（跨平台等价）
+# 或：python -m minecraft_wiki_mdifier.cli（跨平台等价）
 ```
 
 验证：
 ```bash
 mdifier --version
-# 如不行：python -m mdifier.cli --version
+# 如不行：python -m minecraft_wiki_mdifier.cli --version
 ```
 
 ### 路径最佳实践（AI 助手必看）
@@ -141,8 +141,8 @@ mdifier batch -t Iron_Ingot --marker-format '<template:{name} start>/<template:{
 没装 pip 或找不到 `mdifier` 命令时，直接用 `python -m` 运行模块：
 
 ```bash
-python -m mdifier.cli convert "铁锭"
-python -m mdifier.cli search "钻石"
+python -m minecraft_wiki_mdifier.cli convert "铁锭"
+python -m minecraft_wiki_mdifier.cli search "钻石"
 ```
 
 ### Python 库
@@ -242,12 +242,14 @@ except InvalidInputError as e:
 | `NetworkError` | `FetchError` | 连接失败/超时 |
 | `WikiAPIError` | `FetchError` | API 异常结构 |
 | `PageNotFoundError` | `FetchError` | 页面不存在 |
+| `BucketAPIError` | `MdifierError` | Bucket API 调用失败 |
 | `CacheError` | `MdifierError`, `OSError` | 缓存读写失败 |
 
 ## 功能特点
 
 - **双模式**：CLI（`mdifier`）+ Python 库
 - **多语言支持**：内置 `zh`（zh.minecraft.wiki）、`en`（minecraft.wiki）和 `ja`（ja.minecraft.wiki）
+  - 注意：ja wiki 的 Bucket i18n 字段含中文内容，程序默认不翻译，输出英文原文
 - **批量转换**：`mdifier batch` 子命令支持 -t / -i / --from-search
 - **跨语言批量**：标题列表可混合 zh/en/ja 页面，内部自动按语言分组
 - **持久化模板缓存**：相同模板只请求一次，跨运行共享（**5.4x 加速**）
@@ -265,7 +267,7 @@ except InvalidInputError as e:
 
 ## 模板处理
 
-模板被包裹在 `<template:xxx>` 标记中，内容按格式分类型处理：
+模板被包裹在 `:::{name}` 标记中，内容按格式分类型处理：
 
 | 模板 | 输出 |
 |------|------|
@@ -282,11 +284,11 @@ except InvalidInputError as e:
 ```markdown
 ### 合成
 
-<template:wikitable start>
+:::Crafting
 | 材料 | 合成 配方 |
 | --- | --- |
 | 钻石块 | [_|_|_ / _|_|钻石块|_ / _|_|_] -> 钻石x9 |
-<template:wikitable end>
+:::
 ```
 
 ## 性能与缓存
@@ -440,18 +442,19 @@ if info["exists"] and info["size_mb"] > 100:
 ## 项目结构
 
 ```
-src/mdifier/
-├── __init__.py           # 包初始化，导出 convert/convert_detailed/convert_many/search
+src/minecraft_wiki_mdifier/
+├── __init__.py           # 导出 convert/convert_detailed/convert_many/search
 ├── lib.py                # 库模式 API（含 convert_many）
 ├── cli.py                # CLI 入口（click，含 batch/cache 子命令）
-├── convert.py            # 独立转换脚本（命令行直接运行）
-├── search.py             # 独立搜索脚本
 ├── wiki.py               # MediaWiki API 获取 + HTML 降级
 ├── parser.py             # Wikitext 解析器（模板/链接/标题）
 ├── template_expander.py  # 模板展开：action=bucket 或 action=parse + 格式检测
 ├── formatters.py         # Minecraft 颜色代码 → 语义化标签
 ├── converter.py          # Markdown 生成：dict dispatch 渲染
-└── cache.py              # 模板展开缓存持久化
+├── cache.py              # 模板展开缓存持久化
+├── exceptions.py         # 自定义异常层级（含 BucketAPIError）
+├── _session.py           # HTTP Session 工厂（统一重试配置、User-Agent）
+└── _validators.py        # 语言验证器（避免循环依赖）
 ```
 
 ### 数据流
@@ -516,7 +519,7 @@ c = MarkdownConverter(
 
 ### `BatchConvertResult.results` 顺序说明
 
-`result.results` **仅含成功项**，顺序与输入**不严格一致**（`convert_many` 按 lang 分组、按 future 完成顺序填充）。如需保持输入顺序，可自行构建 `dict[title, result]`：
+`result.results` **仅含成功项**，顺序与输入**一致**（按 lang 分组、按输入顺序填充）。如需查找特定标题的结果，可自行构建 `dict[title, result]`：
 
 ```python
 result = convert_many(["钻石", "铁锭", "附魔台"], lang="zh")
