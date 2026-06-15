@@ -16,6 +16,10 @@
 **需要 Python >= 3.13**，依赖：`requests`, `beautifulsoup4`, `click`, `markdownify`。
 
 ```bash
+# 从 PyPI 安装（推荐）
+pip install minecraft-wiki-mdifier
+
+# 本地开发模式（可编辑）
 pip install -e .
 ```
 

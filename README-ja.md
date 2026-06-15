@@ -16,6 +16,10 @@ Minecraft Wiki のページを AI に優しい Markdown に変換
 **Python >= 3.13** が必要です。依存ライブラリ: `requests`, `beautifulsoup4`, `click`, `markdownify`.
 
 ```bash
+# PyPI からインストール（推奨）
+pip install minecraft-wiki-mdifier
+
+# ローカル開発用（編集可能）
 pip install -e .
 ```
 

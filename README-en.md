@@ -16,6 +16,10 @@ Convert Minecraft Wiki pages to AI-friendly Markdown
 **Requires Python >= 3.13**, dependencies: `requests`, `beautifulsoup4`, `click`, `markdownify`.
 
 ```bash
+# Install from PyPI (recommended)
+pip install minecraft-wiki-mdifier
+
+# Local development (editable)
 pip install -e .
 ```
 
