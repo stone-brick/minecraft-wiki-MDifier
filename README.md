@@ -144,7 +144,7 @@ python -m mdifier.cli search "钻石"
 ### Python 库
 
 ```python
-from mdifier import convert, convert_detailed, convert_many, search, BatchConvertResult, ConvertResult
+from minecraft_wiki_mdifier import convert, convert_detailed, convert_many, search, BatchConvertResult, ConvertResult
 
 # 简单转换（中文默认）
 md = convert("铁锭")
@@ -309,7 +309,7 @@ except InvalidInputError as e:
 可改为 HTML `details` 等风格。`open` 和 `close` 各自可独立配置：
 
 ```python
-from mdifier.converter import MarkdownConverter
+from minecraft_wiki_mdifier.converter import MarkdownConverter
 
 c = MarkdownConverter()
 c.template_marker_open = ":::{name}"
@@ -338,8 +338,8 @@ mdifier batch -i pages.txt --marker-format '<template:{name} start>/<template:{n
 
 ```python
 import threading
-from mdifier import convert_many
-from mdifier.converter import MarkdownConverter
+from minecraft_wiki_mdifier import convert_many
+from minecraft_wiki_mdifier.converter import MarkdownConverter
 
 c = MarkdownConverter(lang='zh')
 threading.Timer(0.5, c.cancel).start()
@@ -375,7 +375,7 @@ Iron Ingot
 单页 `convert` 也支持传入 `template_cache`，同一进程内多次转换共享模板展开结果：
 
 ```python
-from mdifier import convert
+from minecraft_wiki_mdifier import convert
 
 shared = {}
 convert("钻石", template_cache=shared)  # 24 条模板展开
@@ -400,7 +400,7 @@ convert("铁锭", template_cache=shared)  # 增量 17 条，24 条共享
 **Python API 等效**：
 
 ```python
-from mdifier.cache import cache_info, clear_cache, save_cache
+from minecraft_wiki_mdifier.cache import cache_info, clear_cache, save_cache
 
 # 手动将进程内缓存写入磁盘（convert_many 自动调用）
 save_cache(my_cache_dict)
@@ -426,7 +426,7 @@ clear_cache()
 Python 等价：
 
 ```python
-from mdifier.cache import cache_info, clear_cache
+from minecraft_wiki_mdifier.cache import cache_info, clear_cache
 
 info = cache_info()
 if info["exists"] and info["size_mb"] > 100:
@@ -500,7 +500,7 @@ mdifier cache clear -y
 ### `MarkdownConverter` 构造参数
 
 ```python
-from mdifier.converter import MarkdownConverter
+from minecraft_wiki_mdifier.converter import MarkdownConverter
 
 c = MarkdownConverter(
     lang="zh",                   # 语言：zh / en / ja
@@ -525,7 +525,7 @@ md_diamond = by_title.get("钻石")
 低层颜色规范类，可独立使用或子类化：
 
 ```python
-from mdifier.formatters import MinecraftColorFormatter
+from minecraft_wiki_mdifier.formatters import MinecraftColorFormatter
 
 f = MinecraftColorFormatter()
 md_text = f.clean("&e黄色&r重置")  # '[yellow]黄色[reset]重置'

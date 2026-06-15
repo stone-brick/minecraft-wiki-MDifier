@@ -36,13 +36,13 @@ export PATH="$PATH:/d/Program Files/Python/Python313/Scripts"
 ```bash
 # Usually installed to ~/.local/bin
 export PATH="$PATH:$HOME/.local/bin"
-# Or: python -m mdifier.cli (cross-platform equivalent)
+# Or: python -m minecraft_wiki_mdifier.cli (cross-platform equivalent)
 ```
 
 Verify:
 ```bash
 mdifier --version
-# Or: python -m mdifier.cli --version
+# Or: python -m minecraft_wiki_mdifier.cli --version
 ```
 
 ### Path Best Practices (for AI assistants)
@@ -110,14 +110,14 @@ mdifier batch -t Diamond --marker-format '<details><summary>{name}</summary>/</d
 
 Without pip or if `mdifier` not found:
 ```bash
-python -m mdifier.cli convert "Iron Ingot"
-python -m mdifier.cli search "diamond"
+python -m minecraft_wiki_mdifier.cli convert "Iron Ingot"
+python -m minecraft_wiki_mdifier.cli search "diamond"
 ```
 
 ### Python Library
 
 ```python
-from mdifier import convert, convert_detailed, convert_many, search
+from minecraft_wiki_mdifier import convert, convert_detailed, convert_many, search
 
 # Simple convert (English wiki default)
 md = convert("Iron Ingot")
@@ -268,7 +268,7 @@ Template expansion results auto-persisted to disk:
 Can be changed to HTML `details` style. `open` and `close` configured independently:
 
 ```python
-from mdifier.converter import MarkdownConverter
+from minecraft_wiki_mdifier.converter import MarkdownConverter
 
 c = MarkdownConverter()
 c.template_marker_open = ":::{name}"
@@ -291,8 +291,8 @@ Get converter reference via `converter_factory` param, call `cancel()` from anot
 
 ```python
 import threading
-from mdifier import convert_many
-from mdifier.converter import MarkdownConverter
+from minecraft_wiki_mdifier import convert_many
+from minecraft_wiki_mdifier.converter import MarkdownConverter
 
 c = MarkdownConverter(lang='en')
 threading.Timer(0.5, c.cancel).start()
@@ -326,7 +326,7 @@ Iron Ingot
 Single-page `convert()` also supports passing `template_cache` for same-process sharing:
 
 ```python
-from mdifier import convert
+from minecraft_wiki_mdifier import convert
 
 shared = {}
 convert("Diamond", template_cache=shared)  # 24 template expansions

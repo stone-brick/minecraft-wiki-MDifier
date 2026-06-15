@@ -36,13 +36,13 @@ export PATH="$PATH:/d/Program Files/Python/Python313/Scripts"
 ```bash
 # 通常 ~/.local/bin にインストールされます
 export PATH="$PATH:$HOME/.local/bin"
-# または: python -m mdifier.cli（クロスプラットフォーム）
+# または: python -m minecraft_wiki_mdifier.cli（クロスプラットフォーム）
 ```
 
 確認:
 ```bash
 mdifier --version
-# または: python -m mdifier.cli --version
+# または: python -m minecraft_wiki_mdifier.cli --version
 ```
 
 ### Path のベストプラクティス（AI アシスタント向け）
@@ -113,14 +113,14 @@ mdifier batch -t Diamond --marker-format '<details><summary>{name}</summary></de
 
 pip がない場合、または `mdifier` が見つからない場合:
 ```bash
-python -m mdifier.cli convert "Iron Ingot"
-python -m mdifier.cli search "diamond"
+python -m minecraft_wiki_mdifier.cli convert "Iron Ingot"
+python -m minecraft_wiki_mdifier.cli search "diamond"
 ```
 
 ### Python ライブラリ
 
 ```python
-from mdifier import convert, convert_detailed, convert_many, search
+from minecraft_wiki_mdifier import convert, convert_detailed, convert_many, search
 
 # 简单変換（英語 wiki デフォルト）
 md = convert("Iron Ingot")
@@ -275,7 +275,7 @@ except InvalidInputError as e:
 HTML `details` スタイルに変更可能。`open` と `close` は個別に設定可能：
 
 ```python
-from mdifier.converter import MarkdownConverter
+from minecraft_wiki_mdifier.converter import MarkdownConverter
 
 c = MarkdownConverter()
 c.template_marker_open = ":::{name}"
@@ -298,8 +298,8 @@ mdifier batch -t Diamond --marker-format '<details><summary>{name}</summary></de
 
 ```python
 import threading
-from mdifier import convert_many
-from mdifier.converter import MarkdownConverter
+from minecraft_wiki_mdifier import convert_many
+from minecraft_wiki_mdifier.converter import MarkdownConverter
 
 c = MarkdownConverter(lang='en')
 threading.Timer(0.5, c.cancel).start()
@@ -333,7 +333,7 @@ Iron Ingot
 1 ページ `convert()` は `template_cache` の受け渡し भी 同プロセス共有をサポート：
 
 ```python
-from mdifier import convert
+from minecraft_wiki_mdifier import convert
 
 shared = {}
 convert("Diamond", template_cache=shared)  # 24 テンプレート展開
