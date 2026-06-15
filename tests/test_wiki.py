@@ -203,14 +203,15 @@ class TestFetchFallback:
 class TestFetchMany:
     """fetch_many() 测试"""
 
-    @patch("mdifier.wiki.WikiFetcher.fetch_via_api")
-    def test_fetch_many_returns_in_order(self, mock_fetch_via_api):
+    @patch("mdifier.wiki.WikiFetcher.fetch")
+    def test_fetch_many_returns_in_order(self, mock_fetch):
         """多页面并发，返回顺序与输入一致"""
-        mock_fetch_via_api.side_effect = [
-            WikiPage(title="A", content="a", source="api"),
-            WikiPage(title="B", content="b", source="api"),
-            WikiPage(title="C", content="c", source="api"),
-        ]
+
+        # 直接 mock fetch 方法本身，消除并发下 side_effect 顺序不确定的问题
+        def fetch_all(title: str):
+            return WikiPage(title=title, content=title.lower(), source="api")
+
+        mock_fetch.side_effect = fetch_all
 
         fetcher = WikiFetcher("zh")
         pages = fetcher.fetch_many(["A", "B", "C"])
@@ -218,14 +219,17 @@ class TestFetchMany:
         assert len(pages) == 3
         assert [p.title for p in pages] == ["A", "B", "C"]
 
-    @patch("mdifier.wiki.WikiFetcher.fetch_via_api")
-    def test_fetch_many_partial_failure(self, mock_fetch_via_api):
+    @patch("mdifier.wiki.WikiFetcher.fetch")
+    def test_fetch_many_partial_failure(self, mock_fetch):
         """部分失败返回 None 不抛异常"""
-        mock_fetch_via_api.side_effect = [
-            WikiPage(title="A", content="a", source="api"),
-            PageNotFoundError("B not found"),
-            WikiPage(title="C", content="c", source="api"),
-        ]
+
+        # fetch 方法 raise 的异常会被 fetch_many 捕获并转为 None
+        def fetch_simu(title: str):
+            if title == "B":
+                raise PageNotFoundError("B not found")
+            return WikiPage(title=title, content=title.lower(), source="api")
+
+        mock_fetch.side_effect = fetch_simu
 
         fetcher = WikiFetcher("zh")
         pages = fetcher.fetch_many(["A", "B", "C"])
