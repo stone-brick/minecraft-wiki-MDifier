@@ -53,6 +53,7 @@ mdifier search "diamond" --lang en
 # 批量转换
 mdifier batch -t 钻石 -t 铁锭 -o ./out
 mdifier batch -i pages.txt -o ./out --workers 8
+mdifier batch -t Diamond --lang en --no-markers  # 禁用模板标记
 
 # 缓存管理
 mdifier cache info

@@ -53,6 +53,7 @@ mdifier search "钻石" --lang zh
 # Batch convert
 mdifier batch -t Diamond -t Iron_Ingot -o ./out
 mdifier batch -i pages.txt -o ./out --workers 8
+mdifier batch -t Diamond --no-markers  # Disable template markers
 
 # Cache management
 mdifier cache info
