@@ -116,7 +116,10 @@ class TemplateExpander:
                 template_name, params, page_title, english_title
             )
             if bucket_query:
-                return self._expand_via_bucket(bucket_query, template_name)
+                try:
+                    return self._expand_via_bucket(bucket_query, template_name)
+                except Exception:
+                    pass  # 降级到 action=expandtemplates
 
         # 降级到 action=expandtemplates（更轻量的模板展开 API）
         return self._expand_via_expandtemplates(template_call)
