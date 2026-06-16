@@ -4,7 +4,7 @@ Minecraft Wiki MDifier
 将Minecraft Wiki页面转换为AI助手易读的Markdown格式。
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from minecraft_wiki_mdifier.lib import (
     BatchConvertResult,
