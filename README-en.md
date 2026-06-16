@@ -5,7 +5,7 @@
 Convert Minecraft Wiki pages to AI-friendly Markdown
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.13+-green.svg)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
 
 **[中文](./README.md)** · **[日本語](./README-ja.md)**
 
@@ -13,7 +13,7 @@ Convert Minecraft Wiki pages to AI-friendly Markdown
 
 ## Installation
 
-**Requires Python >= 3.13**, dependencies: `requests`, `beautifulsoup4`, `click`, `markdownify`.
+**Requires Python >= 3.11**, dependencies: `requests`, `beautifulsoup4`, `click`, `markdownify`.
 
 ```bash
 # Install from PyPI (recommended)

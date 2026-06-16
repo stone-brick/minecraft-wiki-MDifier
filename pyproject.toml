@@ -3,7 +3,7 @@ name = "minecraft-wiki-mdifier"
 version = "0.1.0"
 description = "将Minecraft Wiki页面转换为AI助手易读的Markdown格式"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
     {name = "stone-brick"}
@@ -13,6 +13,8 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Text Processing :: Markup",
 ]
@@ -47,7 +49,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py313"
+target-version = "py311"
 
 [tool.ruff.lint]
 # 启用的规则集

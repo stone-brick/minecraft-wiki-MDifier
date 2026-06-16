@@ -5,7 +5,7 @@
 Minecraft Wiki のページを AI に優しい Markdown に変換
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.13+-green.svg)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
 
 **[中文](./README.md)** · **[English](./README-en.md)**
 
@@ -13,7 +13,7 @@ Minecraft Wiki のページを AI に優しい Markdown に変換
 
 ## インストール
 
-**Python >= 3.13** が必要です。依存ライブラリ: `requests`, `beautifulsoup4`, `click`, `markdownify`.
+**Python >= 3.11** が必要です。依存ライブラリ: `requests`, `beautifulsoup4`, `click`, `markdownify`.
 
 ```bash
 # PyPI からインストール（推奨）

@@ -5,7 +5,7 @@
 将 Minecraft Wiki 页面转换为 AI 助手易读的 Markdown 格式
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.13+-green.svg)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
 
 **[English](./README-en.md)** · **[日本語](./README-ja.md)**
 
@@ -13,7 +13,7 @@
 
 ## 安装
 
-**需要 Python >= 3.13**，依赖：`requests`, `beautifulsoup4`, `click`, `markdownify`。
+**需要 Python >= 3.11**，依赖：`requests`, `beautifulsoup4`, `click`, `markdownify`。
 
 ```bash
 # 从 PyPI 安装（推荐）
