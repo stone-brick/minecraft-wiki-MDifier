@@ -120,10 +120,10 @@ class TemplateExpander:
                 try:
                     return self._expand_via_bucket(bucket_query, template_name)
                 except BucketAPIError:
-                    pass  # 降级到 action=parse
+                    pass  # 降级到 action=expandtemplates
 
-        # 降级到 action=parse
-        return self._expand_via_parse(template_call)
+        # 降级到 action=expandtemplates（更轻量的模板展开 API）
+        return self._expand_via_expandtemplates(template_call)
 
     def _parse_template_call(self, template_call: str) -> tuple[str, dict[str, str]]:
         """
@@ -368,9 +368,33 @@ class TemplateExpander:
             pass
         return None
 
+    def _expand_via_expandtemplates(self, template_call: str) -> dict:
+        """
+        通过 action=expandtemplates API 展开模板
+
+        返回纯净 HTML（无 mw-parser-output 包裹层，无调试注释）
+
+        Args:
+            template_call: 模板调用字符串
+
+        Returns:
+            标准展开结果 dict
+        """
+        params = {
+            "action": "expandtemplates",
+            "text": template_call,
+            "format": "json",
+            "prop": "wikitext",
+        }
+        resp = self.session.get(self.api_url, params=params)
+        data = resp.json()
+        html = data["expandtemplates"]["wikitext"]
+
+        return self._parse_expanded_html(html, template_call)
+
     def _expand_via_parse(self, template_call: str) -> dict:
         """
-        通过 action=parse API 展开模板
+        通过 action=parse API 展开模板（备用方案）
 
         Args:
             template_call: 模板调用字符串
