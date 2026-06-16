@@ -11,7 +11,6 @@ from bs4 import BeautifulSoup
 
 from minecraft_wiki_mdifier._session import create_session
 from minecraft_wiki_mdifier._validators import validate_lang
-from minecraft_wiki_mdifier.exceptions import BucketAPIError
 from minecraft_wiki_mdifier.formatters import MinecraftColorFormatter
 from minecraft_wiki_mdifier.parser import _parse_template_name
 from minecraft_wiki_mdifier.wiki import LANG_CONFIG
@@ -117,10 +116,7 @@ class TemplateExpander:
                 template_name, params, page_title, english_title
             )
             if bucket_query:
-                try:
-                    return self._expand_via_bucket(bucket_query, template_name)
-                except BucketAPIError:
-                    pass  # 降级到 action=expandtemplates
+                return self._expand_via_bucket(bucket_query, template_name)
 
         # 降级到 action=expandtemplates（更轻量的模板展开 API）
         return self._expand_via_expandtemplates(template_call)
@@ -389,28 +385,6 @@ class TemplateExpander:
         resp = self.session.get(self.api_url, params=params)
         data = resp.json()
         html = data["expandtemplates"]["wikitext"]
-
-        return self._parse_expanded_html(html, template_call)
-
-    def _expand_via_parse(self, template_call: str) -> dict:
-        """
-        通过 action=parse API 展开模板（备用方案）
-
-        Args:
-            template_call: 模板调用字符串
-
-        Returns:
-            标准展开结果 dict
-        """
-        params = {
-            "action": "parse",
-            "text": template_call,
-            "format": "json",
-            "prop": "text",
-        }
-        resp = self.session.get(self.api_url, params=params)
-        data = resp.json()
-        html = data["parse"]["text"]["*"]
 
         return self._parse_expanded_html(html, template_call)
 

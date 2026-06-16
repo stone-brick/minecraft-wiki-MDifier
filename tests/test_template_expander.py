@@ -37,7 +37,7 @@ class TestExpand:
         """展开成功返回标准 dict（含 html/class/text/format/table/template_name）"""
         mock_instance = MockSession.return_value
         mock_instance.get.return_value.json.return_value = {
-            "parse": {"text": {"*": '<div class="hatnote">test</div>'}}
+            "expandtemplates": {"wikitext": '<div class="hatnote">test</div>'}
         }
         mock_instance.get.return_value.status_code = 200
 
@@ -57,7 +57,9 @@ class TestExpand:
         """未知模板返回 class="new" 标记"""
         mock_instance = MockSession.return_value
         mock_instance.get.return_value.json.return_value = {
-            "parse": {"text": {"*": '<a class="new" href="/w/Template:Fake">Template:Fake</a>'}}
+            "expandtemplates": {
+                "wikitext": '<a class="new" href="/w/Template:Fake">Template:Fake</a>'
+            }
         }
         mock_instance.get.return_value.status_code = 200
 
@@ -103,8 +105,8 @@ class TestParseTable:
         """table 格式被正确检测"""
         mock_instance = MockSession.return_value
         mock_instance.get.return_value.json.return_value = {
-            "parse": {
-                "text": {"*": '<table class="wikitable"><tr><th>A</th><td>1</td></tr></table>'}
+            "expandtemplates": {
+                "wikitext": '<table class="wikitable"><tr><th>A</th><td>1</td></tr></table>'
             }
         }
         mock_instance.get.return_value.status_code = 200
@@ -119,10 +121,8 @@ class TestParseTable:
         """infobox_table 格式被正确检测"""
         mock_instance = MockSession.return_value
         mock_instance.get.return_value.json.return_value = {
-            "parse": {
-                "text": {
-                    "*": '<div class="infobox"><div class="infobox-row"><span class="infobox-row-label">Label</span><span class="infobox-row-field">Value</span></div></div>'
-                }
+            "expandtemplates": {
+                "wikitext": '<div class="infobox"><div class="infobox-row"><span class="infobox-row-label">Label</span><span class="infobox-row-field">Value</span></div></div>'
             }
         }
         mock_instance.get.return_value.status_code = 200
@@ -133,6 +133,28 @@ class TestParseTable:
         assert result["format"] == "infobox_table"
         assert result["table"] is not None
         assert len(result["table"]) > 0
+
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
+    def test_mcui_format_detected(self, MockSession):
+        """mcui 格式被正确检测（Crafting table 等）"""
+        mock_instance = MockSession.return_value
+        mock_instance.get.return_value.json.return_value = {
+            "expandtemplates": {
+                "wikitext": '<span class="mcui mcui-Crafting_Table pixel-image">'
+                '<span class="mcui-input">'
+                '<span class="mcui-row"><span class="invslot"></span></span>'
+                "</span>"
+                '<span class="mcui-arrow"><br /></span>'
+                '<span class="mcui-output"><span class="invslot invslot-large"></span></span>'
+                "</span>"
+            }
+        }
+        mock_instance.get.return_value.status_code = 200
+
+        expander = TemplateExpander("zh")
+        result = expander.expand("{{Crafting table|Iron Ingot}}")
+
+        assert result["format"] == "mcui"
 
 
 class TestBucketAPI:
@@ -162,11 +184,11 @@ class TestBucketAPI:
         assert len(result["table"]) >= 2  # 表头行 + 数据行
 
     @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
-    def test_expand_via_bucket_no_query_falls_back_to_parse(self, MockSession):
-        """Trade uses 无参数时 _build_bucket_query 返回 None，触发降级到 parse"""
+    def test_expand_via_bucket_no_query_falls_back_to_expandtemplates(self, MockSession):
+        """Trade uses 无参数时 _build_bucket_query 返回 None，触发降级到 expandtemplates"""
         mock_instance = MockSession.return_value
         mock_instance.get.return_value.json.return_value = {
-            "parse": {"text": {"*": '<div class="hatnote">Fallback content</div>'}}
+            "expandtemplates": {"wikitext": '<div class="hatnote">Fallback content</div>'}
         }
         mock_instance.get.return_value.status_code = 200
 
