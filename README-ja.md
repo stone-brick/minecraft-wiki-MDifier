@@ -53,6 +53,7 @@ mdifier search "ダイヤモンド" --lang ja
 # バッチ変換
 mdifier batch -t Diamond -t Iron_Ingot -o ./out
 mdifier batch -i pages.txt -o ./out --workers 8
+mdifier batch -t Diamond --no-markers  # テンプレートマーカー無効化
 
 # キャッシュ管理
 mdifier cache info

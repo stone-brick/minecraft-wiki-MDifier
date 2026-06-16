@@ -53,6 +53,7 @@ mdifier search "diamond" --lang en
 # 批量转换
 mdifier batch -t 钻石 -t 铁锭 -o ./out
 mdifier batch -i pages.txt -o ./out --workers 8
+mdifier batch -t Diamond --lang en --no-markers  # 禁用模板标记
 
 # 缓存管理
 mdifier cache info
@@ -82,6 +83,7 @@ mdifier search "QUERY" [-l {zh|en|ja}] [-n NUM]
 
 | 选项 | 说明 |
 |------|------|
+| `-l, --lang` | 语言（默认 zh） |
 | `-n NUM` | 返回结果数（默认 10） |
 
 ### batch
@@ -100,6 +102,7 @@ mdifier batch [-t TITLE] [-i FILE] [--from-search QUERY] [-o DIR] [--workers N] 
 | `--workers` | 跨页并发抓取数（默认 4） |
 | `--no-progress` | 禁用进度条 |
 | `--marker-format` | 自定义模板标记，格式 `open/close`（`{name}` 为模板类名占位符） |
+| `--no-markers` | 禁用模板起讫标记（`:::name`） |
 
 ### cache
 
@@ -146,7 +149,7 @@ for r in results[:5]:
 |------|----------|
 | `https://zh.minecraft.wiki/wiki/铁锭` | zh |
 | `https://minecraft.wiki/wiki/Iron_Ingot` | en |
-| `https://ja.minecraft.wiki/wiki/鉄`_` | ja |
+| `https://ja.minecraft.wiki/wiki/鉄` | ja |
 | 纯标题 | 使用 `lang` 参数（默认 zh） |
 
 ### 跨语言批量
@@ -175,7 +178,8 @@ c.template_marker_close = '</details>'
 CLI 端用 `--marker-format`：
 
 ```bash
-mdifier batch -t 钻石 --marker-format '<details><summary>{name}</summary>/</details>'
+mdifier batch -t 钻石 --marker-format '<details><summary>{name}</summary></details>/</details>'
+# 格式为 open/close，即 <开启标签>/<闭合标签>
 ```
 
 ### 批量取消

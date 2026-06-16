@@ -208,6 +208,7 @@ def search_cmd(query: str, lang: str, num: int):
 @click.option(
     "--marker-format", default=None, help="自定义模板标记，格式 'open/close'，如 ':::{name}:::/:::'"
 )
+@click.option("--no-markers", is_flag=True, help="禁用模板起讫标记（:::name）")
 def batch_cmd(
     titles,
     input_file,
@@ -218,6 +219,7 @@ def batch_cmd(
     workers,
     no_progress,
     marker_format,
+    no_markers,
 ):
     """
     批量转换 Wiki 页面
@@ -245,7 +247,7 @@ def batch_cmd(
                 deduped.append(title)
 
         progress = _make_progress(len(deduped), enabled=not no_progress)
-        # 解析 --marker-format 为 converter_factory
+        # 解析 --marker-format / --no-markers 为 converter_factory
         converter_factory = None
         if marker_format:
             try:
@@ -260,6 +262,15 @@ def batch_cmd(
                 c = MarkdownConverter(lang=item_lang, template_cache=cache)
                 c.template_marker_open = open_
                 c.template_marker_close = close_
+                return c
+
+            converter_factory = _make_converter
+        elif no_markers:
+
+            def _make_converter(item_lang: str, cache: dict | None):
+                c = MarkdownConverter(lang=item_lang, template_cache=cache)
+                c.template_marker_open = ""
+                c.template_marker_close = ""
                 return c
 
             converter_factory = _make_converter
