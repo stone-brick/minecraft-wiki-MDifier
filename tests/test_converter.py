@@ -157,12 +157,13 @@ class TestExpandAllTemplatesLogging:
         assert "t1" in result
         assert "t2" in result
         assert "t3" in result
-        # t1, t2 成功，t3 走 fallback
-        assert result["t1"]["class"] == "hatnote"
-        assert result["t2"]["class"] == "hatnote"
-        assert result["t3"]["class"] == "error"  # fallback
-        # 应该记录了 t3 的错误日志（Template t3）
-        assert any("t3" in msg and "expand failed" in msg for msg in caplog.messages)
+        # 并发执行顺序不确定，只能确定：恰好 2 个成功，1 个失败（第三次调用才异常）
+        success = [k for k, v in result.items() if v["class"] == "hatnote"]
+        failed = [k for k, v in result.items() if v["class"] == "error"]
+        assert len(success) == 2, f"期望 2 个成功，实际: {success}"
+        assert len(failed) == 1, f"期望 1 个失败，实际: {failed}"
+        # 应该记录了某个模板的错误日志
+        assert any("expand failed" in msg for msg in caplog.messages)
 
 
 class TestRenderTemplateTable:
