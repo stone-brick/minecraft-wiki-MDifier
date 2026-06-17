@@ -4,12 +4,65 @@
 
 Minecraft Wiki のページを AI に優しい Markdown に変換
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
+[![PyPI version](https://img.shields.io/pypi/v/minecraft-wiki-mdifier.svg)](https://pypi.org/project/minecraft-wiki-mdifier/)
 
 **[中文](./README.md)** · **[English](./README-en.md)**
 
 </div>
+
+## 起源
+
+AI 助手を使い始めると、もう手作業には戻れません——データパックの自作も然り。
+Minecraft Wiki の取得時、プレー HTML はスタイルノイズだらけ、
+プレー wikitext は汎用パーサーが処理できないテンプレート構文があります。
+
+だったら自分でツールを作ろう。GitHub で検索しましたが、専念ツールは存在しませんでした。
+@minecraft-wiki-MCP を見つけ、もっと良いパースが必要だと気づき（すでにリライト済み）、
+需要があると気づいて、急いで作りました。
+
+開発中は何度も壁にぶつかり、より良い方法を模索し、
+現在の `action=bucket` + `action=expandtemplates` + `action=parse` 三層フォールバック架构に辿り着きました。
+
+## 問題と解決
+
+Minecraft Wiki 処理には二大类の難題があります：
+
+### Markdown への変換について
+
+**1. テンプレート取得が遅い**
+Wiki ページのテンプレート参照を展開するには多数のリクエストが必要で、時間が膨大にかかります。
+
+**2. テンプレートが展開できない**
+`{{Crafting}}`、`{{Trade}}` などのテンプレートは Lua モジュールとデータベースに依存しており、純パーサーでは描画結果を取得できません。
+
+**3. クリーニングが不十分**
+描画後の HTML には無用な class、style、data 属性や余分なタグが含まれています。
+
+**4. Wikitext 構文が曖昧**
+Bold/Italic タグのネスト、`{{end-bold}}` などの MediaWiki 固有構文は、汎用パーサーが誤判断しやすいです。
+
+### AI 助手での使用について
+
+**5. HTML がコンテキストを占有し、セマンティクスを乱す**
+プレー HTML には無関係なタグや追加情報がたくさんあり、トークンを浪費し LLM の理解に影響します。
+
+**6. Wikitext テンプレートの情報が省略される**
+Wikitext のテンプレートはただのプレースホルダーで、原文にはテンプレート展開後の実際の 내용이含まれておらず、AI は構造化データをここから學べません。
+
+mdifier の解決策：
+- `action=bucket` API で構造化データ（Lua データ）を取得
+- `action=expandtemplates` API でテンプレートを展開
+- HTML の冗長属性をクリーニングし、セマンティック構造を保持
+- テンプレートの展開結果をキャッシュして API 呼び出しを削減
+
+**性能比較**（Diamond、Iron Ingot、Gold Ingot の変換）：
+
+| アプローチ | 耗时 | 高速化 |
+| --------- | ------ | --------- |
+| キャッシュなし、直列（ベースライン） | 51.37s | 1.0x |
+| キャッシュなし、並列 | 22.00s | 2.3x |
+| キャッシュあり（コールド） | 19.02s | 2.7x |
+| キャッシュあり（ホット） | 0.20s | **251.9x** |
 
 ## インストール
 
@@ -33,7 +86,7 @@ mdifier --version
 ## クイックスタート
 
 ```bash
-# ページを変換（英語 wiki デフォルト）
+# ページを変換（中国語 wiki デフォルト）
 mdifier convert "Iron Ingot"
 
 # ファイルに保存
@@ -61,6 +114,37 @@ mdifier cache clear -y   # キャッシュをクリア
 mdifier cache prune       # 期限切れエントリを削除
 ```
 
+## ユースケース
+
+**MCP / Skills / Agent 構築**
+AI 助手に Minecraft Wiki データを提供し、ゲームの質問に答えられる Agent を構築します。
+
+```python
+from minecraft_wiki_mdifier import convert_many
+
+pages = ["Diamond", "Iron Ingot", "Gold Ingot", "Emerald", "Lapis Lazuli"]
+result = convert_many(pages)
+# クリーンな Markdown 出力、直接コンテキスト注入に使用可能
+```
+
+**RAG ナレッジベース**
+Wiki コンテンツをベクトル化し、ローカルナレッジベースを構築：
+
+```python
+result = convert_detailed("Iron Ingot")
+print(result.markdown)  # クリーンなテキスト、チャンク化和ベクトル化に直接使用可能
+```
+
+**MOD 開発データクエリ**
+村人の交易やモブのドロップなどの構造化データを取得：
+
+```python
+from minecraft_wiki_mdifier import convert_detailed
+
+result = convert_detailed("Armorer")
+print(result.templates["trade"][0]["wanted_item"])  # 防具鍛冶の欲しいアイテム
+```
+
 ## CLI リファレンス
 
 ### convert
@@ -72,7 +156,7 @@ mdifier convert "TITLE_OR_URL" [-o OUTPUT] [--lang {zh|en|ja}] [--detail]
 | オプション | 説明 |
 |-----------|------|
 | `-o, --output` | 出力ファイルパス |
-| `-l, --lang` | 言語（デフォルト en） |
+| `-l, --lang` | 言語（デフォルト zh） |
 | `--detail` | 完全な JSON 出力（title, markdown, source, templates） |
 
 ### search
@@ -101,6 +185,7 @@ mdifier batch [-t TITLE] [-i FILE] [--from-search QUERY] [-o DIR] [--workers N] 
 | `--workers` | 並発ページフェッチ数（デフォルト 4） |
 | `--no-progress` | 進捗バーを無効化 |
 | `--marker-format` | カスタムマーカー形式 `open/close`（`{name}` = テンプレートクラス名） |
+| `--no-markers` | テンプレートマーカー（`:::name`）を無効化 |
 
 ### cache
 
@@ -148,7 +233,7 @@ for r in results[:5]:
 | `https://minecraft.wiki/wiki/Iron_Ingot` | en |
 | `https://zh.minecraft.wiki/wiki/铁锭` | zh |
 | `https://ja.minecraft.wiki/wiki/鉄インゴット` | ja |
-| プレーンタイトル | `lang` パラメータを使用（デフォルト en） |
+| プレーンタイトル | `lang` パラメータを使用（デフォルト zh） |
 
 ### 言語横断バッチ
 
@@ -156,7 +241,7 @@ for r in results[:5]:
 items = [
     "Diamond",                                     # en
     "https://zh.minecraft.wiki/wiki/钻石",          # zh（URL 検出）
-    "鉄インゴット",                                  # ja（デフォルト lang）
+    "Iron Ingot",                                   # デフォルト lang を使用
 ]
 result = convert_many(items, lang="en")
 ```
@@ -300,7 +385,7 @@ src/minecraft_wiki_mdifier/
 ├── cli.py                # CLI エントリ（click）
 ├── wiki.py               # MediaWiki API 取得 + HTML フォールバック
 ├── parser.py             # Wikitext パーサー
-├── template_expander.py  # テンプレート展開（bucket/parse）
+├── template_expander.py  # テンプレート展開（bucket/expandtemplates）
 ├── formatters.py         # Minecraft カラーコードフォーマッタ
 ├── converter.py          # Markdown 生成
 ├── cache.py              # テンプレートキャッシュ永続化
@@ -313,28 +398,25 @@ src/minecraft_wiki_mdifier/
 
 1. `WikiFetcher` → MediaWiki API が wikitext を取得
 2. `WikiParser` → AST を解析、テンプレートを抽出
-3. `TemplateExpander` → `action=bucket` を優先、`action=parse` にフォールバック
+3. `TemplateExpander` → `action=bucket` を優先、`action=expandtemplates` にフォールバック
 4. `MarkdownConverter` → レンダラーにディスパッチ、Markdown を生成
 
-## 開発
+## 貢献
+
+あらゆる形態の貢献を歓迎します：
+
+- 🐛 バグを発見しましたか？[Issue を開く](https://github.com/stone-brick/minecraft-wiki-MDifier/issues)
+- 💡 アイデアはありますか？[Discussion](https://github.com/stone-brick/minecraft-wiki-MDifier/discussions) で話す
+- 📖 ドキュメントを改善できますか？PR を送ってください
+
+### 開発環境
 
 ```bash
-# 開発依存関係をインストール
+git clone https://github.com/stone-brick/minecraft-wiki-MDifier
+cd minecraft-wiki-MDifier
 pip install -e ".[dev]"
-
-# リント
-ruff check .
-
-# pre-commit（コミット時に自動実行）
-pre-commit install
-pre-commit run --all-files
+pytest
 ```
-
-## 依存関係
-
-**必須**: requests, beautifulsoup4, click, markdownify
-
-**オプション**: tqdm（`mdifier batch` の進捗バー； 없을 경우 stderr テキストにフォールバック）
 
 ## ライセンス
 

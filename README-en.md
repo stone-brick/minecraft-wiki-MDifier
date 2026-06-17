@@ -4,12 +4,65 @@
 
 Convert Minecraft Wiki pages to AI-friendly Markdown
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
+[![PyPI version](https://img.shields.io/pypi/v/minecraft-wiki-mdifier.svg)](https://pypi.org/project/minecraft-wiki-mdifier/)
 
 **[中文](./README.md)** · **[日本語](./README-ja.md)**
 
 </div>
+
+## Origin
+
+Once you start using AI assistants for coding, there's no going back to writing data packs by hand.
+But getting Minecraft Wiki content is painful: plain HTML comes with style clutter,
+and plain wikitext has template syntax that generic parsers can't handle.
+
+So I built my own tool. Searched GitHub — nothing specialized for this existed.
+Then found @L3-N0X's Minecraft-Wiki-MCP, which really needed better parsing (now rewritten).
+Realized there was demand, so I rushed to get it out.
+
+Hit a lot of walls along the way, kept looking for better approaches,
+and ended up with this three-tier fallback: `action=bucket` + `action=expandtemplates` + `action=parse`.
+
+## Pain Points & Solutions
+
+Processing Minecraft Wiki falls into two categories of problems:
+
+### Converting to Markdown
+
+**1. Template fetching is slow**
+Wiki pages contain many template references that need to be expanded one by one, making requests extremely time-consuming.
+
+**2. Templates can't be expanded**
+`{{Crafting}}`, `{{Trade}}` and similar templates depend on Lua modules and databases — pure parsers can't get the rendered result.
+
+**3. Incomplete cleaning**
+Rendered HTML contains lots of useless class, style, data attributes and redundant tags.
+
+**4. Wikitext syntax is messy**
+Bold/Italic tag nesting, `{{end-bold}}` and other MediaWiki-specific syntax confuse generic parsers.
+
+### For AI Assistant Use
+
+**5. HTML wastes context and pollutes semantics**
+Plain HTML contains a lot of irrelevant tags and extra information, wasting tokens and affecting LLM understanding.
+
+**6. Wikitext templates omit information**
+Templates in Wikitext are just placeholders — the raw text doesn't contain the actual expanded content, so AI can't learn structured data from it.
+
+mdifier's approach:
+- Query structured data (Lua data) via `action=bucket` API
+- Expand templates via `action=expandtemplates` API
+- Clean HTML redundant attributes while preserving semantic structure
+- Cache template expansion results to reduce API calls
+
+**Performance comparison** (converting Diamond, Iron Ingot, Gold Ingot):
+
+| Approach | Time | Speedup |
+|----------|------|---------|
+| No cache, serial (baseline) | 51.37s | 1.0x |
+| No cache, concurrent | 22.00s | 2.3x |
+| With cache (cold) | 19.02s | 2.7x |
+| With cache (hot) | 0.20s | **251.9x** |
 
 ## Installation
 
@@ -53,12 +106,43 @@ mdifier search "钻石" --lang zh
 # Batch convert
 mdifier batch -t Diamond -t Iron_Ingot -o ./out
 mdifier batch -i pages.txt -o ./out --workers 8
-mdifier batch -t Diamond --no-markers  # Disable template markers
+mdifier batch -t Diamond --lang en --no-markers  # Disable template markers
 
 # Cache management
 mdifier cache info
 mdifier cache clear -y   # Clear cache
 mdifier cache prune       # Remove expired entries
+```
+
+## Use Cases
+
+**MCP / Skills / Agent Building**
+Provide Minecraft Wiki data for AI assistants to build agents that can answer game questions.
+
+```python
+from minecraft_wiki_mdifier import convert_many
+
+pages = ["Diamond", "Iron Ingot", "Gold Ingot", "Emerald", "Lapis Lazuli"]
+result = convert_many(pages)
+# Clean Markdown output, ready for context injection
+```
+
+**RAG Knowledge Base**
+Vectorize Wiki content to build a local knowledge base:
+
+```python
+result = convert_detailed("Iron Ingot")
+print(result.markdown)  # Clean text, ready for chunking and embedding
+```
+
+**Mod Development Data Query**
+Query structured data like villager trades and mob loot:
+
+```python
+from minecraft_wiki_mdifier import convert_detailed
+
+result = convert_detailed("Armorer")
+print(result.templates["trade"][0]["wanted_item"])  # Armorer wanted item
 ```
 
 ## CLI Reference
@@ -101,6 +185,7 @@ mdifier batch [-t TITLE] [-i FILE] [--from-search QUERY] [-o DIR] [--workers N] 
 | `--workers` | Concurrent page fetches (default 4) |
 | `--no-progress` | Disable progress bar |
 | `--marker-format` | Custom marker format `open/close` (`{name}` = template class name) |
+| `--no-markers` | Disable template markers (`:::name`) |
 
 ### cache
 
@@ -156,7 +241,7 @@ for r in results[:5]:
 items = [
     "Diamond",                                     # en
     "https://zh.minecraft.wiki/wiki/钻石",         # zh (URL detected)
-    "鉄インゴット",                                 # ja (default lang)
+    "Iron Ingot",                                  # uses default lang
 ]
 result = convert_many(items, lang="en")
 ```
@@ -300,7 +385,7 @@ src/minecraft_wiki_mdifier/
 ├── cli.py                # CLI entry (click)
 ├── wiki.py               # MediaWiki API fetch + HTML fallback
 ├── parser.py             # Wikitext parser
-├── template_expander.py  # Template expansion (bucket/parse)
+├── template_expander.py  # Template expansion (bucket/expandtemplates)
 ├── formatters.py         # Minecraft color code formatter
 ├── converter.py          # Markdown generation
 ├── cache.py              # Template cache persistence
@@ -313,28 +398,25 @@ src/minecraft_wiki_mdifier/
 
 1. `WikiFetcher` → MediaWiki API fetches wikitext
 2. `WikiParser` → Parses AST, extracts templates
-3. `TemplateExpander` → Prefers `action=bucket`, falls back to `action=parse`
+3. `TemplateExpander` → Prefers `action=bucket`, falls back to `action=expandtemplates`
 4. `MarkdownConverter` → Dispatches to renderer, generates Markdown
 
-## Development
+## Contributing
+
+All contributions are welcome:
+
+- 🐛 Found a bug? [Open an Issue](https://github.com/stone-brick/minecraft-wiki-MDifier/issues)
+- 💡 Have an idea? Start a [Discussion](https://github.com/stone-brick/minecraft-wiki-MDifier/discussions)
+- 📖 Documentation can be better? Send a PR
+
+### Development Setup
 
 ```bash
-# Install dev dependencies
+git clone https://github.com/stone-brick/minecraft-wiki-MDifier
+cd minecraft-wiki-MDifier
 pip install -e ".[dev]"
-
-# Lint
-ruff check .
-
-# pre-commit (auto-runs on commit)
-pre-commit install
-pre-commit run --all-files
+pytest
 ```
-
-## Dependencies
-
-**Required**: requests, beautifulsoup4, click, markdownify
-
-**Optional**: tqdm (progress bar for `mdifier batch`; absent → stderr text fallback)
 
 ## License
 

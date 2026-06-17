@@ -4,12 +4,56 @@
 
 将 Minecraft Wiki 页面转换为 AI 助手易读的 Markdown 格式
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
+[![PyPI version](https://img.shields.io/pypi/v/minecraft-wiki-mdifier.svg)](https://pypi.org/project/minecraft-wiki-mdifier/)
 
 **[English](./README-en.md)** · **[日本語](./README-ja.md)**
 
 </div>
+
+## 起源
+
+用了 AI 助手之后就再也回不去了——我不想再纯手搓数据包。
+但获取 Minecraft Wiki 内容时，纯 HTML 夹杂样式碎片，纯 wikitext 通用解析器又处理不了。
+
+于是自己写了一个。GitHub 上搜了一圈没有找到现成的，后来发现了 @L3-N0X 的 Minecraft-Wiki-MCP 需要更好的解析支持（现在已重构），我意识到大家可能需要这个工具。
+
+## 问题与解决
+
+在处理 Minecraft Wiki 时会遇到以下难题：
+
+**转换层面的问题：**
+
+1. **模板展开慢** — Wiki 页面中的模板引用需要逐个展开，逐一请求耗时巨大。
+2. **模板无法展开** — `{{Crafting}}`、`{{Trade}}` 等模板依赖 Lua 模块和数据库，纯解析器无法获取渲染结果。
+3. **清理不全** — 渲染后的 HTML 包含大量无用的 class、style、data 属性和冗余标签。
+4. **Wikitext 语法混乱** — Bold/Italic 标签嵌套、`{{end-bold}}` 等 MediaWiki 特有语法，通用解析器容易误判。
+
+**AI 使用层面的问题：**
+
+5. **HTML 占用上下文且干扰语义** — 纯 HTML 包含大量无关标签和额外信息，浪费 token 且影响 LLM 理解。
+6. **模板信息省略** — Wikitext 中的模板只是占位符，原始文本不包含展开后的实际内容，AI 无法得到结构化数据。
+
+### 解决方案
+
+- 并发 + 缓存：解决模板展开慢的问题
+- `action=bucket` API：解决模板无法展开的问题
+- HTML 清理：解决清理不全的问题
+- Markdown 输出：解决 HTML 占用上下文的问题
+- 模板标记 `:::name`：解决模板信息省略的问题
+
+**性能对比**（转换 Diamond、Iron Ingot、Gold Ingot）：
+
+| 方案        | 耗时     | 加速比        |
+| --------- | ------ | ---------- |
+| 无缓存串行（基线） | 51.37s | 1.0x       |
+| 无缓存并发     | 22.00s | 2.3x       |
+| 有缓存（冷）    | 19.02s | 2.7x       |
+| 有缓存（热）    | 0.20s  | **251.9x** |
+
+**针对 AI 使用问题：**
+
+- Markdown 输出：解决 HTML 占用上下文的问题
+- 模板标记 `:::name`：解决模板信息省略的问题
 
 ## 安装
 
@@ -61,6 +105,37 @@ mdifier cache clear -y   # 清空缓存
 mdifier cache prune       # 清理过期条目
 ```
 
+## 应用场景
+
+**MCP / Skills / Agent 构建**
+为 AI 助手提供 Minecraft Wiki 数据源，构建可以回答游戏问题的 Agent。
+
+```python
+from minecraft_wiki_mdifier import convert_many
+
+pages = ["钻石", "铁锭", "金锭", "绿宝石", "青金石"]
+result = convert_many(pages)
+# 输出干净 Markdown，可直接用于上下文注入
+```
+
+**RAG 知识库**
+将 Wiki 内容向量化，构建本地知识库：
+
+```python
+result = convert_detailed("Iron Ingot")
+print(result.markdown)  # 干净文本，可直接用于分块和向量化
+```
+
+**MOD 开发数据查询**
+获取村民交易、怪物掉落等结构化数据：
+
+```python
+from minecraft_wiki_mdifier import convert_detailed
+
+result = convert_detailed("Armorer")
+print(result.templates["trade"][0]["wanted_item"])  # 盔甲匠想要的物品
+```
+
 ## CLI 参考
 
 ### convert
@@ -69,11 +144,11 @@ mdifier cache prune       # 清理过期条目
 mdifier convert "TITLE_OR_URL" [-o OUTPUT] [--lang {zh|en|ja}] [--detail]
 ```
 
-| 选项 | 说明 |
-|------|------|
-| `-o, --output` | 输出文件路径 |
-| `-l, --lang` | 语言（默认 zh） |
-| `--detail` | 输出完整 JSON（含 title、markdown、source、templates） |
+| 选项             | 说明                                           |
+| -------------- | -------------------------------------------- |
+| `-o, --output` | 输出文件路径                                       |
+| `-l, --lang`   | 语言（默认 zh）                                    |
+| `--detail`     | 输出完整 JSON（含 title、markdown、source、templates） |
 
 ### search
 
@@ -81,10 +156,10 @@ mdifier convert "TITLE_OR_URL" [-o OUTPUT] [--lang {zh|en|ja}] [--detail]
 mdifier search "QUERY" [-l {zh|en|ja}] [-n NUM]
 ```
 
-| 选项 | 说明 |
-|------|------|
-| `-l, --lang` | 语言（默认 zh） |
-| `-n NUM` | 返回结果数（默认 10） |
+| 选项           | 说明           |
+| ------------ | ------------ |
+| `-l, --lang` | 语言（默认 zh）    |
+| `-n NUM`     | 返回结果数（默认 10） |
 
 ### batch
 
@@ -92,17 +167,17 @@ mdifier search "QUERY" [-l {zh|en|ja}] [-n NUM]
 mdifier batch [-t TITLE] [-i FILE] [--from-search QUERY] [-o DIR] [--workers N] [--no-progress] [--marker-format FORMAT]
 ```
 
-| 选项 | 说明 |
-|------|------|
-| `-t, --title` | 页面标题（可多次使用） |
-| `-i, --input-file` | 标题列表文件（每行一个，`#` 开头为注释） |
-| `--from-search` | 通过搜索获取标题 |
-| `--search-limit` | `--from-search` 时返回的最大结果数 |
-| `-o, --output-dir` | 输出目录；为 None 则打印到 stdout |
-| `--workers` | 跨页并发抓取数（默认 4） |
-| `--no-progress` | 禁用进度条 |
-| `--marker-format` | 自定义模板标记，格式 `open/close`（`{name}` 为模板类名占位符） |
-| `--no-markers` | 禁用模板起讫标记（`:::name`） |
+| 选项                 | 说明                                         |
+| ------------------ | ------------------------------------------ |
+| `-t, --title`      | 页面标题（可多次使用）                                |
+| `-i, --input-file` | 标题列表文件（每行一个，`#` 开头为注释）                     |
+| `--from-search`    | 通过搜索获取标题                                   |
+| `--search-limit`   | `--from-search` 时返回的最大结果数                  |
+| `-o, --output-dir` | 输出目录；为 None 则打印到 stdout                    |
+| `--workers`        | 跨页并发抓取数（默认 4）                              |
+| `--no-progress`    | 禁用进度条                                      |
+| `--marker-format`  | 自定义模板标记，格式 `open/close`（`{name}` 为模板类名占位符） |
+| `--no-markers`     | 禁用模板起讫标记（`:::name`）                        |
 
 ### cache
 
@@ -145,12 +220,12 @@ for r in results[:5]:
 
 ### URL 自动识别
 
-| 输入 | 识别语言 |
-|------|----------|
-| `https://zh.minecraft.wiki/wiki/铁锭` | zh |
-| `https://minecraft.wiki/wiki/Iron_Ingot` | en |
-| `https://ja.minecraft.wiki/wiki/鉄` | ja |
-| 纯标题 | 使用 `lang` 参数（默认 zh） |
+| 输入                                       | 识别语言                |
+| ---------------------------------------- | ------------------- |
+| `https://zh.minecraft.wiki/wiki/铁锭`      | zh                  |
+| `https://minecraft.wiki/wiki/Iron_Ingot` | en                  |
+| `https://ja.minecraft.wiki/wiki/鉄`       | ja                  |
+| 纯标题                                      | 使用 `lang` 参数（默认 zh） |
 
 ### 跨语言批量
 
@@ -221,15 +296,15 @@ f.clean("&e黄色&r重置")  # '[yellow]黄色[reset]重置'
 
 模板被包裹在 `:::{name}` 标记中，内容按格式分发渲染：
 
-| 模板 | 输出 |
-|------|------|
-| `Infobox`（物品信息框） | 两列 Markdown 表格 |
-| `Crafting`（合成表） | 三列：材料 / 配方 / 描述 |
-| `LootChest`（战利品表） | 六列：物品 / 来源 / 数量 / 概率等 |
-| `mcui`（合成台/熔炉/织布机/锻造台） | 3x3 网格文本 + 物品描述 |
-| `Hatnote`、`Quote` | markdownify 转为 Markdown |
-| 其他未识别模板 | 通用 markdownify 转换 |
-| 展开失败 | 回退文本 `[模板名: k=v]`，标记为 `class="error"` |
+| 模板                     | 输出                                    |
+| ---------------------- | ------------------------------------- |
+| `Infobox`（物品信息框）       | 两列 Markdown 表格                        |
+| `Crafting`（合成表）        | 三列：材料 / 配方 / 描述                       |
+| `LootChest`（战利品表）      | 六列：物品 / 来源 / 数量 / 概率等                 |
+| `mcui`（合成台/熔炉/织布机/锻造台） | 3x3 网格文本 + 物品描述                       |
+| `Hatnote`、`Quote`      | markdownify 转为 Markdown               |
+| 其他未识别模板                | 通用 markdownify 转换                     |
+| 展开失败                   | 回退文本 `[模板名: k=v]`，标记为 `class="error"` |
 
 部分模板（Trade uses、Crafting usage 等）依赖 Lua Bucket 数据库，程序通过 `action=bucket` API 查询。
 
@@ -278,15 +353,16 @@ MdifierError
 
 ### CLI 退出码
 
-| 退出码 | 名称 | 含义 |
-|--------|------|------|
-| 0 | 成功 | 全部 OK |
-| 64 | `EX_USAGE` | 命令行参数错 |
-| 65 | `EX_DATAERR` | 数据错（页面不存在、批量部分失败） |
-| 70 | `EX_SOFTWARE` | 内部软件错 |
-| 74 | `EX_IOERR` | 本地 I/O 错 |
-| 75 | `EX_TEMPFAIL` | 网络临时失败 |
-| 77 | `EX_NOPERM` | 权限错 |
+| 退出码 | 名称            | 含义                |
+| --- | ------------- | ----------------- |
+| 0   | 成功            | 全部 OK             |
+| 64  | `EX_USAGE`    | 命令行参数错            |
+| 65  | `EX_DATAERR`  | 数据错（页面不存在、批量部分失败） |
+| 70  | `EX_SOFTWARE` | 内部软件错             |
+| 74  | `EX_IOERR`    | 本地 I/O 错          |
+| 75  | `EX_TEMPFAIL` | 网络临时失败            |
+| 77  | `EX_NOPERM`   | 权限错               |
+| 78  | `EXIT_CONFIG` | 配置错              |
 
 ## 多语言支持
 
@@ -303,7 +379,7 @@ src/minecraft_wiki_mdifier/
 ├── cli.py                # CLI 入口（click）
 ├── wiki.py               # MediaWiki API 获取 + HTML 降级
 ├── parser.py             # Wikitext 解析器
-├── template_expander.py  # 模板展开（bucket/parse）
+├── template_expander.py  # 模板展开（bucket/expandtemplates）
 ├── formatters.py         # Minecraft 颜色代码格式化
 ├── converter.py          # Markdown 生成
 ├── cache.py              # 模板缓存持久化
@@ -316,28 +392,25 @@ src/minecraft_wiki_mdifier/
 
 1. `WikiFetcher` → MediaWiki API 获取 wikitext
 2. `WikiParser` → 解析 AST，提取模板到 `templates` 字典
-3. `TemplateExpander` → 优先 `action=bucket`，失败则降级 `action=parse`
+3. `TemplateExpander` → 优先 `action=bucket`，失败则降级 `action=expandtemplates`
 4. `MarkdownConverter` → 分发渲染，生成最终 Markdown
 
-## 开发
+## 参与贡献
+
+欢迎任何形式的贡献：
+
+- 🐛 发现 Bug？请 [提交 Issue](https://github.com/stone-brick/minecraft-wiki-MDifier/issues)
+- 💡 有好想法？欢迎 [讨论](https://github.com/stone-brick/minecraft-wiki-MDifier/discussions)
+- 📖 或许你有更好的实现？直接发 PR 吧
+
+### 开发环境
 
 ```bash
-# 安装开发依赖
+git clone https://github.com/stone-brick/minecraft-wiki-MDifier
+cd minecraft-wiki-MDifier
 pip install -e ".[dev]"
-
-# 代码检查
-ruff check .
-
-# pre-commit（提交时自动运行）
-pre-commit install
-pre-commit run --all-files
+pytest
 ```
-
-## 依赖
-
-**必需**：requests、beautifulsoup4、click、markdownify
-
-**可选**：tqdm（`mdifier batch` 进度条；缺则降级为 stderr 文本）
 
 ## License
 
