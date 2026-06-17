@@ -115,6 +115,7 @@ jobs:
 
       - name: Publish to PyPI
         if: success()
+        run: rm -f dist/*.publish.attestation
         uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Generate Release Notes
