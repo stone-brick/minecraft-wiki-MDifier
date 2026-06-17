@@ -113,9 +113,12 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
 
-      - name: Publish to PyPI
+      - name: Clean attestation files
         if: success()
         run: rm -f dist/*.publish.attestation
+
+      - name: Publish to PyPI
+        if: success()
         uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Generate Release Notes
