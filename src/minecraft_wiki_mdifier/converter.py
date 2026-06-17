@@ -4,6 +4,8 @@ Markdown转换器
 将解析后的AST转换为Markdown格式
 """
 
+import base64
+import logging
 import re
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -14,6 +16,8 @@ from minecraft_wiki_mdifier.parser import Node, NodeType, TemplateInfo, WikiPars
 from minecraft_wiki_mdifier.template_expander import TemplateExpander
 from minecraft_wiki_mdifier.wiki import LANG_CONFIG, WikiPage
 
+_logger = logging.getLogger(__name__)
+
 # 匹配 <span class="sprite-file">...</span>，其中包含 EnvSprite img
 # alt 格式："EnvSprite xxx.png：Minecraft中xxx的精灵图"，对 AI 无意义
 _SPRITE_FILE_PATTERN = re.compile(
@@ -22,10 +26,9 @@ _SPRITE_FILE_PATTERN = re.compile(
 )
 
 
-# 匹配 <pre class="history-json ..."> 块，内含 MediaWiki 嵌入的 JSON 数据，对 AI 无意义
-def _escape_cache_value(v: str) -> str:
-    """转义缓存键中的分隔符，防止 cache_key 碰撞（"a|b" vs "a"/"b"）。"""
-    return v.replace("\\", "\\\\").replace("|", "\\|").replace("=", "\\=")
+def _encode_cache_value(v: str) -> str:
+    """URL-safe base64 编码，避免分隔符冲突（"|" 和 "=" 不会出现在编码结果中）。"""
+    return base64.urlsafe_b64encode(v.encode("utf-8")).decode("ascii")
 
 
 # 节点类型 → 渲染方法名（注册表）
@@ -111,21 +114,26 @@ class MarkdownConverter:
         self._cache_lock = threading.Lock()
         # 未展开的模板名（驼峰映射缺失或模板不存在）
         self._unresolved: set[str] = set()
+        self._unresolved_lock = threading.Lock()
         # 取消标志（convert_many 检查）
         self._cancelled = False
+        self._cancel_lock = threading.Lock()
 
     def cancel(self) -> None:
         """请求取消批量转换（仅 convert_many 有效，单页 convert_wiki 不响应）"""
-        self._cancelled = True
+        with self._cancel_lock:
+            self._cancelled = True
 
     @property
     def unresolved_templates(self) -> frozenset[str]:
         """返回本次转换中未展开的模板名集合（只读视图）"""
-        return frozenset(self._unresolved)
+        with self._unresolved_lock:
+            return frozenset(self._unresolved)
 
     def is_cancelled(self) -> bool:
         """返回取消标志当前状态"""
-        return self._cancelled
+        with self._cancel_lock:
+            return self._cancelled
 
     def flush_cache(self) -> None:
         """将当前模板缓存保存到磁盘（供后续运行复用）"""
@@ -198,8 +206,9 @@ class MarkdownConverter:
                 name = future_to_name[future]
                 try:
                     expanded[name] = future.result()
-                except Exception:
+                except Exception as e:
                     # 单个模板失败不应中断整体
+                    _logger.debug("Template %s expand failed: %s, using fallback", name, e)
                     expanded[name] = self._fallback_template(name, templates[name].params)
 
         return expanded
@@ -224,9 +233,9 @@ class MarkdownConverter:
         parts = [api_name]
         for key, value in params.items():
             if key.isdigit():
-                parts.append(_escape_cache_value(value))
+                parts.append(_encode_cache_value(value))
             else:
-                parts.append(f"{_escape_cache_value(key)}={_escape_cache_value(value)}")
+                parts.append(f"{_encode_cache_value(key)}={_encode_cache_value(value)}")
         cache_key = "|".join(parts)
         cache_key = f"{self.lang}:{cache_key}"
 
@@ -248,12 +257,14 @@ class MarkdownConverter:
                 "table": expanded.get("table"),
                 "template_name": expanded.get("template_name"),
             }
-        except Exception:
+        except Exception as e:
+            _logger.debug("Template %s expand failed: %s, using fallback", name, e)
             result = self._fallback_template(name, params)
 
         # 记录未展开的模板（API 返回 class="new" 或展开失败 class="error"）
         if result.get("class") in ("new", "error"):
-            self._unresolved.add(name)
+            with self._unresolved_lock:
+                self._unresolved.add(name)
 
         with self._cache_lock:
             self._template_cache[cache_key] = result

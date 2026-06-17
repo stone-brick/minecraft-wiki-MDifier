@@ -227,9 +227,10 @@ def convert_many(
                 if on_progress:
                     on_progress(done, len(items), t)
         # 收集 unresolved（保持插入序，首现优先）
-        for tmpl in converter._unresolved:
-            if tmpl not in all_unresolved:
-                all_unresolved[tmpl] = 0
+        with converter._unresolved_lock:
+            for tmpl in converter._unresolved:
+                if tmpl not in all_unresolved:
+                    all_unresolved[tmpl] = 0
 
     # 批量结束只 flush 一次（用户没传 cache 时）
     if template_cache is None:

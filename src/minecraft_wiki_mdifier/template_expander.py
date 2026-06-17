@@ -4,6 +4,7 @@
 通过 MediaWiki API 展开模板，获取渲染后的HTML
 """
 
+import logging
 from collections.abc import Callable
 
 import requests  # noqa: F401
@@ -14,6 +15,8 @@ from minecraft_wiki_mdifier._validators import validate_lang
 from minecraft_wiki_mdifier.formatters import MinecraftColorFormatter
 from minecraft_wiki_mdifier.parser import _parse_template_name
 from minecraft_wiki_mdifier.wiki import LANG_CONFIG
+
+_logger = logging.getLogger(__name__)
 
 # 格式检测器：(elem) -> 格式字符串 | None
 # 注册表形式，按优先级顺序匹配；首个返回非 None 的获胜
@@ -118,7 +121,8 @@ class TemplateExpander:
             if bucket_query:
                 try:
                     return self._expand_via_bucket(bucket_query, template_name)
-                except Exception:
+                except Exception as e:
+                    _logger.debug("Bucket API failed for %s: %s, falling back", template_name, e)
                     pass  # 降级到 action=expandtemplates
 
         # 降级到 action=expandtemplates（更轻量的模板展开 API）
@@ -217,7 +221,7 @@ class TemplateExpander:
             "query": query,
             "format": "json",
         }
-        resp = self.session.get(self.api_url, params=params)
+        resp = self.session.get(self.api_url, params=params, timeout=30)
         data = resp.json()
 
         bucket_data = data.get("bucket", [])
@@ -355,7 +359,7 @@ class TemplateExpander:
             "format": "json",
         }
         try:
-            resp = self.session.get(self.api_url, params=params)
+            resp = self.session.get(self.api_url, params=params, timeout=30)
             data = resp.json()
             pages = data.get("query", {}).get("pages", {})
             for page in pages.values():
@@ -363,8 +367,10 @@ class TemplateExpander:
                 for link in langlinks:
                     if link.get("lang") == "en":
                         return link.get("*")
-        except Exception:
-            pass
+        except requests.RequestException as e:
+            _logger.debug("Langlinks API failed for %s: %s", title, e)
+        except Exception as e:
+            _logger.debug("Unexpected error in _get_english_title for %s: %s", title, e)
         return None
 
     def _expand_via_expandtemplates(self, template_call: str) -> dict:
@@ -385,7 +391,7 @@ class TemplateExpander:
             "format": "json",
             "prop": "wikitext",
         }
-        resp = self.session.get(self.api_url, params=params)
+        resp = self.session.get(self.api_url, params=params, timeout=30)
         data = resp.json()
         html = data["expandtemplates"]["wikitext"]
 
@@ -426,8 +432,8 @@ class TemplateExpander:
                 import json
 
                 infobox_json = json.loads(pre.get_text(strip=True))
-            except Exception:
-                pass
+            except json.JSONDecodeError as e:
+                _logger.debug("infobox_json decode failed: %s", e)
 
         # 从 template_call 提取语义名称
         template_name = None

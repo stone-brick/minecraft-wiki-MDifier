@@ -49,8 +49,8 @@ def load_cache() -> dict:
     try:
         data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
         now = time.time()
-        # 过滤过期项
-        return {k: v for k, v in data.items() if now - v.get("ts", 0) < CACHE_TTL}
+        # 过滤过期项（无 ts 的条目视为当前，不过期）
+        return {k: v for k, v in data.items() if now - v.get("ts", now) < CACHE_TTL}
     except (json.JSONDecodeError, OSError):
         return {}
 

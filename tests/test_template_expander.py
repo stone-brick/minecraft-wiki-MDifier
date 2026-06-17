@@ -327,3 +327,88 @@ class TestBucketAPI:
         expander = TemplateExpander("en")
         data = {"profession": "Armorer"}
         assert expander._translate_field(data, "profession") == "Armorer"
+
+
+class TestTimeoutBehavior:
+    """API 超时行为测试"""
+
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
+    def test_expandtemplates_timeout_raises(self, MockSession):
+        """expandtemplates API 超时时抛出 requests.Timeout（上层会捕获并 fallback）"""
+        import requests
+
+        mock_instance = MockSession.return_value
+        mock_instance.get.side_effect = requests.Timeout("connection timeout")
+
+        expander = TemplateExpander("zh")
+        with pytest.raises(requests.Timeout):
+            expander._expand_via_expandtemplates("{{Hatnote|text}}")
+
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
+    def test_expandtemplates_timeout_has_timeout_param(self, MockSession):
+        """expandtemplates API 调用时传递了 timeout 参数"""
+
+        mock_instance = MockSession.return_value
+        mock_instance.get.return_value.json.return_value = {
+            "expandtemplates": {"wikitext": '<div class="hatnote">test</div>'}
+        }
+
+        expander = TemplateExpander("zh")
+        expander._expand_via_expandtemplates("{{Hatnote|text}}")
+
+        # 验证 session.get 被调用，且传递了 timeout=30
+        mock_instance.get.assert_called_once()
+        call_kwargs = mock_instance.get.call_args
+        assert call_kwargs.kwargs.get("timeout") == 30 or (
+            len(call_kwargs.args) >= 3 and 30 in call_kwargs.args
+        )
+
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
+    def test_bucket_timeout_raises_and_falls_back(self, MockSession):
+        """bucket API 超时时上层捕获并 fallback 到 expandtemplates"""
+        import requests
+
+        mock_instance = MockSession.return_value
+        # 依次：bucket 超时，expandtemplates 成功
+        mock_instance.get.side_effect = [
+            requests.Timeout("bucket timeout"),
+            mock_instance.get.return_value,
+        ]
+        mock_instance.get.return_value.json.return_value = {
+            "expandtemplates": {"wikitext": '<div class="hatnote">fallback</div>'}
+        }
+
+        expander = TemplateExpander("en")
+        # expand 内部会捕获 bucket 超时并 fallback
+        result = expander.expand("{{Trade uses|Iron}}")
+
+        # 应该成功返回 fallback 结果
+        assert result["class"] == "hatnote"
+
+
+class TestBucketFallbackLogging:
+    """bucket API 降级时日志记录测试"""
+
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
+    def test_bucket_fallback_logs_debug(self, MockSession, caplog):
+        """bucket API 失败时记录 debug 日志"""
+        import logging
+
+        mock_instance = MockSession.return_value
+        # 依次：bucket 抛出异常，expandtemplates 成功
+        mock_instance.get.side_effect = [
+            RuntimeError("bucket error"),
+            mock_instance.get.return_value,
+        ]
+        mock_instance.get.return_value.json.return_value = {
+            "expandtemplates": {"wikitext": '<div class="hatnote">fallback</div>'}
+        }
+
+        expander = TemplateExpander("en")
+        with caplog.at_level(logging.DEBUG, "minecraft_wiki_mdifier.template_expander"):
+            result = expander.expand("{{Trade uses|Iron}}")
+
+        # 应该返回 fallback 结果
+        assert result["class"] == "hatnote"
+        # 应该记录降级日志
+        assert any("Bucket API failed" in msg and "falling back" in msg for msg in caplog.messages)

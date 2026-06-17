@@ -46,7 +46,7 @@ class TestCache:
         # 构造一条 8 天前的缓存
         expired_ts = time.time() - CACHE_TTL - 86400  # 8 天前
         with open(cache_dir / "templates.json", "w", encoding="utf-8") as f:
-            json.dump({"k": {"text": "x", "_ts": expired_ts}}, f)
+            json.dump({"k": {"text": "x", "ts": expired_ts}}, f)
         loaded = load_cache()
         assert "k" not in loaded
 

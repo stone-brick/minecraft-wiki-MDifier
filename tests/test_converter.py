@@ -94,6 +94,77 @@ class TestMarkdownConverter:
         assert "after" in result
 
 
+class TestExpandTemplateLogging:
+    """_expand_template 异常时日志记录测试"""
+
+    def test_expand_template_logs_on_expander_error(self, caplog):
+        """expander.expand 失败时记录 debug 日志"""
+        import logging
+
+        c = MarkdownConverter(lang="zh", use_persistent_cache=False)
+        c.expander = MagicMock()
+        c.expander.expand.side_effect = RuntimeError("API error")
+
+        with caplog.at_level(logging.DEBUG, "minecraft_wiki_mdifier.converter"):
+            result = c._expand_template("Hatnote", {"1": "text"}, page_title="Test page")
+
+        # 应该返回 fallback 结果
+        assert result["class"] == "error"
+        # 应该记录日志
+        assert any("Hatnote" in msg and "API error" in msg for msg in caplog.messages)
+
+
+class TestExpandAllTemplatesLogging:
+    """_expand_all_templates 异常时日志记录测试"""
+
+    def test_expand_all_templates_continues_on_single_error(self, caplog):
+        """单个模板失败时记录日志但不中断其他模板"""
+        import logging
+
+        c = MarkdownConverter(lang="zh", use_persistent_cache=False)
+
+        # mock expander.expand，前两次成功，第三次抛出异常
+        call_count = [0]
+
+        def mock_expand(template_call, page_title=None):
+            call_count[0] += 1
+            if call_count[0] >= 3:
+                raise RuntimeError("expand failed")
+            return {
+                "html": "<div>ok</div>",
+                "class": "hatnote",
+                "text": "ok",
+                "format": "text",
+                "table": None,
+                "template_name": "test",
+            }
+
+        c.expander = MagicMock()
+        c.expander.expand = mock_expand
+
+        from minecraft_wiki_mdifier.parser import TemplateInfo
+
+        templates = {
+            "t1": TemplateInfo(name="T1", params={"1": "a"}),
+            "t2": TemplateInfo(name="T2", params={"1": "b"}),
+            "t3": TemplateInfo(name="T3", params={"1": "c"}),
+        }
+
+        with caplog.at_level(logging.DEBUG, "minecraft_wiki_mdifier.converter"):
+            result = c._expand_all_templates(templates)
+
+        # 三个模板都应该有结果（失败的走 fallback）
+        assert "t1" in result
+        assert "t2" in result
+        assert "t3" in result
+        # t1, t2 成功，t3 走 fallback
+        assert result["t1"]["class"] == "hatnote"
+        assert result["t2"]["class"] == "hatnote"
+        assert result["t3"]["class"] == "error"  # fallback
+        # 应该记录了 t3 的错误日志（Template t3）
+        assert any("t3" in msg and "expand failed" in msg for msg in caplog.messages)
+
+
 class TestRenderTemplateTable:
     """_render_template_table 测试"""
 
@@ -239,3 +310,84 @@ class TestRenderList:
 
         result = self.c._render_list(node, {})
         assert "1. First" in result
+
+
+class TestEncodeCacheValue:
+    """_encode_cache_value 测试"""
+
+    def test_encode_never_contains_pipe(self):
+        """base64 编码结果中不包含 |，避免分隔符冲突"""
+        from minecraft_wiki_mdifier.converter import _encode_cache_value
+
+        # 包含各种特殊字符的值
+        test_values = [
+            "a|b",
+            "x|y|z",
+            "key=value",
+            "a|b=c|d",
+            "{}|[]",
+            "中文|english",
+        ]
+        for v in test_values:
+            encoded = _encode_cache_value(v)
+            # URL-safe base64 不包含 |，确保分隔符不冲突
+            assert "|" not in encoded, f"encoded value should not contain pipe: {encoded}"
+
+    def test_encode_decode_roundtrip(self):
+        """编码后能正确还原"""
+        from minecraft_wiki_mdifier.converter import _encode_cache_value
+
+        test_values = [
+            "simple",
+            "a|b|c",
+            "key=value",
+            "mixed|a=b|normal",
+            "123|456|789",
+        ]
+        for v in test_values:
+            # 由于使用 base64，编码后直接解码应该能还原
+            import base64
+
+            encoded = _encode_cache_value(v)
+            decoded = base64.urlsafe_b64decode(encoded).decode("utf-8")
+            assert decoded == v
+
+
+class TestCancelThreadSafety:
+    """cancel() 和 is_cancelled() 线程安全测试"""
+
+    def test_cancel_is_thread_safe(self):
+        """cancel() 从多线程并发调用时无数据竞争"""
+        import threading
+
+        converter = MarkdownConverter(lang="zh", use_persistent_cache=False)
+        converter._cancelled = False  # 重置状态
+
+        call_count = {"cancel": 0, "check": 0}
+        results = []
+
+        def cancel_repeatedly():
+            for _ in range(100):
+                converter.cancel()
+                call_count["cancel"] += 1
+
+        def check_cancelled_repeatedly():
+            for _ in range(100):
+                results.append(converter.is_cancelled())
+                call_count["check"] += 1
+
+        threads = [
+            threading.Thread(target=cancel_repeatedly),
+            threading.Thread(target=cancel_repeatedly),
+            threading.Thread(target=check_cancelled_repeatedly),
+            threading.Thread(target=check_cancelled_repeatedly),
+        ]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        # 验证 is_cancelled() 至少被调用了预期次数
+        assert call_count["check"] == 200
+        # cancel 被调用至少一次后，is_cancelled 应该返回 True
+        assert converter.is_cancelled() is True

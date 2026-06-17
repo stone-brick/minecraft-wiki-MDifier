@@ -6,6 +6,7 @@ Wiki页面获取模块
 2. HTML抓取 - 降级方案
 """
 
+import logging
 import re
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -22,6 +23,8 @@ from minecraft_wiki_mdifier.exceptions import (
     PageNotFoundError,
     WikiAPIError,
 )
+
+_logger = logging.getLogger(__name__)
 
 # 语言配置：集中管理 URL 和解析模式
 LANG_CONFIG: dict[str, dict[str, str | bool]] = {
@@ -275,7 +278,8 @@ class WikiFetcher:
                 i = future_to_idx[future]
                 try:
                     results[i] = future.result()
-                except Exception:
+                except Exception as e:
+                    _logger.debug("fetch_many: page %s failed with %s", titles[i], e)
                     results[i] = None
                 if on_progress:
                     on_progress(titles[i], results[i])
