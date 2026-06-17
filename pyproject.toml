@@ -1,7 +1,7 @@
 [project]
 name = "minecraft-wiki-mdifier"
 version = "0.1.2"
-description = "将Minecraft Wiki页面转换为AI助手易读的Markdown格式"
+description = "Built specifically for AI tools: Seamlessly convert Minecraft Wiki into clean, structured Markdown."
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
