@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.1.3] - 2026-06-18
+
+### Fixed
+
+- 完善 release workflow（质量门禁、构建验证、版本校验）
+- 修复并发测试中假设线程执行顺序的 flakiness
+
 ## [0.1.2] - 2026-06-16
 
 ### Changed
