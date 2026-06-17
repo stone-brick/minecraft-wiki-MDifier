@@ -2,7 +2,7 @@
 
 # ⚡ Minecraft Wiki MDifier
 
-Minecraft Wiki のページを AI に優しい Markdown に変換
+AI ツール向けに特別に設計：Minecraft Wiki をクリーンかつ構造化された Markdown 形式へ完璧に変換。
 
 [![PyPI version](https://img.shields.io/pypi/v/minecraft-wiki-mdifier.svg)](https://pypi.org/project/minecraft-wiki-mdifier/)
 

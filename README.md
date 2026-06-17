@@ -2,7 +2,7 @@
 
 # ⚡ Minecraft Wiki MDifier
 
-将 Minecraft Wiki 页面转换为 AI 助手易读的 Markdown 格式
+专为 AI 工具打造：将 Minecraft Wiki 完美转换为纯净、结构化的 Markdown 格式。
 
 [![PyPI version](https://img.shields.io/pypi/v/minecraft-wiki-mdifier.svg)](https://pypi.org/project/minecraft-wiki-mdifier/)
 

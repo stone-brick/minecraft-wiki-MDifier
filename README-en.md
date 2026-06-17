@@ -2,7 +2,7 @@
 
 # ⚡ Minecraft Wiki MDifier
 
-Convert Minecraft Wiki pages to AI-friendly Markdown
+Built specifically for AI tools: Seamlessly convert Minecraft Wiki into clean, structured Markdown.
 
 [![PyPI version](https://img.shields.io/pypi/v/minecraft-wiki-mdifier.svg)](https://pypi.org/project/minecraft-wiki-mdifier/)
 
