@@ -131,9 +131,8 @@ jobs:
           else
             CONTENT=$(awk -v ver="$TAG_VERSION" '
               /^\[/{f=0}
-              f{body=body $0 "\n"}
               /^\['"ver"'\]/{f=1; next}
-              END{print body}
+              f{body=body $0 "\n"}
             ' CHANGELOG.md)
             if [ -z "$CONTENT" ]; then
               echo "No release notes found for v$TAG_VERSION" > release_notes.md
