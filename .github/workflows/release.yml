@@ -126,6 +126,11 @@ jobs:
         with:
           skip_existing: true
 
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
       - name: Generate Release Notes
         id: release-notes
         uses: octivi/release-notes-from-changelog@v1
