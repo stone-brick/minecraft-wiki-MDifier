@@ -128,23 +128,11 @@ jobs:
 
       - name: Generate Release Notes
         id: release-notes
-        run: |
-          TAG_VERSION=${GITHUB_REF#refs/tags/v}
-          if [ ! -f CHANGELOG.md ]; then
-            echo "No CHANGELOG.md found" > release_notes.md
-          else
-            CONTENT=$(awk -v ver="$TAG_VERSION" '
-              /^\[/{f=0}
-              /^\['"ver"'\]/{f=1; next}
-              f{body=body $0 "\n"}
-            ' CHANGELOG.md)
-            if [ -z "$CONTENT" ]; then
-              echo "No release notes found for v$TAG_VERSION" > release_notes.md
-            else
-              echo "$CONTENT" > release_notes.md
-            fi
-          fi
-          cat release_notes.md
+        uses: octivi/release-notes-from-changelog@v1
+        with:
+          tag: ${{ github.ref_name }}
+          changelog: CHANGELOG.md
+          release_notes: release_notes.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
