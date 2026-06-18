@@ -139,6 +139,12 @@ jobs:
           changelog: CHANGELOG.md
           release_notes: release_notes.md
 
+      - name: Download dist files
+        uses: actions/download-artifact@v6
+        with:
+          name: python-package-distributions
+          path: dist/
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
