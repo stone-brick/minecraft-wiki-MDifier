@@ -121,6 +121,8 @@ jobs:
       - name: Publish to PyPI
         if: success()
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip_existing: true
 
       - name: Generate Release Notes
         id: release-notes
