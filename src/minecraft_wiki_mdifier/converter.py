@@ -12,7 +12,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from markdownify import markdownify as md
 
-from minecraft_wiki_mdifier.parser import Node, NodeType, TemplateInfo, WikiParser
+from minecraft_wiki_mdifier.parser import (
+    Node,
+    NodeType,
+    TemplateInfo,
+    WikiParser,
+    _split_template_params,
+)
 from minecraft_wiki_mdifier.template_expander import TemplateExpander
 from minecraft_wiki_mdifier.wiki import LANG_CONFIG, WikiPage
 
@@ -57,6 +63,15 @@ class MarkdownConverter:
         "infobox_table": "_render_template_table",
         "table": "_render_template_table",
         "mcui": "_render_template_table",
+    }
+
+    # 模板名 → 专用渲染器方法名（优先级高于 FORMAT_RENDERERS）
+    TEMPLATE_RENDERERS: dict[str, str] = {
+        "historyline": "_render_history_line",
+        "historytable": "_render_history_table",
+        "only": "_render_only",
+        "id": "_render_id_table",
+        "id table": "_render_id_table",
     }
 
     # 已知需要驼峰转写的模板名（小写 -> 正确名）
@@ -256,6 +271,7 @@ class MarkdownConverter:
                 "format": expanded.get("format", "text"),
                 "table": expanded.get("table"),
                 "template_name": expanded.get("template_name"),
+                "params": params,  # 原始参数，渲染器需要用来做语义化渲染
             }
         except Exception as e:
             _logger.debug("Template %s expand failed: %s, using fallback", name, e)
@@ -303,6 +319,7 @@ class MarkdownConverter:
             "html": None,
             "format": "text",
             "table": None,
+            "params": params,
         }
 
     def _generate_markdown(
@@ -404,10 +421,15 @@ class MarkdownConverter:
             if not info:
                 return match.group(0)
 
-            fmt = info.get("format", "text")
-
-            # 通过 FORMAT_RENDERERS 查找渲染方法
-            renderer_name = self.FORMAT_RENDERERS.get(fmt)
+            # 优先通过模板名专用渲染器查找
+            # info["name"] 可能是 "historytable:0"，需要去掉 :N 后缀
+            raw_key = info.get("name", "").lower()
+            template_key = raw_key.split(":")[0] if ":" in raw_key else raw_key
+            renderer_name = self.TEMPLATE_RENDERERS.get(template_key)
+            if not renderer_name:
+                # 降级：通过 format 查找渲染方法
+                fmt = info.get("format", "text")
+                renderer_name = self.FORMAT_RENDERERS.get(fmt)
             if renderer_name:
                 return getattr(self, renderer_name)(info)
 
@@ -473,3 +495,223 @@ class MarkdownConverter:
         if not name:
             return rendered
         return self._wrap_template(name, rendered)
+
+    def _render_history_line(self, info: dict) -> str:
+        """
+        渲染 HistoryLine 模板为时间线格式
+
+        参数格式（混合位置+命名）：
+        {{HistoryLine|[版本标志]|[版本号]|[日期]|[描述...]}}
+        {{HistoryLine|||dev=日期|text}}
+        {{HistoryLine|版本标志|版本号|dev=日期|link=URL|text}}
+
+        输出：- **版本号** — 描述
+        """
+        params = info.get("params", info.get("text", ""))
+        if isinstance(params, str):
+            # fallback: text 模式时 params 是字符串
+            return self._wrap_template("HistoryLine", params)
+
+        # 取位置参数作为版本和描述
+        version_label = params.get("1", "").strip()
+        version_num = params.get("2", "").strip()
+        description = params.get("3", "").strip()
+
+        # 找最后一个非键名的值（描述文本）
+        # 位置参数之后的参数可能是描述
+        for key in sorted(params.keys(), key=lambda k: (not k.isdigit(), k)):
+            if key.isdigit():
+                v = params[key].strip()
+                if v and v not in (version_label, version_num) and not v.startswith("http"):
+                    description = v
+
+        # 组合版本标识
+        if version_num:
+            version_str = version_num
+        elif version_label:
+            version_str = version_label
+        else:
+            version_str = ""
+
+        # 收集额外元信息（dev=, exp=, link=, xbox= 等）
+        meta_parts = []
+        for key, value in sorted(params.items()):
+            if not key.isdigit() and value.strip():
+                meta_parts.append(value.strip())
+
+        if description:
+            line = f"- **{version_str}**"
+            if meta_parts:
+                line += f" — {description} ({', '.join(meta_parts)})"
+            else:
+                line += f" — {description}"
+        elif version_str:
+            line = f"- **{version_str}**"
+            if meta_parts:
+                line += f" ({', '.join(meta_parts)})"
+        else:
+            return ""
+
+        return self._wrap_template("HistoryLine", line)
+
+    def _render_history_table(self, info: dict) -> str:
+        """
+        渲染 HistoryTable 模板为时间线格式
+
+        HistoryTable 的每个 param value 都是一个 {{HistoryLine|...}} wikitext 字符串。
+        我们直接解析这些 wikitext 字符串，生成结构化时间线输出。
+
+        输出：
+        ## 历史
+
+        - **1.20** — 发生了变化
+        - **1.19** — 增加了新特性
+        """
+        params = info.get("params", {})
+        if not params:
+            return self._wrap_template("HistoryTable", "")
+
+        lines = []
+        for key in sorted(params.keys(), key=lambda k: (not k.isdigit(), k)):
+            value = params[key].strip()
+            if not value:
+                continue
+
+            # 如果 value 包含 {{HistoryLine，说明是嵌套的 wikitext
+            if "{{HistoryLine" in value:
+                # 解析 {{HistoryLine|...}} wikitext
+                # _split_template_params 可以正确处理嵌套模板
+                inner = value.lstrip("{").rstrip("}").rstrip("{").rstrip("}")
+                parts = _split_template_params(inner)
+                if not parts:
+                    continue
+
+                # 解析参数（第一个部分是模板名本身）
+                inner_params: dict[str, str] = {}
+                for i, part in enumerate(parts[1:], start=1):
+                    part = part.strip()
+                    if not part:
+                        continue
+                    if "=" in part:
+                        k, v = part.split("=", 1)
+                        inner_params[k.strip()] = v.strip()
+                    else:
+                        inner_params[str(i)] = part
+
+                # 提取版本和描述
+                version_label = inner_params.get("1", "").strip()
+                version_num = inner_params.get("2", "").strip()
+                description = inner_params.get("3", "").strip()
+
+                # 找描述（可能在后续数字参数中）
+                if not description:
+                    for k in sorted(inner_params.keys(), key=lambda x: (not x.isdigit(), x)):
+                        if k.isdigit() and inner_params[k].strip():
+                            v = inner_params[k].strip()
+                            if v not in (version_label, version_num) and not v.startswith("http"):
+                                description = v
+                                break
+
+                # 找元信息
+                meta_parts = []
+                for k, v in sorted(inner_params.items()):
+                    if not k.isdigit() and v.strip():
+                        meta_parts.append(v.strip())
+
+                if version_num:
+                    version_str = version_num
+                elif version_label:
+                    version_str = version_label
+                else:
+                    version_str = ""
+
+                if description:
+                    line = f"- **{version_str}**"
+                    if meta_parts:
+                        line += f" — {description} ({', '.join(meta_parts)})"
+                    else:
+                        line += f" — {description}"
+                elif version_str:
+                    line = f"- **{version_str}**"
+                    if meta_parts:
+                        line += f" ({', '.join(meta_parts)})"
+                else:
+                    continue
+
+                lines.append(line)
+
+        if not lines:
+            return self._wrap_template("HistoryTable", "")
+
+        return self._wrap_template("HistoryTable", "\n".join(lines))
+
+    def _render_only(self, info: dict) -> str:
+        """
+        渲染 Only 模板为版本提示格式
+
+        格式：{{Only|条件|内容}}
+        输出：> 仅 条件：内容
+        """
+        params = info.get("params", info.get("text", ""))
+        if isinstance(params, str):
+            return self._wrap_template("Only", params)
+
+        # Only 通常是位置参数
+        condition = params.get("1", "").strip()
+        content = params.get("2", "").strip()
+        if not content:
+            # 内容可能在后续位置参数中
+            for key in sorted(params.keys(), key=lambda k: (not k.isdigit(), k)):
+                if key.isdigit() and params[key].strip() and params[key].strip() != condition:
+                    content = params[key].strip()
+                    break
+
+        if condition and content:
+            return self._wrap_template("Only", f"> 仅 {condition}：{content}")
+        elif content:
+            return self._wrap_template("Only", content)
+        return ""
+
+    def _render_id_table(self, info: dict) -> str:
+        """
+        渲染 ID / ID table 模板为结构化表格
+
+        格式：{{ID table|数字ID=256|字符串ID=minecraft:iron_ingot}}
+        输出：| 类型 | 值 |
+              |------|-----|
+              | 数字 | 256 |
+              | 字符串 | iron_ingot |
+        """
+        params = info.get("params", info.get("text", ""))
+        if isinstance(params, str):
+            return self._wrap_template("ID table", params)
+
+        # 收集所有键值对
+        rows = []
+        for key, value in sorted(params.items()):
+            if key.isdigit():
+                continue
+            key_str = key.strip()
+            value_str = value.strip()
+            if not value_str:
+                continue
+            # 翻译常见键名
+            label = key_str
+            if key_str.lower() in ("数字id", "数字", "numeric id", "数字 ID"):
+                label = "数字"
+            elif key_str.lower() in ("字符串id", "字符串", "string id", "字符串 ID"):
+                label = "字符串"
+            elif key_str.lower() in ("物品id", "物品", "item id", "物品 ID"):
+                label = "物品"
+            elif key_str.lower() in ("方块id", "方块", "block id", "方块 ID"):
+                label = "方块"
+            rows.append([label, value_str])
+
+        if not rows:
+            return self._wrap_template("ID table", "")
+
+        lines = ["| 类型 | 值 |", "|------|-----|"]
+        for label, value in rows:
+            lines.append(f"| {label} | {value} |")
+
+        return self._wrap_template("ID table", "\n".join(lines))

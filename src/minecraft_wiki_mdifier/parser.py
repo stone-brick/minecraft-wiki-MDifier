@@ -25,6 +25,91 @@ def _parse_template_name(template_str: str) -> str:
     return name
 
 
+def _split_template_params(text: str) -> list[str]:
+    """
+    按 | 分割模板参数字符串，但忽略 [[]]、{{}}、{{{}}} 内部的 |
+
+    MediaWiki 规范：Pipes inside inner templates, tplargs,
+    or inside double rectangular brackets are not taken as parameter separators.
+
+    Args:
+        text: 参数字符串（如 "a|[[File:img.png|32px]]|b"）
+
+    Returns:
+        分割后的参数列表
+    """
+    result = []
+    current: list[str] = []
+    i = 0
+    # depth: 0=顶层，1=在 {{ }} 内，2=在 {{{ }}} 内
+    depth = 0
+
+    while i < len(text):
+        remaining = len(text) - i
+
+        # {{{ 进入 tplarg（仅在顶层或 {{ 内时；{{{ 在 {{}} 内是文字）
+        if remaining >= 3 and text[i : i + 3] == "{{{":
+            if depth == 0:
+                depth = 2
+            elif depth == 1:
+                depth = 2  # {{{ 在 {{}} 内是文字，不增加深度
+            current.append("{{{")
+            i += 3
+            continue
+
+        # {{ 进入模板（仅在顶层时；{{ 在 {{}} 内是文字）
+        if remaining >= 2 and text[i : i + 2] == "{{":
+            if depth == 0:
+                depth = 1
+            current.append("{{")
+            i += 2
+            continue
+
+        # [[ 进入链接（任意层；[[ 在任何层内都是文字，不增加深度）
+        if remaining >= 2 and text[i : i + 2] == "[[":
+            if depth == 0:
+                depth = 3
+            current.append("[[")
+            i += 2
+            continue
+
+        # }}} 退出 tplarg
+        if remaining >= 3 and text[i : i + 3] == "}}}" and depth >= 2:
+            depth -= 1
+            current.append("}}}")
+            i += 3
+            continue
+
+        # }} 退出模板（仅在 depth=1 时）
+        if remaining >= 2 and text[i : i + 2] == "}}" and depth == 1:
+            depth = 0
+            current.append("}}")
+            i += 2
+            continue
+
+        # ]] 退出链接（仅在 depth=3 时）
+        if remaining >= 2 and text[i : i + 2] == "]]" and depth == 3:
+            depth = 0
+            current.append("]]")
+            i += 2
+            continue
+
+        # 顶层分隔符
+        if text[i] == "|" and depth == 0:
+            result.append("".join(current))
+            current = []
+            i += 1
+            continue
+
+        current.append(text[i])
+        i += 1
+
+    if current:
+        result.append("".join(current))
+
+    return result
+
+
 class NodeType(Enum):
     """AST节点类型"""
 
@@ -249,7 +334,7 @@ class WikiParser:
             唯一标识键（如 "ItemLink:0", "ItemLink:1"）
         """
         name = _parse_template_name(template_str)
-        parts = template_str.split("|")
+        parts = _split_template_params(template_str)
 
         params = {}
         for i, part in enumerate(parts[1:], start=1):
