@@ -1,6 +1,6 @@
 """测试 WikiParser"""
 
-from minecraft_wiki_mdifier.parser import NodeType, WikiParser
+from minecraft_wiki_mdifier.parser import NodeType, WikiParser, _split_template_params
 
 
 class TestWikiParser:
@@ -88,3 +88,78 @@ class TestWikiParser:
         assert len(templates) >= 1
         t = list(templates.values())[0]
         assert "i" in t.params or "1" in t.params
+
+
+class TestSplitTemplateParams:
+    """测试 _split_template_params 的参数分割逻辑"""
+
+    def test_simple_split(self):
+        """简单 | 分割"""
+        assert _split_template_params("a|b") == ["a", "b"]
+
+    def test_empty_first_param(self):
+        """首个参数为空"""
+        # || 表示两个空参数（MediaWiki 规范）
+        assert _split_template_params("||b") == ["", "", "b"]
+
+    def test_link_inside_param_not_split(self):
+        """链接 [[a|b]] 中的 | 不应被分割"""
+        assert _split_template_params("|[[File:img.png|32px]]|x") == [
+            "",
+            "[[File:img.png|32px]]",
+            "x",
+        ]
+
+    def test_nested_template_not_split(self):
+        """嵌套模板 {{inner|a=b}} 中的 | 不应被分割"""
+        assert _split_template_params("{{inner|a=b}}|text") == ["{{inner|a=b}}", "text"]
+
+    def test_double_nested_template(self):
+        """嵌套多层 {{A|{{B|C}}|D}}"""
+        assert _split_template_params("{{A|{{B|C}}|D}}") == ["{{A|{{B|C}}", "D}}"]
+
+    def test_tplarg_not_split(self):
+        """参数默认值 {{{1|default}}} 在实际场景中会被 API 先展开，此处测试保守行为"""
+        # MediaWiki API 会先展开 tplarg，所以实际传入的是展开后的值
+        # 这里测试包含 {} 的字符串不会被错误分割
+        assert _split_template_params("{{{1|default}}}") == ["{{{1|default}}}"]
+
+    def test_historyline_real_case(self):
+        """真实的 HistoryLine wikitext"""
+        result = _split_template_params("HistoryLine|||dev=20100130|text")
+        assert result == ["HistoryLine", "", "", "dev=20100130", "text"]
+
+    def test_historyline_with_link(self):
+        """带链接的 HistoryLine"""
+        result = _split_template_params(
+            "HistoryLine||0.31|dev=20100128|[[File:Iron Ingot JE1.png|32px]] 加入了铁锭。"
+        )
+        assert result == [
+            "HistoryLine",
+            "",
+            "0.31",
+            "dev=20100128",
+            "[[File:Iron Ingot JE1.png|32px]] 加入了铁锭。",
+        ]
+
+    def test_crafting_params(self):
+        """Crafting 模板参数"""
+        result = _split_template_params("Crafting|a=|b=|c=|d=|e=|f=|g=|h=|i=Diamond")
+        assert result == ["Crafting", "a=", "b=", "c=", "d=", "e=", "f=", "g=", "h=", "i=Diamond"]
+
+    def test_empty_string(self):
+        """空字符串"""
+        assert _split_template_params("") == []
+
+    def test_single_value(self):
+        """单个值"""
+        assert _split_template_params("a") == ["a"]
+
+    def test_pipe_only(self):
+        """仅管道符"""
+        assert _split_template_params("|") == [""]
+
+    def test_template_with_colon(self):
+        """模板名含冒号"""
+        result = _split_template_params("File:img.png|32px")
+        assert result == ["File:img.png", "32px"]

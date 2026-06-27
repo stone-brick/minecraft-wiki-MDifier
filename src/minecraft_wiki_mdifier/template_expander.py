@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 from minecraft_wiki_mdifier._session import create_session
 from minecraft_wiki_mdifier._validators import validate_lang
 from minecraft_wiki_mdifier.formatters import MinecraftColorFormatter
-from minecraft_wiki_mdifier.parser import _parse_template_name
+from minecraft_wiki_mdifier.parser import _parse_template_name, _split_template_params
 from minecraft_wiki_mdifier.wiki import LANG_CONFIG
 
 _logger = logging.getLogger(__name__)
@@ -140,7 +140,7 @@ class TemplateExpander:
         """
         # 去掉 {{ 和 }}
         inner = template_call.strip().lstrip("{").rstrip("}").rstrip("{").rstrip("}")
-        parts = inner.split("|")
+        parts = _split_template_params(inner)
         name = _parse_template_name(parts[0])
 
         params = {}
