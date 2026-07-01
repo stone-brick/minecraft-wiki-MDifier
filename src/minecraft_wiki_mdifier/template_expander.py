@@ -125,8 +125,8 @@ class TemplateExpander:
                     _logger.debug("Bucket API failed for %s: %s, falling back", template_name, e)
                     pass  # 降级到 action=expandtemplates
 
-        # 降级到 action=expandtemplates（更轻量的模板展开 API）
-        return self._expand_via_expandtemplates(template_call)
+        # 降级到 action=parse（支持 variant 参数，可正确处理 zh 语言变体）
+        return self._expand_via_parse(template_call)
 
     def _parse_template_call(self, template_call: str) -> tuple[str, dict[str, str]]:
         """
@@ -373,11 +373,10 @@ class TemplateExpander:
             _logger.debug("Unexpected error in _get_english_title for %s: %s", title, e)
         return None
 
-    def _expand_via_expandtemplates(self, template_call: str) -> dict:
+    def _expand_via_parse(self, template_call: str) -> dict:
         """
-        通过 action=expandtemplates API 展开模板
-
-        返回纯净 HTML（无 mw-parser-output 包裹层，无调试注释）
+        通过 action=parse API 展开模板（优于 expandtemplates，
+        因为 action=parse 支持 variant 参数，可正确处理 zh-cn/zh-tw/zh-hk 语言变体）
 
         Args:
             template_call: 模板调用字符串
@@ -385,15 +384,18 @@ class TemplateExpander:
         Returns:
             标准展开结果 dict
         """
+        # zh wiki 需要 variant 参数剥离语言变体标记
+        variant = self.lang if self.lang in ("en", "ja") else "zh-cn"
         params = {
-            "action": "expandtemplates",
+            "action": "parse",
             "text": template_call,
             "format": "json",
-            "prop": "wikitext",
+            "prop": "text",
+            "variant": variant,
         }
-        resp = self.session.get(self.api_url, params=params, timeout=30)
+        resp = self.session.post(self.api_url, data=params, timeout=30)
         data = resp.json()
-        html = data["expandtemplates"]["wikitext"]
+        html = data["parse"]["text"]["*"]
 
         return self._parse_expanded_html(html, template_call)
 
