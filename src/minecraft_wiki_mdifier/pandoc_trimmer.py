@@ -13,6 +13,7 @@ WikiText → pypandoc(commonmark_x+raw_attribute)
 import re
 
 import pypandoc
+from bs4 import BeautifulSoup
 from markdownify import markdownify as md
 
 from minecraft_wiki_mdifier.template_expander import TemplateExpander
@@ -58,6 +59,7 @@ TEMPLATE_RENDERERS: dict[str, str] = {
     "only": "_render_only",
     "id": "_render_id_table",
     "id table": "_render_id_table",
+    "navbox items": "_render_navbox_items",
 }
 
 # 已知需要驼峰转写的模板名（小写 → 正确名）
@@ -216,13 +218,18 @@ def _wrap_template(class_name: str | None, body: str) -> str:
 
 def _render_template_table(expanded: dict, lang: str) -> str:
     """渲染模板表格为 Markdown（v0.1.3 逻辑）"""
+
+    def format_cell(cell: str) -> str:
+        """格式化单元格：换行转为 <br/>"""
+        return str(cell).replace("\n", "<br/>")
+
     table = expanded.get("table", [])
     if not table:
         return expanded.get("text", "")
 
     lines = []
     for row in table:
-        lines.append("| " + " | ".join(str(cell) for cell in row) + " |")
+        lines.append("| " + " | ".join(format_cell(cell) for cell in row) + " |")
 
     if len(table) > 0:
         col_count = len(table[0])
@@ -262,121 +269,80 @@ def _render_html_generic(expanded: dict, lang: str) -> str:
 def _render_history_line(info: dict, lang: str) -> str:
     """
     渲染 HistoryLine 模板为时间线格式
-    {{HistoryLine|[标志]|[版本]|[日期]|[描述...]}}
+    解析 action=parse 返回的 HTML 表格行
     输出：- **版本号** — 描述
     """
-    params = info.get("params", info.get("text", ""))
-    if isinstance(params, str):
-        return _wrap_template("HistoryLine", params)
+    html = info.get("html", "")
+    text = info.get("text", "")
 
-    version_label = str(params.get("1", "")).strip()
-    version_num = str(params.get("2", "")).strip()
-    description = str(params.get("3", "")).strip()
+    # 如果有 HTML，解析它
+    if html:
+        soup = BeautifulSoup(html, "html.parser")
+        tr = soup.find("tr")
+        if tr:
+            ths = tr.find_all("th")
+            tds = tr.find_all("td")
 
-    for key in sorted(params.keys(), key=lambda k: (not str(k).isdigit(), k)):
-        v = str(params[key]).strip()
-        if v and v not in (version_label, version_num) and not v.startswith("http"):
-            description = v
+            version_str = ths[0].get_text(strip=True) if ths else ""
+            description = tds[-1].get_text(strip=True) if tds else ""
 
-    meta_parts = []
-    for key, value in sorted(params.items()):
-        if not str(key).isdigit() and str(value).strip():
-            meta_parts.append(str(value).strip())
+            if description:
+                line = f"- **{version_str}** — {description}" if version_str else f"- {description}"
+            elif version_str:
+                line = f"- **{version_str}**"
+            else:
+                return ""
 
-    if version_num:
-        version_str = version_num
-    elif version_label:
-        version_str = version_label
-    else:
-        version_str = ""
+            return _wrap_template("HistoryLine", line)
 
-    if description:
-        line = f"- **{version_str}**"
-        if meta_parts:
-            line += f" — {description} ({', '.join(meta_parts)})"
-        else:
-            line += f" — {description}"
-    elif version_str:
-        line = f"- **{version_str}**"
-        if meta_parts:
-            line += f" ({', '.join(meta_parts)})"
-    else:
-        return ""
+    # Fallback 到纯文本
+    if text:
+        return _wrap_template("HistoryLine", text)
 
-    return _wrap_template("HistoryLine", line)
+    return ""
 
 
 def _render_history_table(info: dict, lang: str) -> str:
     """
     渲染 HistoryTable 模板为时间线格式
-    每个 param value 都是 {{HistoryLine|...}} wikitext
+    解析 action=parse 返回的 HTML 表格结构
     """
-    params = info.get("params", {})
-    if not params:
+    html = info.get("html", "")
+    if not html:
         return _wrap_template("HistoryTable", "")
 
-    from minecraft_wiki_mdifier.parser import _split_template_params
+    soup = BeautifulSoup(html, "html.parser")
+    table = soup.find("table")
+    if not table:
+        return _wrap_template("HistoryTable", "")
 
     lines = []
-    for key in sorted(params.keys(), key=lambda k: (not str(k).isdigit(), k)):
-        value = str(params[key]).strip()
-        if not value:
-            continue
+    current_section = ""
 
-        if "{{HistoryLine" in value:
-            inner = value.lstrip("{").rstrip("}").rstrip("{").rstrip("}")
-            parts = _split_template_params(inner)
-            if not parts:
+    for tr in table.find_all("tr"):
+        ths = tr.find_all("th")
+        tds = tr.find_all("td")
+
+        # Section header row: 只有 th 且 colspan >= 6
+        if ths and not tds:
+            first_th = ths[0]
+            if first_th.get("colspan") and int(first_th.get("colspan", 0)) >= 6:
+                current_section = first_th.get_text(strip=True)
                 continue
 
-            inner_params: dict[str, str] = {}
-            for i, part in enumerate(parts[1:], start=1):
-                part = part.strip()
-                if not part:
-                    continue
-                if "=" in part:
-                    k2, v2 = part.split("=", 1)
-                    inner_params[k2.strip()] = v2.strip()
-                else:
-                    inner_params[str(i)] = part
+        # Data row: 有 td 的行
+        if tds:
+            # 版本号在第一个 th 中（如果有）
+            version_str = ths[0].get_text(strip=True) if ths else ""
 
-            version_label = inner_params.get("1", "").strip()
-            version_num = inner_params.get("2", "").strip()
-            description = inner_params.get("3", "").strip()
-
-            if not description:
-                for k2 in sorted(inner_params.keys(), key=lambda x: (not x.isdigit(), x)):
-                    v2 = inner_params[k2].strip()
-                    if v2 and v2 not in (version_label, version_num) and not v2.startswith("http"):
-                        description = v2
-                        break
-
-            meta_parts = []
-            for k2, v2 in sorted(inner_params.items()):
-                if not k2.isdigit() and v2.strip():
-                    meta_parts.append(v2.strip())
-
-            if version_num:
-                version_str = version_num
-            elif version_label:
-                version_str = version_label
-            else:
-                version_str = ""
+            # 描述在最后一个 td 中
+            description = tds[-1].get_text(strip=True) if tds else ""
 
             if description:
-                line = f"- **{version_str}**"
-                if meta_parts:
-                    line += f" — {description} ({', '.join(meta_parts)})"
-                else:
-                    line += f" — {description}"
-            elif version_str:
-                line = f"- **{version_str}**"
-                if meta_parts:
-                    line += f" ({', '.join(meta_parts)})"
-            else:
-                continue
-
-            lines.append(line)
+                line = f"- **{version_str}** — {description}" if version_str else f"- {description}"
+                if current_section:
+                    line = f"[{current_section}] {line}"
+                lines.append(line)
 
     if not lines:
         return _wrap_template("HistoryTable", "")
@@ -413,40 +379,55 @@ def _render_only(info: dict, lang: str) -> str:
 def _render_id_table(info: dict, lang: str) -> str:
     """
     渲染 ID / ID table 模板为结构化表格
-    {{ID table|数字ID=256|字符串ID=minecraft:iron_ingot}}
+    使用 action=parse 返回的 table 数据
     """
-    params = info.get("params", info.get("text", ""))
-    if isinstance(params, str):
-        return _wrap_template("ID table", params)
+    table = info.get("table", [])
+    if not table:
+        # Fallback 到纯文本
+        text = info.get("text", "")
+        return _wrap_template("ID table", text) if text else ""
 
-    rows = []
-    for key, value in sorted(params.items()):
-        if str(key).isdigit():
-            continue
-        key_str = str(key).strip()
-        value_str = str(value).strip()
-        if not value_str:
-            continue
-        label = key_str
-        kl = key_str.lower()
-        if kl in ("数字id", "数字", "numeric id", "数字 id"):
-            label = "数字"
-        elif kl in ("字符串id", "字符串", "string id", "字符串 id"):
-            label = "字符串"
-        elif kl in ("物品id", "物品", "item id", "物品 id"):
-            label = "物品"
-        elif kl in ("方块id", "方块", "block id", "方块 id"):
-            label = "方块"
-        rows.append([label, value_str])
+    def format_cell(cell: str) -> str:
+        """格式化单元格：换行转为 <br/>"""
+        return str(cell).replace("\n", "<br/>")
 
-    if not rows:
-        return _wrap_template("ID table", "")
+    lines = []
+    for row in table:
+        lines.append("| " + " | ".join(format_cell(cell) for cell in row) + " |")
 
-    lines = ["| 类型 | 值 |", "|------|-----|"]
-    for label, value in rows:
-        lines.append(f"| {label} | {value} |")
+    if len(table) > 0:
+        col_count = len(table[0])
+        lines.insert(1, "| " + " | ".join(["---"] * col_count) + " |")
 
     return _wrap_template("ID table", "\n".join(lines))
+
+
+def _render_navbox_items(info: dict, lang: str) -> str:
+    """
+    渲染 Navbox items 模板为列表格式
+    提取 HTML 中的分类列表
+    """
+    html = info.get("html", "")
+    if not html:
+        text = info.get("text", "")
+        return _wrap_template("Navbox items", text) if text else ""
+
+    soup = BeautifulSoup(html, "html.parser")
+
+    # 提取所有列表项
+    items = []
+    for li in soup.find_all("li"):
+        text = li.get_text(strip=True)
+        if text:
+            items.append(text)
+
+    if items:
+        # 用逗号连接列表项
+        content = "、".join(items)
+        return _wrap_template("Navbox items", content)
+
+    # Fallback: 用 markdownify 处理
+    return _render_html_generic(info, lang)
 
 
 # =============================================================================

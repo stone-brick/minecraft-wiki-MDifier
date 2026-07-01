@@ -242,7 +242,8 @@ class TemplateExpander:
                         if mcui:
                             text = self._parse_mcui(mcui)
                         else:
-                            text = cell.get_text(separator=" ", strip=True)
+                            # 用换行符连接 <br/> 分隔的内容
+                            text = cell.get_text(separator="\n", strip=True)
                         cells.append(text)
                     if cells:
                         rows.append(cells)
