@@ -60,6 +60,7 @@ TEMPLATE_RENDERERS: dict[str, str] = {
     "id": "_render_id_table",
     "id table": "_render_id_table",
     "navbox items": "_render_navbox_items",
+    "bv": "_render_bv",
 }
 
 # 已知需要驼峰转写的模板名（小写 → 正确名）
@@ -425,6 +426,28 @@ def _render_navbox_items(info: dict, lang: str) -> str:
         # 用逗号连接列表项
         content = "、".join(items)
         return _wrap_template("Navbox items", content)
+
+    # Fallback: 用 markdownify 处理
+    return _render_html_generic(info, lang)
+
+
+def _render_bv(info: dict, lang: str) -> str:
+    """
+    渲染 bv (Bilibili 视频) 模板
+    提取 iframe src 为视频链接
+    """
+    html = info.get("html", "")
+    if not html:
+        text = info.get("text", "")
+        return _wrap_template("bv", text) if text else ""
+
+    soup = BeautifulSoup(html, "html.parser")
+    iframe = soup.find("iframe", class_="embedvideo-player")
+    if iframe:
+        src = iframe.get("src", "")
+        if src:
+            # 转换为 Markdown 链接格式
+            return _wrap_template("bv", f"[视频]({src})")
 
     # Fallback: 用 markdownify 处理
     return _render_html_generic(info, lang)
