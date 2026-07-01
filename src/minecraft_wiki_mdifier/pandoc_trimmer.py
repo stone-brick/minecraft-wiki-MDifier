@@ -405,8 +405,8 @@ def _render_id_table(info: dict, lang: str) -> str:
 
 def _render_navbox_items(info: dict, lang: str) -> str:
     """
-    渲染 Navbox items 模板为列表格式
-    提取 HTML 中的分类列表
+    渲染 Navbox items 模板为分类列表格式
+    保留 HTML 中的分类层级结构
     """
     html = info.get("html", "")
     if not html:
@@ -414,21 +414,93 @@ def _render_navbox_items(info: dict, lang: str) -> str:
         return _wrap_template("Navbox items", text) if text else ""
 
     soup = BeautifulSoup(html, "html.parser")
+    navbox = soup.find("table", class_="navbox")
 
-    # 提取所有列表项
-    items = []
-    for li in soup.find_all("li"):
-        text = li.get_text(strip=True)
-        if text:
-            items.append(text)
+    # 如果有 navbox 表格，提取分类结构
+    if navbox:
+        lines = []
+        current_category = ""
 
-    if items:
-        # 用逗号连接列表项
-        content = "、".join(items)
-        return _wrap_template("Navbox items", content)
+        for elem in navbox.find_all(["th", "li"]):
+            th_class = elem.get("class", [])
+            text = elem.get_text(strip=True)
+            if not text:
+                continue
+            if "navbox-top" in th_class:
+                continue
+            elif "navbox-middle" in th_class:
+                if current_category and lines:
+                    lines.append("")
+                lines.append(f"**{text}**")
+                current_category = text
+            elif th_class and "navbox-middle" not in th_class and elem.name == "th":
+                lines.append(f"*{text}*")
+            elif elem.name == "li":
+                lines.append(f"- {text}")
+
+        if lines:
+            return _wrap_template("Navbox items", "\n".join(lines))
+
+    # 处理简单的 ul/li 结构（测试用例兼容）
+    ul = soup.find("ul")
+    if ul:
+        items = []
+        for li in ul.find_all("li"):
+            text = li.get_text(strip=True)
+            if text:
+                items.append(f"- {text}")
+        if items:
+            return _wrap_template("Navbox items", "\n".join(items))
 
     # Fallback: 用 markdownify 处理
     return _render_html_generic(info, lang)
+
+    lines = []
+    current_category = ""
+
+    def process_element(elem):
+        """递归处理元素，返回 (is_heading, text) 元组"""
+        tag = elem.name
+        if tag == "th":
+            th_class = elem.get("class", [])
+            text = elem.get_text(strip=True)
+            if "navbox-top" in th_class:
+                # 导航栏标题，跳过
+                return False, None
+            elif "navbox-middle" in th_class:
+                # 一级分类
+                return True, ("category", text)
+            else:
+                # 二级分类标题
+                return True, ("subcategory", text)
+        elif tag == "li":
+            text = elem.get_text(strip=True)
+            return True, ("item", text)
+        return False, None
+
+    # 收集所有 th 和 li（保持文档顺序）
+    elements = []
+    for elem in navbox.find_all(["th", "li"]):
+        is_valid, data = process_element(elem)
+        if is_valid and data:
+            elements.append(data)
+
+    # 转换为行
+    for elem_type, text in elements:
+        if elem_type == "category":
+            if current_category and lines:
+                lines.append("")
+            lines.append(f"**{text}**")
+            current_category = text
+        elif elem_type == "subcategory":
+            lines.append(f"*{text}*")
+        elif elem_type == "item":
+            lines.append(f"- {text}")
+
+    if not lines:
+        return _render_html_generic(info, lang)
+
+    return _wrap_template("Navbox items", "\n".join(lines))
 
 
 def _render_bv(info: dict, lang: str) -> str:
