@@ -4,6 +4,8 @@
 通过 MediaWiki API 展开模板，获取渲染后的HTML
 """
 
+from __future__ import annotations
+
 import base64
 import logging
 import threading
