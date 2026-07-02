@@ -32,19 +32,19 @@ LANG_CONFIG: dict[str, dict[str, str | bool]] = {
         "api": "https://zh.minecraft.wiki/api.php",
         "base": "https://zh.minecraft.wiki",
         "static_base": "https://zh.minecraft.wiki",
-        "has_bucket_api": True,  # zh wiki 也支持 action=bucket
+        "variant": "zh-cn",  # action=parse 的 variant 参数
     },
     "en": {
         "api": "https://minecraft.wiki/api.php",
         "base": "https://minecraft.wiki",
         "static_base": "https://minecraft.wiki",
-        "has_bucket_api": True,
+        "variant": "en",
     },
     "ja": {
         "api": "https://ja.minecraft.wiki/api.php",
         "base": "https://ja.minecraft.wiki",
         "static_base": "https://ja.minecraft.wiki",
-        "has_bucket_api": True,
+        "variant": "ja",
     },
 }
 

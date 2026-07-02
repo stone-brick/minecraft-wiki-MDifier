@@ -26,11 +26,13 @@ class MarkdownConverter:
     def __init__(
         self,
         lang: str = "zh",
+        variant: str | None = None,
         max_workers: int = 10,
         template_cache: dict | None = None,
         use_persistent_cache: bool = True,
     ):
         self.lang = lang
+        self.variant = variant
         self.max_workers = max_workers
         self._use_persistent_cache = use_persistent_cache
         # 跨页共享的模板缓存（外部注入实现多批次共享）
@@ -51,6 +53,7 @@ class MarkdownConverter:
         self._cancel_lock = threading.Lock()
         self.expander = TemplateExpander(
             lang=lang,
+            variant=variant,
             template_cache=self._template_cache,
             cache_lock=self._cache_lock,
         )

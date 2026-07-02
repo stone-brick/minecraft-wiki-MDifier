@@ -64,11 +64,18 @@ def main():
     is_flag=True,
     help="输出完整 JSON（包含 title、markdown、source、templates）",
 )
+@click.option(
+    "--variant",
+    type=str,
+    default=None,
+    help="语言变体（如 zh-cn、zh-tw、zh-hk；None 则使用 lang 默认值）",
+)
 def convert_cmd(
     title_or_url: str,
     output: str | None,
     lang: str,
     detail: bool,
+    variant: str | None,
 ):
     """
     转换Wiki页面为Markdown
@@ -85,7 +92,7 @@ def convert_cmd(
         if detail:
             import json
 
-            result = convert_detailed(title_or_url, lang=lang)
+            result = convert_detailed(title_or_url, lang=lang, variant=variant)
             content = json.dumps(
                 {
                     "title": result.title,
@@ -97,7 +104,7 @@ def convert_cmd(
                 indent=2,
             )
         else:
-            content = convert(title_or_url, lang=lang)
+            content = convert(title_or_url, lang=lang, variant=variant)
 
         if output:
             try:
@@ -197,6 +204,12 @@ def search_cmd(query: str, lang: str, num: int):
     help="默认语言（默认 zh）",
 )
 @click.option(
+    "--variant",
+    type=str,
+    default=None,
+    help="语言变体（如 zh-cn、zh-tw、zh-hk；None 则使用 lang 默认值）",
+)
+@click.option(
     "-o",
     "--output-dir",
     type=click.Path(file_okay=False),
@@ -215,6 +228,7 @@ def batch_cmd(
     from_search,
     search_limit,
     lang,
+    variant,
     output_dir,
     workers,
     no_progress,
@@ -258,8 +272,8 @@ def batch_cmd(
                 )
                 sys.exit(EXIT_USAGE)
 
-            def _make_converter(item_lang: str, cache: dict | None):
-                c = MarkdownConverter(lang=item_lang, template_cache=cache)
+            def _make_converter(item_lang: str, item_variant: str | None, cache: dict | None):
+                c = MarkdownConverter(lang=item_lang, variant=item_variant, template_cache=cache)
                 c.template_marker_open = open_
                 c.template_marker_close = close_
                 return c
@@ -267,8 +281,8 @@ def batch_cmd(
             converter_factory = _make_converter
         elif no_markers:
 
-            def _make_converter(item_lang: str, cache: dict | None):
-                c = MarkdownConverter(lang=item_lang, template_cache=cache)
+            def _make_converter(item_lang: str, item_variant: str | None, cache: dict | None):
+                c = MarkdownConverter(lang=item_lang, variant=item_variant, template_cache=cache)
                 c.template_marker_open = ""
                 c.template_marker_close = ""
                 return c
@@ -277,6 +291,7 @@ def batch_cmd(
         result = convert_many(
             deduped,
             lang=lang,
+            variant=variant,
             max_workers=workers,
             on_progress=progress,
             converter_factory=converter_factory,

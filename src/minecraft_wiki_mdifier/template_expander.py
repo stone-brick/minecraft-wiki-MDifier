@@ -45,11 +45,13 @@ class TemplateExpander:
     def __init__(
         self,
         lang: str = "zh",
+        variant: str | None = None,
         template_cache: dict | None = None,
         cache_lock: threading.Lock | None = None,
     ):
         validate_lang(lang)
         self.lang = lang
+        self.variant = variant if variant is not None else LANG_CONFIG[lang]["variant"]
         self.api_url = LANG_CONFIG[lang]["api"]
         self.session = create_session()
         self.formatter = MinecraftColorFormatter()
@@ -73,7 +75,7 @@ class TemplateExpander:
                 "table": 表格数据（如果有的话）
             }
         """
-        cache_key = _encode_cache_value(template_call)
+        cache_key = _encode_cache_value(f"{self.variant}:{template_call}")
         with self._cache_lock:
             if cache_key in self._template_cache:
                 return self._template_cache[cache_key]
@@ -93,14 +95,12 @@ class TemplateExpander:
         Returns:
             标准展开结果 dict
         """
-        # zh wiki 需要 variant 参数剥离语言变体标记
-        variant = self.lang if self.lang in ("en", "ja") else "zh-cn"
         params = {
             "action": "parse",
             "text": template_call,
             "format": "json",
             "prop": "text",
-            "variant": variant,
+            "variant": self.variant,
         }
         resp = self.session.post(self.api_url, data=params, timeout=30)
         data = resp.json()

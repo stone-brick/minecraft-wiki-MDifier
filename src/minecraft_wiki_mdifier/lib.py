@@ -48,6 +48,7 @@ def convert(
     title_or_url: str,
     lang: str | None = None,
     template_cache: dict | None = None,
+    variant: str | None = None,
 ) -> str:
     """
     将Minecraft Wiki页面转换为Markdown
@@ -59,6 +60,7 @@ def convert(
         lang: 语言，'zh'或'en'，None则自动检测
         template_cache: 跨调用共享的模板缓存（None 则新建空 dict）
             不会自动持久化到磁盘（用 convert_many 才有）
+        variant: 语言变体（None 则使用 lang 对应的默认变体）
 
     Returns:
         Markdown格式字符串
@@ -74,19 +76,24 @@ def convert(
         >>> convert("铁锭", template_cache=shared)  # 共享
     """
     page, lang = _resolve_and_fetch(title_or_url, lang)
-    converter = MarkdownConverter(lang=lang, template_cache=template_cache)
+    converter = MarkdownConverter(lang=lang, variant=variant, template_cache=template_cache)
     result = converter.convert_wiki(page)
     converter.flush_cache()
     return result
 
 
-def convert_detailed(title_or_url: str, lang: str | None = None) -> ConvertResult:
+def convert_detailed(
+    title_or_url: str,
+    lang: str | None = None,
+    variant: str | None = None,
+) -> ConvertResult:
     """
     将Minecraft Wiki页面转换为Markdown，并返回详细信息
 
     Args:
         title_or_url: 页面标题或完整URL
         lang: 语言，'zh'或'en'，None则自动检测
+        variant: 语言变体（None 则使用 lang 对应的默认变体）
 
     Returns:
         ConvertResult对象，包含标题、Markdown、来源和模板数据
@@ -99,7 +106,7 @@ def convert_detailed(title_or_url: str, lang: str | None = None) -> ConvertResul
         >>> print(result.templates)
     """
     page, lang = _resolve_and_fetch(title_or_url, lang)
-    converter = MarkdownConverter(lang=lang)
+    converter = MarkdownConverter(lang=lang, variant=variant)
     markdown = converter.convert_wiki(page)
     return ConvertResult(
         title=page.title,
@@ -133,10 +140,11 @@ def _convert_one(converter: MarkdownConverter, page: WikiPage | None, title: str
 def convert_many(
     items: list[str],
     lang: str = "zh",
+    variant: str | None = None,
     max_workers: int = 4,
     on_progress: Callable[[int, int, str], None] | None = None,
     template_cache: dict | None = None,
-    converter_factory: Callable[[str, dict | None], MarkdownConverter] | None = None,
+    converter_factory: Callable[[str, str | None, dict | None], MarkdownConverter] | None = None,
 ) -> BatchConvertResult:
     """
     批量转换 Wiki 页面
@@ -144,10 +152,11 @@ def convert_many(
     Args:
         items: 标题或 URL 列表（可混合）
         lang: 默认语言
+        variant: 语言变体（None 则使用 lang 对应的默认变体）
         max_workers: 跨页并发抓取数
         on_progress: 进度回调 (done, total, title)
         template_cache: 跨批次共享的模板缓存（None 则内部新建）
-        converter_factory: 自定义 converter 工厂 (lang, cache) -> MarkdownConverter
+        converter_factory: 自定义 converter 工厂 (lang, variant, cache) -> MarkdownConverter
             用于获得 converter 引用（如想从外部调用 cancel()）
 
     Returns:
@@ -164,7 +173,7 @@ def convert_many(
         >>> from minecraft_wiki_mdifier.converter import MarkdownConverter
         >>> c = MarkdownConverter(lang='zh')
         >>> threading.Timer(0.5, c.cancel).start()
-        >>> convert_many(['钻石'], converter_factory=lambda l, cache: c)
+        >>> convert_many(['钻石'], converter_factory=lambda l, v, cache: c)
     """
     validate_lang(lang)
 
@@ -184,8 +193,10 @@ def convert_many(
         by_lang.setdefault(item_lang, []).append((idx, title))
 
     # 默认 converter 工厂
-    def default_factory(item_lang: str, cache: dict | None) -> MarkdownConverter:
-        return MarkdownConverter(lang=item_lang, template_cache=cache)
+    def default_factory(
+        item_lang: str, item_variant: str | None, cache: dict | None
+    ) -> MarkdownConverter:
+        return MarkdownConverter(lang=item_lang, variant=item_variant, template_cache=cache)
 
     factory = converter_factory or default_factory
 
@@ -199,7 +210,7 @@ def convert_many(
         fetcher = WikiFetcher(lang=group_lang)
         # 用用户工厂或默认工厂创建 converter
         cache = template_cache if template_cache is not None else get_or_load_persistent_cache()
-        converter = factory(group_lang, cache)
+        converter = factory(group_lang, variant, cache)
         titles = [t for _, t in group]
 
         # 跨页并发抓取
