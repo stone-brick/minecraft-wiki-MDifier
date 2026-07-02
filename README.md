@@ -21,25 +21,19 @@
 
 在处理 Minecraft Wiki 时会遇到以下难题：
 
-**转换层面的问题：**
-
 1. **模板展开慢** — Wiki 页面中的模板引用需要逐个展开，逐一请求耗时巨大。
-2. **模板无法展开** — `{{Crafting}}`、`{{Trade}}` 等模板依赖 Lua 模块和数据库，纯解析器无法获取渲染结果。
-3. **清理不全** — 渲染后的 HTML 包含大量无用的 class、style、data 属性和冗余标签。
-4. **Wikitext 语法混乱** — Bold/Italic 标签嵌套、`{{end-bold}}` 等 MediaWiki 特有语法，通用解析器容易误判。
-
-**AI 使用层面的问题：**
-
-5. **HTML 占用上下文且干扰语义** — 纯 HTML 包含大量无关标签和额外信息，浪费 token 且影响 LLM 理解。
-6. **模板信息省略** — Wikitext 中的模板只是占位符，原始文本不包含展开后的实际内容，AI 无法得到结构化数据。
+2. **清理不全** — 渲染后的 HTML 包含大量无用的 class、style、data 属性和冗余标签。
+3. **Wikitext 语法混乱** — Bold/Italic 标签嵌套、`{{end-bold}}` 等 MediaWiki 特有语法，通用解析器容易误判。
+4. **HTML 占用上下文且干扰语义** — 纯 HTML 包含大量无关标签，浪费 token 且影响 LLM 理解。
+5. **模板信息省略** — Wikitext 中的模板只是占位符，AI 无法得到结构化数据。
 
 ### 解决方案
 
-- 并发 + 缓存：解决模板展开慢的问题
-- `action=bucket` API：解决模板无法展开的问题
-- HTML 清理：解决清理不全的问题
-- Markdown 输出：解决 HTML 占用上下文的问题
-- 模板标记 `:::name`：解决模板信息省略的问题
+- **并发 + 缓存**：解决模板展开慢的问题
+- **统一 `action=parse`**：所有模板统一走 API 展开，无需 Lua Bucket 数据库
+- **Pandoc 预处理**：`pypandoc` 将 wikitext 转为 Markdown，无法处理的模板保留为 `{=mediawiki}` 块再单独展开
+- **HTML 清理**：BeautifulSoup + markdownify 清理冗余属性
+- **模板标记 `:::name`**：解决模板信息省略的问题
 
 **性能对比**（转换 Diamond、Iron Ingot、Gold Ingot）：
 
@@ -49,11 +43,6 @@
 | 无缓存并发     | 22.00s | 2.3x       |
 | 有缓存（冷）    | 19.02s | 2.7x       |
 | 有缓存（热）    | 0.20s  | **251.9x** |
-
-**针对 AI 使用问题：**
-
-- Markdown 输出：解决 HTML 占用上下文的问题
-- 模板标记 `:::name`：解决模板信息省略的问题
 
 ## 安装
 
@@ -133,7 +122,7 @@ print(result.markdown)  # 干净文本，可直接用于分块和向量化
 from minecraft_wiki_mdifier import convert_detailed
 
 result = convert_detailed("Armorer")
-print(result.templates["trade"][0]["wanted_item"])  # 盔甲匠想要的物品
+print(result.templates["trade"])  # 渲染后的交易表格 Markdown
 ```
 
 ## CLI 参考
@@ -300,13 +289,13 @@ f.clean("&e黄色&r重置")  # '[yellow]黄色[reset]重置'
 | ---------------------- | ------------------------------------- |
 | `Infobox`（物品信息框）       | 两列 Markdown 表格                        |
 | `Crafting`（合成表）        | 三列：材料 / 配方 / 描述                       |
-| `LootChest`（战利品表）      | 六列：物品 / 来源 / 数量 / 概率等                 |
+| `DropTable`（掉落表）      | Markdown 表格 + 掉落注释脚注（`[^A]` 等）       |
 | `mcui`（合成台/熔炉/织布机/锻造台） | 3x3 网格文本 + 物品描述                       |
 | `Hatnote`、`Quote`      | markdownify 转为 Markdown               |
 | 其他未识别模板                | 通用 markdownify 转换                     |
 | 展开失败                   | 回退文本 `[模板名: k=v]`，标记为 `class="error"` |
 
-部分模板（Trade uses、Crafting usage 等）依赖 Lua Bucket 数据库，程序通过 `action=bucket` API 查询。
+所有模板统一通过 `action=parse` API 展开，缓存命中时无需网络请求。
 
 ## 缓存机制
 
@@ -347,7 +336,6 @@ MdifierError
 │   ├── NetworkError
 │   ├── WikiAPIError
 │   └── PageNotFoundError
-├── BucketAPIError
 └── CacheError (OSError)
 ```
 
@@ -368,8 +356,6 @@ MdifierError
 
 内置 `zh`（zh.minecraft.wiki）、`en`（minecraft.wiki）和 `ja`（ja.minecraft.wiki）。
 
-**注意**：ja wiki 的 Bucket i18n 字段含中文内容，程序默认不翻译，输出英文原文。
-
 ## 项目结构
 
 ```
@@ -378,8 +364,8 @@ src/minecraft_wiki_mdifier/
 ├── lib.py                # convert / convert_many / search
 ├── cli.py                # CLI 入口（click）
 ├── wiki.py               # MediaWiki API 获取 + HTML 降级
-├── parser.py             # Wikitext 解析器
-├── template_expander.py  # 模板展开（bucket/expandtemplates）
+├── pandoc_trimmer.py     # 核心转换：Pandoc 预处理 + 模板渲染
+├── template_expander.py  # 模板展开（action=parse 降级链）
 ├── formatters.py         # Minecraft 颜色代码格式化
 ├── converter.py          # Markdown 生成
 ├── cache.py              # 模板缓存持久化
@@ -390,10 +376,26 @@ src/minecraft_wiki_mdifier/
 
 **数据流**：
 
-1. `WikiFetcher` → MediaWiki API 获取 wikitext
-2. `WikiParser` → 解析 AST，提取模板到 `templates` 字典
-3. `TemplateExpander` → 优先 `action=bucket`，失败则降级 `action=expandtemplates`
-4. `MarkdownConverter` → 分发渲染，生成最终 Markdown
+```
+Wikitext
+    │
+    ▼
+pypandoc(commonmark_x+raw_attribute)
+    │
+    ▼
+遍历输出，识别 {=mediawiki} 块和内联模板
+    │
+    ▼
+TemplateExpander.expand() — 统一 action=parse
+    │
+    ▼
+pandoc_trimmer 渲染器分发 — 专用渲染器 > 通用 markdownify
+    │
+    ▼
+Markdown
+```
+
+> **注意**：`parser.py` 在当前架构下未使用，是遗留代码。
 
 ## 参与贡献
 

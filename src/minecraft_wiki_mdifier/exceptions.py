@@ -36,11 +36,5 @@ class PageNotFoundError(FetchError):
     """页面不存在（404 或 API 返回无 parse 字段）"""
 
 
-class BucketAPIError(MdifierError):
-    """Bucket API 调用失败"""
-
-    pass
-
-
 class CacheError(MdifierError, OSError):
     """缓存文件读写失败"""
