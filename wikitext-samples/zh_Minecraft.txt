@@ -1,0 +1,874 @@
+{{About|广义上的本游戏|Minecraft系列作品|Minecraft系列|其他用法}}
+{{Infobox program
+| title = Minecraft
+| image = MainMenu Simplified.png\MainMenu Traditional.png\MainMenu Traditional HK.png
+| image2 = BEMenuScreen Simplified.png\BEMenuScreen Traditional.png
+| image3 = EEMenuScreen Simplified.png\EEMenuScreen Traditional.png
+| imagesize = 280px
+| image2size = 280px
+| image3size = 280px
+| author = 
+* [[File:Mojang Studios logo.svg|20px|link=Mojang Studios|alt=Mojang Studios logo]] [[Mojang Studios]] <small>[https://minecraft.net/credits （创作者）]</small>
+* [[File:Xbox Game Studios.svg|20px|link=wzh:Xbox游戏工作室]] [[Xbox游戏工作室]]<small>（{{el|be|ee}}）</small>
+* [[File:SkyBox Labs icon.png|20px|link=SkyBox Labs|alt=SkyBox Labs]] [[SkyBox Labs]] <small>（{{el|be}}）</small>
+* [[File:4J.png|20px|link=4J Studios|alt=4J Studios logo]] [[4J Studios]] <small>（{{el|lce}}）</small>
+* [[File:OtherOceanLogo.png|20px|link=Other Ocean Interactive|alt=Other Ocean Interactive logo]] [[Other Ocean Interactive]] <small>（{{el|3ds}}）</small>
+* [[File:NetEase Games Logo.svg|20px|alt=网易游戏]][[网易游戏]]<small>（[[中国版]]）</small>
+* [https://minecraft.net/credits 制作人员名单]
+| platform = 
+; {{el|je}}
+: {{OS|winwm}}<br>{{OS|mac|lin}}
+; {{el|be}}
+:; 原生支持
+:: {{OS|win|chrome|xb1|xsx|ns|ps4|ps5}}<br>{{OS|and|ios|ipad|fire}}
+:; 优化增强
+:: {{OS|xb1}} {{w|Xbox One#Xbox One X|Xbox One X}}<br>{{OS|ps4}} {{w|PlayStation 4|PlayStation 4 Pro}}
+:; 后向兼容
+:: {{OS|ns2}}
+; {{el|ee}}
+: {{OS|winwm}}<br>{{OS|chrome|andwm}}<br>{{OS|mac|ios|ipad}}
+
+| programming language = 
+* [[wzh:Java（编程语言）|Java]] <sup>（Java版）</sup>
+* [[wzh:C++|C++]]<ref>{{tweet|jeb|122350670648066049}}</ref> <sup>（基岩版和教育版）</sup>
+
+| version = 
+* {{el|je}}：{{v|java}}{{#if: {{v|java-snap}} | （{{v|java-snap}}） }}
+* {{el|be}}：{{v|bedrock}}{{#if: {{v|bedrock-beta}} | （{{v|bedrock-beta}}） }}
+* {{el|ee}}：{{v|education}}{{#if: {{v|education-beta}} | （{{v|education-beta}}） }}
+
+| date = 
+{{collapse|content=
+;{{el|je}}
+: 2009年5月17日<small>（[[Java版Classic|Classic]]）</small>
+: 2009年12月23日<small>（[[Java版Indev|Indev]]）</small>
+: 2010年2月27日<small>（[[Java版Infdev|Infdev]]）</small>
+: 2010年6月30日<small>（[[Java版Alpha|Alpha]]）</small>
+: 2010年12月20日<small>（[[Java版Beta|Beta]]）</small>
+: 2011年11月18日<small>（[[Java版#正式版|正式版]]）</small>
+;{{el|be}}
+: '''Android'''：2011年8月16日
+: '''iOS'''：2011年11月16日
+: '''FireOS'''：2014年4月2日
+: '''Fire Phone'''：2014年7月25日
+: '''Galaxy Store'''：2014年
+: '''Windows Phone 8.1'''：2014年12月10日
+: '''[[Windows 10版|Windows]]'''：2015年7月29日
+: '''[[Gear VR版|Gear VR]]'''：2016年4月27日
+: '''Oculus Rift'''：2016年8月15日
+: '''[[Apple TV版|Apple TV]]和[[Fire TV版|Fire TV]]'''：2016年12月19日
+: '''Windows 10 Mobile'''：2017年2月22日
+: '''Xbox One'''：2017年9月20日
+: '''Windows MR'''：2017年11月21日
+: '''Nintendo Switch'''：2018年6月21日
+: '''iPadOS'''：2019年9月24日
+: '''PlayStation 4'''：2019年12月10日
+: '''PlayStation VR'''：2020年9月22日
+: '''ChromeOS'''：2023年6月7日
+: '''PlayStation 5'''：2024年10月22日
+: '''Xbox Series X{{!}}S'''：2025年6月17日
+;{{el|lce}}
+: '''[[Xbox 360版|Xbox 360]]'''：2012年5月9日
+: '''[[Xbox One版|Xbox One]]'''：2014年9月5日
+: '''[[PlayStation 3版|PS3]]'''：2013年12月17日
+: '''[[PlayStation 4版|PS4]]'''：2014年9月4日
+: '''[[PlayStation Vita版|PSVita]]'''：2014年10月14日
+: '''[[Wii U版|Wii U]]'''：2015年12月17日<ref>[https://web.archive.org/web/20151207180938/https://www.mojang.com/2015/12/minecraft-coming-to-nintendo-wii-u/ Minecraft coming to Nintendo Wii U] - Mojang.com，2015年12月7日</ref>
+: '''[[Nintendo Switch版|Nintendo Switch]]'''：2017年5月11日
+;{{el|ee}}
+: 2016年11月1日<ref>[https://web.archive.org/web/20161104025605/http://mojang.com/2016/11/minecraft-education-edition-has-launched ''Minecraft: Education Edition'' has launched!] - Mojang.com，2016年11月1日</ref>
+;{{el|3ds}}
+: 2017年9月13日<ref>{{article|minecraft-new-3ds|Minecraft on new 3DS!}}</ref>
+;[[中国版]]
+: 2017年8月8日<ref name="pclaunch">{{cite|url=https://mc.163.com/news/20180619/29175_704938.html|title=欢迎回家！《我的世界》中国版PC Java版今日开测|website=我的世界官网|date=2017-08-08|archive=1|archive-time=20201003193235}}</ref>
+}}
+| ratings = 见{{el|je}}、{{el|be}}、{{el|ee}}和[[中国版]]
+| size    = 见{{el|je}}、{{el|be}}、{{el|ee}}和[[中国版]]
+| source available = '''Java版'''：部分<br>'''其他版本'''：否
+| license = [https://www.minecraft.net/usage-guidelines 使用准则]
+| customlinks = 
+* [https://www.minecraft.net '''官方网站''']
+* [https://minecraft.net/free-trial 免费体验游戏]
+* [https://www.minecraft.net/choose-your-game 游戏选购]
+* [https://www.minecraft.net/store/minecraft-dungeons-legends-bundle Minecraft三重捆绑包]
+}}
+[[File:MC key art 2024.jpg|thumb|主视觉图]]
+{{quote|{{tr|探索自己独一无二的世界，挺过漫漫长夜，并创建您能想象的一切！|探索屬於您自己的獨特世界，在夜間求生，並且憑藉您的想像創造一切！}}|[[minecraft.net]]||}}
+'''Minecraft'''（中文译作'''《我的世界》'''<ref>{{tweet|pgeuder|600230316721250304}}</ref><ref>https://24h.pchome.com.tw/prod/DGBJLN-D900GETAT</ref>，又称'''《当个创世神》'''<ref>https://www.swanpanasia.com/products/minecraft-portal-dash</ref>或'''《麦块》'''<ref>https://www.youtube.com/watch?v=pAei6ZOk6hE</ref>）是一款由[[Mojang Studios]]开发的{{w|三维计算机图形|3D}}{{w|沙盒类游戏|沙盒类}}{{w|电子游戏}}。游戏最初于2009年5月17日作为[[Java版Classic|Classic]]版本发布，历经数年更新后于2011年11月18日发布[[Java版1.0.0|正式版]]。至今，Minecraft的游戏平台已涵盖[[基岩版|移动设备]]和[[主机版（消歧义）|游戏主机]]。
+
+Minecraft着重于让[[玩家]]探索、交互并改变一个动态生成1[[wzh:立方米|m³]]大小[[方块]]的[[世界]]。除方块外，环境中还包括[[生物|动]][[植物]]与[[物品]]。游戏内容包括采集[[矿石]]，与敌对[[生物]]战斗，收集游戏中的各种资源来合成新的[[方块]]与[[工具]]。开放的[[游戏模式]]允许玩家在各类多人[[服务器]]或单人地图中创造建筑物与艺术作品。其他内容包括用于逻辑运算与远程控制的[[红石电路]]、[[矿车]]及[[铁轨]]，以及称之为“[[下界]]”的神秘[[维度]]。最终，玩家可选择前往名为“[[末地]]”的维度，击败[[末影龙]]。
+
+Minecraft的开创者为[[Markus Persson|马库斯·佩尔松]]（Notch），他负责了游戏几乎所有的前期开发工作，直到[[Jens Bergensten|延斯·伯根斯坦]]（Jeb）加入并接任开发负责人。2014年11月6日，Minecraft及Mojang的全部资产被{{w|微软}}以25亿美元收购，自此隶属于[[Xbox游戏工作室]]，同时Notch从Mojang离职。<ref>https://mojang.com/2014/09/yes-were-being-bought-by-microsoft/</ref><ref>{{tweet|xboxp3|530368089418784768}}</ref>游戏[[音乐]]由[[C418|丹尼尔·罗森费尔德]]（C418）、[[Lena Raine|莉娜·雷恩]]、[[谷冈久美]]、[[Aaron Cherof|阿龙·谢洛夫]]、[[Samuel Åberg|萨穆埃尔·奥贝里]]、[[Hyper Potions]]、[[Amos Roddy|埃莫斯·罗迪]]和[[fingerspit|保拉·鲁伊兹]]（fingerspit）创作；[[画]]则由[[Kristoffer Zetterstrand|克里斯托弗·塞特斯特兰德]]和[[Sarah Boeving]]绘制。
+
+截至2025年4月，Minecraft的销量已突破3.5亿份。<ref>[https://www.guinnessworldrecords.com/world-records/best-selling-video-game Best-selling videogame]</ref>
+
+== 购买及供应 ==
+{{main|Tutorial:获取游戏}}
+
+{{el|je}}主要适用于运行{{w|Microsoft Windows|Windows}}、{{w|macOS}}和{{w|Linux}}系统的电脑端，目前与运行于{{w|Microsoft Windows|Windows}}的{{el|be}}捆绑售卖。可在[https://minecraft.net/store/minecraft-java-bedrock-edition-pc Minecraft.net]或Microsoft Store（[https://www.xbox.com/zh-CN/games/store/minecraft-java-bedrock-edition-for-pc/9NXP44L49SHJ/0010/9Q258VBCKLXT 中国大陆]、[https://www.xbox.com/zh-TW/games/store/minecraft-java-bedrock-edition-for-pc/9NXP44L49SHJ/0010/9RBLN69GK5PW 台区]、[https://www.xbox.com/zh-HK/games/store/minecraft-java-bedrock-edition-for-pc/9NXP44L49SHJ/0010/9MT8VC5T23C1 港區]）购买。可使用礼品码为他人购买，价格与自己购买相同。另有包含游戏本体、[[Minecoin]]及[[市场]]内容的[https://www.minecraft.net/store/minecraft-deluxe-collection-pc 豪华合集]或[https://www.minecraft.net/store/minecraft-ultimate-collection-pc 终极合集]可选。
+
+对于其他平台的{{el|be}}，可以在[https://play.google.com/store/apps/details?id=com.mojang.minecraftpe Google Play商店]、苹果App Store（[https://apps.apple.com/hk/app/minecraft/id479516143 港区]、[https://apps.apple.com/tw/app/minecraft/id479516143 台区]、[https://apps.apple.com/us/app/minecraft/id479516143 美区]）、PlayStation Store（<!--[https://store.playstation.com/zh-hans-cn/product/HP4433-CUSA02169_00-MINECRAFTPS40000 （中国大陆）]-->[https://store.playstation.com/zh-hant-tw/product/EP4433-CUSA00265_00-ASIA0000FULLGAME 台区]、[https://store.playstation.com/zh-hant-hk/product/EP4433-CUSA00265_00-ASIA0000FULLGAME 港区]）、[https://www.amazon.com/gp/product/B00992CF6W/ Amazon App Store]（美国）、Microsoft Store以及任天堂eShop（[https://www.nintendo.com/games/detail/minecraft-switch 美区]、[https://store-jp.nintendo.com/list/software/70010000000965.html 日区]、[https://store.nintendo.com.hk/70010000024522 港区]）各自为Android/ChromeOS、iOS/iPadOS、Xbox、PlayStation、Fire TV、Xbox以及Nintendo Switch购买。
+
+此外，不同订阅等级的{{w|Xbox Game Pass}}也提供了对于{{el|je}}、{{w|Microsoft Windows|Windows}}{{el|be}}及Xbox主机{{el|be}}的游戏权限。
+
+另有包含Minecraft、[[Minecraft Dungeons]]、[[Minecraft Legends]]及[[Minecoin]]的[https://www.minecraft.net/store/minecraft-dungeons-legends-bundle 三重捆绑包]，在PC及主机平台可选。
+
+[[原主机版]]及[[New Nintendo 3DS版]]在大部分平台已停售，可通过购买实体版游玩。
+
+[[Java版Classic 0.0.23a_01（重制）|Minecraft Classic]]，{{el|je}}[[Java版Classic 0.0.23a 01|Classic 0.0.23a_01]]的重制版本，可在[https://classic.minecraft.net classic.minecraft.net]免费游玩。
+
+[[中国版]]，为中国大陆玩家提供的{{el|je|be}}中国本地化版本，中国大陆玩家可在[https://mc.163.com 中国版官网]免费下载游玩。
+
+{{-}}
+
+== 游戏内容 ==
+[[File:Survival.png|300px|缩略图|Minecraft中的一个新世界]]
+
+=== 方块 ===
+{{main|方块}}
+
+Minecraft发生在[[wzh:立方体堆砌|由立方体构成的三维网格]]世界中，每个立方体由特定种类的方块占据（有些方块不一定是立方体形的）。方块种类繁多，类似[[草]]、[[石头]]及各种[[矿石]]这样的自然方块在世界中随机生成。玩家也能自行[[合成]]方块，例如[[工作台]]和[[熔炉]]。资源可通过徒手或使用[[工具]]从方块中获取。部分资源是可在玩家[[物品栏]]中放置的简单方块，其余则用于合成其他方块或工具，还有些或许仅作装饰用途。有些方块无法通过正常的生存手段破坏，例如[[基岩]]、[[末地传送门方块|末地传送门]]、[[命令方块]]和[[屏障]]。
+
+{{-}}
+
+=== 玩家 ===
+{{main|玩家}}
+[[File:Steve.png|100px|缩略图|[[玩家]]的九种默认形象之一（Steve）]]
+玩家是用户在世界中控制的人物。当用户开始新游戏时，玩家会被放入由随机或指定的[[种子（世界生成）|种子]]生成的世界中，[[物品栏]]为空。玩家有10颗心的[[生命条]]，会受到跌落、窒息、溺水、[[火]]、[[熔岩]]、[[闪电]]、[[仙人掌]]、掉入[[虚空]]、掉落的[[铁砧]]以及被敌对[[生物]]和其他玩家击中所产生的伤害。对生命的伤害可被[[盔甲]]抵消，生命值可通过食用[[食物]]或饮用特定[[药水]]恢复；若将[[难度]]设为和平，生命值会自动恢复。[[饥饿值]]是和平难度以外的一项指标，会随时间逐渐消耗，[[疾跑]]时消耗会加剧。[[食物]]可恢复饥饿值，食用部分食物也会对玩家产生额外的效果。饥饿值降到零时会消耗玩家的生命值，具体情况取决于[[难度]]等级，困难难度下会导致[[死亡]]。
+
+{{-}}
+
+=== 采矿 ===
+{{main|挖掘}}
+[[File:MultipleOreBlobs.png|300px|缩略图|主世界中各种能被采集的矿石（靠近熔岩）]]
+
+游戏名定为Minecraft，其中的“mine”指的就是采矿——这是游戏中的一项主要活动，即进入地表以下采集[[矿石]]及其他材料的过程。主世界的矿石包括[[煤矿石|煤]]、[[铁矿石|铁]]、[[铜矿石|铜]]、[[金矿石|金]]、[[红石矿石|红石]]、[[青金石矿石|青金石]]、[[绿宝石矿石|绿宝石]]和[[钻石矿石|钻石]]，开采这些矿石是制作各类物品的关键。采矿的方式可以是从地表[[挖掘]]一个洞直通地下，也可以是沿着天然[[洞穴]]往下走。游戏还会生成[[废弃矿井]]等结构，为玩家提供寻找资源的额外区域。
+
+{{-}}
+
+=== 合成与烧炼 ===
+{{main|合成|烧炼}}
+[[File:Crafting Table.png|缩略图|120px|一个[[工作台]]]]
+
+合成是指玩家在[[物品栏]]的2×2网格或[[工作台]]提供的3×3网格中，将自己[[物品栏]]中已有的方块或物品合并、拆解或改造成新的[[方块]]或[[物品]]，以满足生存需求。每种可合成物品的配方各不相同，玩家可通过查阅配方书了解各类配方。随着游戏版本的不断更新，新的合成配方会持续增加。
+
+烧炼是指使用燃料在[[熔炉]]中将某些方块或物品加工成其他方块或物品。与合成类似，烧炼也有多种配方，同样可通过查阅配方书了解（例如将[[粗铁]]冶炼为[[铁锭]]）。此外，不同燃料的燃烧时长不同，[[烟熏炉]]和[[高炉]]能提高某些方块或物品的烧炼效率，这就需要玩家选择合适的燃料和熔炉。
+
+{{-}}
+
+=== 酿造与附魔 ===
+[[File:Enchantment Table animated experience.gif|300px|缩略图|右|一些字符正在飘进一个[[附魔台]]]] 
+{{main|药水酿造|附魔}}
+
+酿造指的是在[[酿造台]]中使用各种原料和水制造[[药水]]。酿造系统有着较为复杂的配方，根据原料的不同，酿造完成的药水效果也多种多样。它们储存在[[玻璃瓶]]中，玩家可以饮用，也能将其继续酿造成[[喷溅药水|喷溅]]或[[滞留药水|滞留]]形式，丢到其他[[生物]]或玩家身上，产生不同效果。
+
+附魔指的是在[[附魔台]]上通过花费[[经验]]和[[青金石]]，给[[盔甲]]、[[工具]]和[[武器]]附上独特的“魔咒”，使其拥有特别的属性。更高级的魔咒可通过在周围放置[[书架]]升级附魔台，或使用[[铁砧]]将物品与[[附魔书]]合并来获取。
+
+{{-}}
+
+=== 生物 ===
+{{main|生物}}
+[[File:Creeper in forest.png|200px|缩略图|右|森林里的苦力怕，它们一旦靠近玩家就会爆炸]]
+
+生物（Mob，“mobiles”的缩写）是动物或其他居住在世界中的可移动[[实体]]。根据它们对玩家是否有敌意，可分为友好生物和敌对生物。
+
+[[主世界]]居住着许多动物，常见的包括{{EntityLink|Pig|wrap=1}}、{{EntityLink|Cow|wrap=1}}、{{EntityLink|Sheep|wrap=1}}、{{EntityLink|Chicken|wrap=1}}、{{EntityLink|Rabbit|wrap=1}}、{{EntityLink|Bee|wrap=1}}、{{EntityLink|Horse|wrap=1}}、{{EntityLink|Donkey|wrap=1}}、{{EntityLink|Wolf|wrap=1}}、{{EntityLink|Cat}}、{{EntityLink|Turtle|wrap=1}}、{{EntityLink|Squid|wrap=1}}、{{EntityLink|Salmon|wrap=1}}、{{EntityLink|Cod|wrap=1}}、{{EntityLink|Tropical Fish|wrap=1}}、{{EntityLink|Pufferfish|wrap=1}}等，它们对玩家的生存有着不同的辅助作用。
+
+主世界常见的怪物有{{EntityLink|Zombie|wrap=1}}、{{EntityLink|Skeleton|wrap=1}}、{{EntityLink|Spider|wrap=1}}、{{EntityLink|Creeper|wrap=1}}、{{EntityLink|Enderman|wrap=1}}、{{EntityLink|Slime|wrap=1}}、{{EntityLink|Phantom|wrap=1}}、{{EntityLink|Witch|wrap=1}}、{{EntityLink|Pillager|wrap=1}}等，它们各有独特的生成需求和攻击方式。
+
+目前，Minecraft中只有两种NPC生物：{{EntityLink|Villager|wrap=1}}和{{EntityLink|Wandering Trader|wrap=1}}。前者生活在[[村庄]]中，后者会生成在玩家附近，玩家都能与它们[[交易]]获取资源。Minecraft中只有两种Boss生物：{{EntityLink|Ender Dragon|wrap=1}}和{{EntityLink|Wither|wrap=1}}。前者仅生成于[[末地]]的主岛，且可以由玩家复活；后者玩家可在任意[[维度]]召唤。
+
+其他[[维度]]的生物详见下文的{{slink||下界}}和{{slink||末地}}章节。
+
+{{-}}
+
+=== 下界 ===
+{{main|下界}}
+[[File:The Nether.png|300px|缩略图|右|下界景观一隅]]
+
+下界是Minecraft的一个维度，可从[[主世界]]通过[[下界传送门]]进入。下界有五大[[生物群系]]：[[下界荒地]]、[[绯红森林]]、[[诡异森林]]、[[灵魂沙峡谷]]和[[玄武岩三角洲]]，每个生物群系各有不同的景观与生物。
+
+下界充斥着大片[[熔岩海]]，栖息着{{EntityLink|Ghast|wrap=1}}、{{EntityLink|Zombified Piglin|wrap=1}}、{{EntityLink|Magma Cube|wrap=1}}、{{EntityLink|Hoglin|wrap=1}}、{{EntityLink|Skeleton|wrap=1}}、{{EntityLink|Enderman|wrap=1}}、{{EntityLink|Blaze|wrap=1}}、{{EntityLink|Wither Skeleton|wrap=1}}等危险怪物，也有{{EntityLink|Piglin|wrap=1}}这类虽有敌意但可进行[[以物易物]]的生物，以及能作为穿越熔岩海载具的友好生物{{EntityLink|Strider}}。
+
+下界还可开采到[[下界石英矿石]]、[[下界金矿石]]、[[荧石]]，以及能用来制成强大[[下界合金]]制品的珍贵[[远古残骸]]。
+
+{{-}}
+
+=== 末地 ===
+{{main|末地}}
+[[File:The End.png|缩略图|300px|末地主岛]]
+
+末路之地，通称末地，是Minecraft的“最终维度”，可通过[[要塞]]中的[[末地传送门]]抵达。它悬浮于虚空中，由[[末地石]]构成的一座主岛及环绕其外的无数外岛组成。这里的生物有Boss生物{{EntityLink|Ender Dragon}}、数量众多且随处可见的{{EntityLink|Enderman}}，以及方块状的{{EntityLink|Shulker}}。
+
+主岛上矗立着[[黑曜石柱]]，柱上有[[末地水晶]]，是与[[末影龙]]战斗的场所。战斗胜利后，可通过[[末地折跃门]]前往外岛。外岛生长着大量[[紫颂树]]，还会罕见生成[[末地城]]，城内有[[潜影贝]]守卫，藏有丰厚战利品。末地城旁可能出现的[[末地船]]中，还有极为稀有的战利品——[[鞘翅]]。
+
+{{-}}
+
+=== 多人游戏 ===
+{{Main|多人游戏}}
+[[File:PlayerVersusPlayer.png|300px|缩略图|右|多人游戏服务器中的PvP]]
+Minecraft本身支持多人游戏。在多人游戏中，不同玩家得以在同一个世界中相互交流互动。玩家可以互相协作进行建设、采矿和战斗（或[[PvP|互相对抗]]）等。
+
+==== Minecraft Realms ====
+{{main|Realms|Realms Plus}}
+
+'''Minecraft Realms'''是官方的、基于订阅的[[服务器]]托管服务，供玩家创建和管理自己的私有Minecraft服务器。由[[Mojang Studios]]托管的Realms提供了简单快捷的服务器创建方式，允许所有者（服主）从游戏内直接管理，无需具备互联网服务器搭建知识。不过，Realms并非为大型公开服务器设计，更适合一群玩友或家庭使用。<ref>{{tweet|danfrisk|311725356434460672}}</ref>私有Realms服务器设置简便，且只要服主持续付费，就能全天候提供服务。
+
+== 平台 ==
+=== 基岩版 ===
+{{main|基岩版}}
+[[File:Pocket.jpg|300px|缩略图|右|[[Notch]]和携带版Minecraft]]
+[[File:Minecraft Sales Data.png|300px|缩略图|右|Minecraft的销售数据，截至2015年12月]]
+
+基岩版（亦称作基岩平台、基岩代码库或基岩引擎），是由[[Mojang Studios]]、[[Xbox Game Studios]]、[[4J Studios]]和[[SkyBox Labs]]联合开发的多平台版本的Minecraft。由于其游戏引擎源自携带版，所以在此版本之前，该作品系列在提及时常使用“携带版”“MCPE”或“携带版/Windows 10版”等名称。
+
+所有基岩版的标题均为'''Minecraft'''，没有副标题。在[[独乐不如众乐更新]]之前，每个平台上的版本都有不同副标题，包括[[携带版]]（所有移动平台）、[[Windows 10版]]、[[Xbox One版]]、[[Nintendo Switch版]]、[[Gear VR版]]和[[Fire TV版]]。
+
+基岩版于2011年8月16日在Google Play<ref>https://play.google.com/details?id=com.mojang.minecraftpe</ref>上初始发布，为[[wzh:Sony Ericsson Xperia Play|Xperia PLAY]]独占，售价6.99美元；随后在2011年10月7日向其他[[wzh:Android|Android]]设备发布<ref>{{tweet|kappische|122246496941899776}}</ref>，2011年11月17日向[[wzh:iOS|iOS]]设备发布<ref>http://appleinformer.org/2011/11/minecraft-pocket-edition-for-ios-now-available-for-download/</ref>。2012年9月13日，携带版在Amazon Appstore上线销售。[[wzh:Windows Phone|Windows Phone]]版于2014年12月10日以[[携带版1.0.0]]在Windows商店发布<ref>http://www.windowscentral.com/minecraft-pocket-edition-comes-windows-phone</ref>，后续更新版本仅适用于Windows 10 Mobile。之后，携带版又扩展到4个平台：2015年7月29日发布至[[Windows 10版|Windows 10]]，2016年4月27日发布至[[Gear VR版|三星Gear VR]]，2016年12月19日发布至[[Apple TV版|Apple TV]]和[[Fire TV版|亚马逊Fire TV]]。<ref>https://mojang.com/2015/07/announcing-minecraft-windows-10-edition-beta/</ref><ref>https://www3.oculus.com/en-us/blog/minecraft-now-available-on-oculus-for-gear-vr/</ref><ref>https://minecraft.net/article/apple-tv-edition-released</ref><ref>https://www.amazon.com/gp/product/B01NCJDPER/</ref>2018年9月24日，[[Apple TV版]]终止更新。
+
+=== Java版 ===
+{{main|Java版}}
+
+Minecraft的原始版本，可在Windows、macOS和Linux上运行，必须通过[[启动器]]启动。游戏最初于2009年5月16日以“早期个人单机alpha”之名发布，之后经历了多个开发阶段（Classic、Indev、Infdev、Alpha、Beta），最终于2011年11月18日发布正式版。自正式版推出后，Java版已进行过多次重大更新。
+
+=== 原主机版 ===
+{{main|原主机版}}
+
+原主机版是适用于游戏机的Minecraft，原先由开发者[[4J Studios]]持续更新。
+
+原主机版最初于2012年5月9日在[[Xbox 360版|Xbox 360]]上发布。该版本由Mojang在2011年6月7日的E3游戏展上宣布，发行日期则在次年3月22日由PlayXBLA的推特账户公布。2013年12月17日，其在[[PlayStation 3版|PlayStation 3]]上的版本发布，该版本于2013年8月20日宣布。之后，游戏陆续为[[Xbox One版|Xbox One]]、[[PlayStation 4版|PlayStation 4]]、[[PlayStation Vita版|PlayStation Vita]]、[[Wii U版|Wii U]]以及[[Nintendo Switch版|Nintendo Switch]]推出了适配版本。2019年12月10日，原主机版的所有子版本终止更新。
+
+=== New Nintendo 3DS版 ===
+{{main|New Nintendo 3DS版}}
+ 
+New Nintendo 3DS版于2017年9月13日发布，是由[[Other Ocean Interactive]]开发的特殊移植版本。该版本可在Nintendo eShop获取，但仅适用于New 3DS和New 2DS设备。其多人游戏模式仅限本地游玩。2019年1月15日，此版本终止更新。
+
+=== 教育版 ===
+{{main|教育版}}
+
+教育版是专为课堂使用设计、具有教育作用的Minecraft版本。它由Mojang Studios和Xbox工作室联合开发，包含便于在教室环境中使用的功能。该版本的完整应用于2016年11月1日正式发布。
+
+=== 其他版本 ===
+除以上所述之外，Minecraft还有许多其他版本。[[Minecraft 4k]]是一个简易版本的Minecraft，由Notch参照其他“4k” Java游戏的样式，为参加竞赛而制作。树莓派版移植自[[携带版]]的[[携带版版本记录#0.5.0|0.5.0版本]]，适配于{{w|树莓派}}平台。<ref>http://www.mojang.com/2012/11/minecraft-is-coming-to-the-raspberry-pi/</ref>其旨在为新手程序员提供教学工具，允许用户修改游戏代码，且支持多种编程语言，2016年1月终止支持。
+
+=== 版本比较 ===
+{| class="wikitable sortable" style="width: auto; text-align: center; font-size: smaller" data-description="Edition comparison"
+! 版本
+! 价格（美元）
+! 开发商
+! 平台
+! 下载
+! 输入方式
+! 账户种类
+! 皮肤更改
+! 支持
+! 备注
+|-
+! {{el|je}}
+| $29.99 - $39.99
+| [[Mojang Studios]]
+| {{w|Microsoft Windows|Windows}}、{{w|macOS}}和{{w|Linux}}
+| [https://minecraft.net minecraft.net]
+| 键盘和鼠标
+| Mojang账户<br>[[wzh:Microsoft帐户|Microsoft账户（Xbox Live）]]
+| 免费，用户自定义
+| [https://help.mojang.com help.mojang.com]
+| Minecraft的最初版本。能够获取偶尔的测试版更新（[[快照]]），也能够方便地下载和安装旧版本；当你已经购买了Windows上的基岩版时可免费获得该版本。
+|-
+! {{el|be}}
+| $6.99 - $39.99
+| [[Mojang Studios]]<br>[[Xbox游戏工作室]]<br>[[SkyBox Labs]]
+| '''原生支持'''：{{w|Windows 10}}、{{w|Windows 11}}、{{w|iOS}}、{{w|iPadOS}}、{{w|ChromeOS}}、{{w|Android}}、{{w|Kindle Fire|Fire}}、{{w|Xbox One}}、{{w|Xbox Series X/S}}、{{w|PlayStation 4}}、{{w|PlayStation 5}}、{{w|Nintendo Switch}}<br>'''兼容模式'''：{{w|Nintendo Switch 2}}
+| [[wzh:Microsoft商店|Microsoft Store]]、[[wzh:App Store (iOS/iPadOS)|App Store]]、[[wzh:Google Play|Google Play]]、Xbox Store、PlayStation Store、[[wzh:Oculus|Oculus]]、[[wzh: 亚马逊应用商店 |Amazon Appstore]]、[[wzh:任天堂eShop|Nintendo eShop商店]]<br>或通过订阅[[wzh:Xbox Game Pass|Xbox Game Pass]]免费游玩Windows 10/11和Xbox One平台的基岩版
+| 键盘和鼠标<br>触摸屏<br>控制器
+| [[wzh:Microsoft帐户|Microsoft账户]]（Xbox Live，用于绝大部分平台登录、跨平台多人游戏以及游戏内[[成就]]）<br>Nintendo账户（用于[[wzh:Nintendo Switch|Nintendo Switch]]平台登录及其[[wzh:Nintendo Switch Online|多人游戏服务Nintendo Switch Online]]）<br>[[wzh:PlayStation Network|PlayStation Network]]（用于[[wzh:PlayStation 4|PlayStation 4]]平台登录、[[wzh:PlayStation Plus|多人游戏服务PlayStation Plus]]和PS4平台的[[奖杯]]系统
+| 免费，用户自定义，通过内购或Xbox Live（主机平台仅支持默认皮肤和[[市场]]内购买）
+| [https://help.mojang.com help.mojang.com]<br>[https://support.xbox.com support.xbox.com]
+| 多平台通用的Minecraft版本，允许跨平台本地多人服务器；一些平台上的用户能够获取偶尔的[[Minecraft Preview|预览版]]更新（Windows 10/11、Xbox One、iOS/iPadOS和PlayStation）或[[基岩版版本记录/开发版本|Beta版]]更新（ChromeOS/Android）；当你已经购买了Xbox One、Nintendo或PS4上的原主机版且满足一定要求后，或是已经购买了Java版时，可免费获得对应平台的基岩版。
+|-
+! {{el|ee}}
+| 每用户每年$5.04-$12.00
+| [[Xbox游戏工作室]]
+| {{w|Microsoft Windows|Windows}}、{{w|macOS}}、{{w|iPadOS}}、{{w|iOS}}、{{w|Android}}和{{w|ChromeOS}}
+| [https://education.minecraft.net/en-us/homepage education.minecraft.net]、[[wzh:Microsoft商店|Microsoft Store]]、[[wzh:App Store (iOS/iPadOS)|App Store]]、[[wzh:Google Play|Google Play]]
+| 键盘和鼠标<br>触摸屏
+| [[wzh:Microsoft 365|Microsoft 365]]教育版（学生、老师均适用）
+| 免费，用户自定义
+| [https://educommunity.minecraft.net/hc/en-us educommunity.minecraft.net]
+| 为教育而设计，基于{{el|be}}。
+|-
+! [[中国版]]
+| 免费、提供应用内购买
+| [[Mojang Studios]]<br>[[Xbox游戏工作室]]<br>{{w|网易}}
+| {{w|Microsoft Windows|Windows}}、{{w|Android}}、{{w|iOS}}、{{w|iPadOS}}和{{w|macOS}}
+| [https://mc.163.com/index.html mc.163.com]、[[wzh:App Store (iOS/iPadOS)|App Store]]、中国大陆各大安卓应用商店（通常是渠道服）
+| 鼠标和键盘<br>触摸屏
+| 网易账号<br>第三方登录方式（通常是QQ登录、微信登录或安卓渠道服登录）
+| 免费，或通过内购
+| [https://gm.163.com gm.163.com]
+|[[wzh:中华人民共和国|中国大陆]]的本地化版本，移植自{{el|je}}和{{el|be}}。
+|}
+
+== 游戏个性化 ==
+=== 附加包 ===
+{{main|附加包}}
+
+附加包是为{{el|be}}的Minecraft带来自定义内容的首次尝试，且受官方支持。它允许玩家更改世界样式、[[生物]]行为和[[生物群系]]等。
+
+=== 数据包 ===
+{{main|数据包}}
+
+数据包适用于{{el|java}}，为玩家更深层次自定义Minecraft体验提供官方支持。无需任何代码更改，即可用其覆盖或添加新的[[进度]]、[[Java版函数|函数]]、[[战利品表]]、[[维度]]、[[自定义世界生成|世界生成机制]]、[[结构]]、[[配方]]和[[Java版标签|标签]]。
+
+=== 资源包 ===
+{{main|资源包}}
+
+资源包可更改游戏内大多数的[[纹理]]、[[声音]]、文字和部分[[模型]]，受官方支持。它必须包含特定的文件和文件夹结构，储存在<samp>.zip</samp>压缩文件、{{only|for=<samp>.mcpack</samp>文件|be}}或文件夹中，放置在Java版的{{filepath|.minecraft/resourcepacks}}或基岩版的{{filepath|com.mojang/resource_packs}}目录下，可在[[选项]]中查看或启用。其对游戏的改变程度主要取决于包含的文件数量。
+
+=== 皮肤 ===
+{{main|皮肤}}
+
+皮肤是覆盖在玩家模型上的纹理。
+
+皮肤文件分为多个区域，对应角色表面的不同部位（如头的前部、左脚等）。皮肤仅允许使用纯色；皮肤文件中不允许有透明区域，除非该区域在第二层（默认透明）；离线游戏时，像素若被忽略，会使皮肤出现“洞”。第二层可用于为角色添加眼镜、帽子等配件（甚至更大的头）。
+
+{{in|be}}玩家还能通过[[角色创建器]]直接修改游戏中角色的体型、着装等。
+
+=== 披风 ===
+{{main|披风}}
+
+披风是一种装饰物品，可装备在玩家的皮肤后面。
+
+披风会在玩家下落、向前和侧向侧向移动时飘起，飘起的幅度与玩家移动的速度有关。当玩家同时装备了披风和鞘翅时，披风就会隐藏，且玩家装备的鞘翅会有与披风外观相适应的纹理。
+
+=== 非官方Mod ===
+{{main|加载器Mod}}
+
+可通过添加或替换Java类文件修改Java版中的{{filename|[[client.jar]]}}。这种制作mod的方法不受Mojang Studios支持，可能因mod过期、有缺陷或与其他mod冲突而损坏游戏。部分mod作者给[[Notch]]、[[Jeb]]等主导开发者留下深刻印象，其作品被纳入官方更新：Hippoplatimus制作的[[活塞]]mod和DrZhark制作的“更多生物”（Mo' Creatures）mod，分别加入[[Java版Beta 1.7]]和[[Java版1.6.1]]中。<ref>http://www.peripheralarbor.com/minecraft/minecraftscriptphotojournal.html</ref><ref>{{notch|506311060|Still going slow, but here’s a new screenshot!|April 8, 2010}}</ref><ref>{{ytl|uZJr86d2IUo}}</ref><ref>{{reddit|hvkmo}}</ref>
+
+=== 第三方程序 ===
+{{main|辅助程序与编辑器}}
+
+有许多专为Minecraft打造的程序，包括3D地图编辑器与浏览器、游戏修改器、各类信息程序、服务器包装程序及其他专业程序。和mod一样，这些程序也不受Mojang Studios支持。
+
+== 奖项 ==
+[[File:MojangTrophies.jpg|200px|缩略图|右|Mojang Studios的奖杯]]
+
+{| class="wikitable sortable plainrowheaders" style="width: auto"
+! scope="col" | 奖项
+! scope="col" | 日期
+! scope="col" | 类别
+! scope="col" | 被提名项
+! scope="col" | 结果
+! scope="col" class="unsortable" | 参考
+|-
+! scope="row" | 2010年{{w|en:Good Game (TV program)|Good Game}}奖
+| 2010年12月6日
+| 最佳可下载游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://abc.net.au/tv/goodgame/stories/s3085956.htm|title=GG Awards 2010: Best Downloadable Game|archive=1|archive-time=20101211083934|website=Good Game Stories|date=6 December 2010}}</ref>
+|-
+! rowspan="2" scope="row" | 2010年{{w|Machinima公司|Machinima}} Inside Gaming奖
+| rowspan="2" | 2010年12月11日
+| 玩家选择年度游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| rowspan="2" | <ref>{{Citation|url=https://www.prnewswire.com/news-releases/machinimacom-aired-second-annual-inside-gaming-awards-live-via-ustream-111718194.html|title=Machinima.com Aired Second Annual Inside Gaming Awards Live Via UStream|website=PRNewswire|date=December 11, 2010}}</ref>
+|-
+| 最佳独立游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+|-
+! scope="row" | 2010年{{w|Rock Paper Shotgun}}年度游戏
+| 2010年12月24日
+| 年度游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.rockpapershotgun.com/the-games-of-christmas-10-day-24|title=The Games Of Christmas ’10: Day 24|archive-url=https://web.archive.org/web/20101226032010/http://www.rockpapershotgun.com/2010/12/24/the-games-of-christmas-%E2%80%9910-day-24/|website=Rock, Paper, Shotgun|date=December 24, 2010}}</ref>
+|-
+! rowspan="3" scope="row" | 2010年{{w|Mod_DB#Indie DB|Indie DB}}独立游戏奖
+| rowspan="3" | 2010年12月24日
+| 最具创新
+| Minecraft
+| {{tc|Yes|得奖}}
+| rowspan="3" | <ref>{{Citation|url=https://indiedb.com/events/2010-indie-of-the-year-awards/winners|title=2010 Indie of the Year Awards|archive=1|archive-time=20110722071405|website=IndieDB}}</ref>
+|-
+| 最佳单人独立游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+|-
+| 年度独立游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+|-
+! scope="row" | 2010年{{w|PC Gamer|PC Gamer UK}}年度游戏
+| 2010年12月31日
+| 年度游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.pcgamer.com/pc-gamer-uks-game-of-the-year/|title=Minecraft - PC Gamer UK's Game Of The Year|archive-url=https://web.archive.org/web/20110103020509/https://pcgamer.com/2010/12/31/pc-gamer-uks-game-of-the-year|website=PC Gamer UK|date=December 31, 2010}}</ref>
+|-
+! rowspan="4" scope="row" | 2011年{{w|独立游戏节}}
+| rowspan="4" | 2011年3月2日
+| 谢默斯·麦克纳利大奖
+| Minecraft
+| {{tc|Yes|得奖}}
+| rowspan="4" | <ref>{{Citation|url=https://indiegamesplus.com/2011/01/2011_independent_games_festiva_10|title=2011 Independent Games Festival Reveals Main Competition Finalists|archive=1|archive-time=20190710014718|website=Indie Games Plus|date=January 3, 2011}}</ref>
+|-
+| 卓越技术奖
+| Minecraft
+| {{tc|No|提名}}
+|-
+| 卓越设计奖
+| Minecraft
+| {{tc|No|提名}}
+|-
+| 玩家选择奖
+| Minecraft
+| {{tc|Yes|得奖}}
+|-
+! rowspan="3" scope="row" | 第11届{{w|游戏开发者选择奖}}
+| rowspan="3" | 2011年3月2日
+| 最佳初创游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| rowspan="3" | <ref>{{Citation|url=https://gamechoiceawards.com/archive/gdca_11th.html|title=11th Annual Game Developers Choice Awards|archive=1|archive-time=20111205041122|website=Game Developers Choice Awards}}</ref>
+|-
+| 创新奖
+| Minecraft
+| {{tc|Yes|得奖}}
+|-
+| 最佳可下载游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+|-
+! rowspan="4" scope="row" | 2011年{{w|开发 (杂志)|开发行业卓越奖}}
+| rowspan="4" | 2011年7月20日
+| 全新下载IP
+| Minecraft
+| {{tc|Yes|得奖}}
+| rowspan="4" | <ref>{{Citation|url=https://www.telegraph.co.uk/technology/video-games/8652100/Develop-Industry-Excellence-Award-winners-announced.html|title=Develop Industry Excellence Award winners announced|website=The Telegraph|date=July 21, 2011}}</ref>
+|-
+| 新工作室
+| Mojang Specifications
+| {{tc|Yes|得奖}}
+|-
+| 微型工作室
+| Mojang Specifications
+| {{tc|Yes|得奖}}
+|-
+| 独立工作室
+| Mojang Specifications
+| {{tc|No|提名}}
+|-
+! scope="row" | 2011年欧洲游戏奖
+| 2011年8月13日
+| 最佳欧洲独立游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.ign.com/articles/2011/08/16/european-games-awards-2011-winners-announced|title=European Games Awards 2011: Winners Announced|website=IGN|date=August 16, 2011}}</ref>
+|-
+! rowspan="2" scope="row" | 2011年{{w|en:Game Developers Choice Online Awards|游戏开发者选择在线奖}}
+| rowspan="2" | 2011年10月12日
+| 最佳社区关系
+| Minecraft
+| {{tc|Yes|得奖}}
+| rowspan="2" | <ref>{{Citation|url=https://www.gamespot.com/articles/everquest-honored-at-gdc-online-awards/1100-6339672/|title=EverQuest honored at GDC Online awards |website=GameSpot|date=October 13, 2011}}</ref>
+|-
+| 最佳新在线游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+|-
+! scope="row" | 第29届{{w|金摇杆奖}}
+| 2011年10月21日
+| 年度下载游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{tweet|GoldenJoysticks|127392668748742656|Winner for best Downloadable: Minecraft #goldenjoystick2011|October 21, 2011 |archive=|archiveid=}}</ref>
+|-
+! scope="row" | 2011年{{w|en:GameCity Prize|GameCity奖}}
+| 2011年10月29日
+| GameCity奖
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.bbc.com/news/technology-15509330|title=Minecraft awarded GameCity videogame arts prize - BBC News|website=BBC News|date=October 29, 2011}}</ref>
+|-
+! rowspan="2" scope="row" | 2011年{{w|斯派克电子游戏大奖}}
+| rowspan="2" | 2011年12月10日
+| 最佳PC游戏
+| Minecraft
+| {{tc|No|提名}}
+| rowspan="2" | <ref>{{Citation|url=https://gamerant.com/2011-spike-video-game-awards-complete-winners-list/|title=2011 Spike Video Game Awards: Complete Winners List|website=GameRant|date=December 15, 2011}}</ref>
+|-
+| 最佳独立游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+|-
+! rowspan="2" scope="row" | {{w|en:X-Play|X-Play}}2011年度最佳奖
+| rowspan="2" | 2011年12月15日
+| 最具原创游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| rowspan="2" | <ref>{{Citation|url=https://www.gonintendo.com/archives/168413-x-play-best-of-2011-awards-details|title=X-Play ""Best of 2011 Awards"" details|website=GoNintendo|date=December 15, 2011}}</ref>
+|-
+| 最佳玩法创新
+| Minecraft – 创造自由度
+| {{tc|No|提名}}
+|-
+! rowspan="2" scope="row" | 第8届{{w|英国学院游戏奖}}
+| rowspan="2" | 2012年3月16日
+| 年度游戏
+| Minecraft
+| {{tc|No|提名}}
+| rowspan="2" | <ref>{{Citation|url=https://www.bafta.org/awards/games/?award-year=2012|title=BAFTA Games Awards 2012|website=BAFTA|date=}}</ref>
+|-
+| 特别奖
+| [[Markus Persson]]
+| {{tc|Yes|得奖}}
+|-
+! scope="row" | 第30届金摇杆奖
+| 2012年10月26日
+| 年度下载游戏
+| Minecraft Xbox 360版
+| {{tc|Yes|得奖}}
+| <ref>{{tweet|GoldenJoysticks|261837285165776896|Best Downloadable?? Minecraft on 360! Notch and co do it again!!!|October 26, 2012|archive=|archiveid=}}</ref>
+|-
+! scope="row" | 2012年{{w|en:The Independent Games Developers Association|独立游戏开发者协会}}奖
+| 2012年11月1日
+| 最佳街机游戏
+| 4J Studios – Minecraft XBLA
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://tiga.org/news/tiga-games-industry-awards-2012-winners-revealed|title=TIGA Games Industry Awards 2012 winners revealed|website=tiga|date=November 1, 2012}}</ref>
+|-
+! scope="row" | 2011年宽屏游戏论坛奖
+| 2012年2月16日
+| 年度独立开发者
+| Mojang
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.wsgf.org/phpBB3/viewtopic.php?f=82&t=25901&view=previous|title=Widescreen Gaming Forum &bull; View topic - 2011 WSGF Awards|website=WSGF|date=Feb 16, 2012}}</ref>
+|-
+! rowspan="2" scope="row" | 2011年{{w|en:NAVGTR Awards|NAVGTR奖}}
+| rowspan="2" | 2012年4月9日
+| 年度游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| rowspan="2" | <ref>{{Citation|url=https://navgtr.org/2011-awards/|title=2011 Awards - NAVGTR|website=NAVGTR|date=April 9, 2012}}</ref>
+|-
+| 游戏玩法创新
+| Minecraft
+| {{tc|No|提名}}
+|-
+! scope="row" | 2012年开发行业卓越奖
+| 2012年7月11日
+| 在线游玩
+| Minecraft Xbox 360版
+| {{tc|No|提名}}
+| <ref>{{Citation|url=https://mcvuk.com/business-news/media-pr/finalists-unveiled-for-develop-awards-2012/|title=Finalists unveiled for Develop Awards 2012|website=MCV/DEVELOP|date=May 23, 2012}}</ref>
+|-
+! scope="row" | 第17届{{w|卫星奖}}
+| 2012年12月16日
+| 最佳动作/冒险游戏
+| Minecraft Xbox 360版
+| {{tc|No|提名}}
+| <ref>{{Citation|url=https://www.pressacademy.com/award_cat/2012/|title=2012 <nowiki>|</nowiki> Categories <nowiki>|</nowiki> International Press Academy|website=International Press Academy|date=}}</ref>
+|-
+! scope="row" | 第16届{{w|D.I.C.E.大奖}}
+| 2013年2月7日
+| 年度策略/模拟游戏
+| Minecraft Xbox 360版
+| {{tc|No|提名}}
+| <ref>{{Citation|url=https://www.interactive.org/games/video_game_details.asp?idAward=2013&idGame=1272|title=D.I.C.E. Awards By Video Game Details|website=Interactive|date=}}</ref>
+|-
+! scope="row" | 第9届英国学院游戏奖
+| 2013年3月5日
+| 家庭游戏
+| Minecraft Xbox 360版
+| {{tc|No|提名}}
+| <ref>{{Citation|url=https://www.bafta.org/awards/games/?award-year=2013|title=BAFTA Games Awards 2013|website=BAFTA|date=}}</ref>
+|-
+! scope="row" | 2013年{{w|尼克频道儿童选择奖}}
+| 2013年3月23日
+| 最喜爱应用
+| Minecraft
+| {{tc|No|提名}}
+| <ref>{{Citation|url=https://www.prnewswire.com/news-releases/nickelodeon-unveils-2013-kids-choice-awards-nominees-191016921.html|title=Nickelodeon Unveils 2013 Kids' Choice Awards Nominees|website=PRNewswire|date=Feb 13, 2013}}</ref>
+|-
+! scope="row" | 2013年{{w|en:British Academy Children's Awards|英国电影学院儿童奖}}
+| 2013年11月24日
+| BAFTA儿童投票 - 电子游戏
+| Minecraft
+| {{tc|No|提名}}
+| <ref>{{Citation|url=https://www.bafta.org/awards/childrens/bafta-kids-vote-2010-top-10s-video-games/|title=BAFTA Kids&#039; Vote - Video Game - Bafta|website=BAFTA|date=}}</ref>
+|-
+! scope="row" | 2014年{{w|en:Toy Association|年度玩具奖}}
+| 2014年2月15日
+| 年度IP
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://toybuzz.org/2014-toty-awards-announced/|title=2014 TOTY Awards Announced|website=toybuzz|date=February 16, 2014}}</ref>
+|-
+! scope="row" | 2014年尼克频道儿童选择奖
+| 2014年3月29日
+| 最喜爱电子游戏
+| Minecraft
+| {{tc|No|提名}}
+| <ref>{{Citation|url=https://www.hollywoodreporter.com/news/general-news/kids-choice-awards-2014-nominees-681858/|title=Nickelodeon’s Kids’ Choice Awards Nominations Revealed|website=The Hollywood Reporter|date=February 24, 2014}}</ref>
+|-
+! rowspan="2" scope="row" | 2014年独立游戏开发者协会奖
+| rowspan="2" | 2014年11月6日
+| 最佳街机游戏 - 大型工作室
+| 4J Studios – Minecraft主机版
+| {{tc|Yes|得奖}}
+| rowspan="2" | <ref>{{Citation|url=https://tiga.org/news/2014-tiga-games-industry-awards-winners-revealed|title=2014 TIGA Games Industry Awards Winners revealed|website=tiga|date=November 6, 2014}}</ref>
+|-
+| 年度游戏
+| Minecraft主机版
+| {{tc|Yes|得奖}}
+|-
+! scope="row" | 2014年英国电影学院儿童奖
+| 2014年11月23日
+| BAFTA儿童投票 - 游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.bafta.org/media-centre/press-releases/winners-announced-british-academy-childrens-awards-in-2014/|title=Winners Announced: British Academy Children’s Awards in 2014|website=BAFTA|date=November 23, 2014}}</ref>
+|-
+! rowspan="2" scope="row" | 第11届{{w|英国学院游戏奖}}
+| rowspan="2" | 2015年3月12日
+| 家庭游戏
+|Minecraft主机版
+| {{tc|Yes|得奖}}
+| rowspan="2" | <ref>{{Citation|url=https://www.bafta.org/awards/games/?award-year=2015|title=BAFTA Games Awards 2015|website=BAFTA|date=}}</ref>
+|-
+| 多人游戏
+|Minecraft主机版
+| {{tc|No|提名}}
+|-
+! scope="row" | 2015年尼克频道儿童选择奖
+| 2015年3月28日
+| 最令人沉迷游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.hollywoodreporter.com/news/general-news/kids-choice-awards-complete-winners-783761/|title=Kids’ Choice Awards 2015: The Complete Winners List|website=The Hollywood Reporter|date=March 28, 2015}}</ref>
+|-
+! scope="row" | 2015年BAFTA青年游戏设计师英雄奖
+| 2015年7月25日
+| 青年游戏设计师英雄奖
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.bafta.org/media-centre/press-releases/bafta-announces-winners-of-young-game-designers-awards-at-special/|title=BAFTA Announces Winners of Young Game Designers Awards at Special Ceremony|website=BAFTA|date=July 25, 2015}}</ref>
+|-
+! scope="row" | 2015年{{w|日本游戏大奖}}
+| 2015年9月17日
+| 特别奖
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://awards.cesa.or.jp/2015/en/prize/prize_01.html|title=Japan Game Awards:2015|website=Japan Game Awards|date=}}</ref>
+|-
+! scope="row" | 2015年英国电影学院儿童奖
+| 2015年11月22日
+| BAFTA儿童投票 - 游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.bafta.org/media-centre/press-releases/british-academy-childrens-awards-winners-announced-2015/|title=British Academy Children’s Awards Winners Announced|website=BAFTA|date=November 22, 2015}}</ref>
+|-
+! rowspan="2" scope="row" | 2015年PlayStation合作伙伴奖
+| rowspan="2" | 2015年12月3日
+| 白金奖
+| Minecraft PlayStation Vita/3/4版
+| {{tc|Yes|得奖}}
+| rowspan="2" | <ref>{{Citation|url=https://www.playstation.com/en-hk/local/events/playstation-awards/history/2015/|title=Award results in 2015 <nowiki>|</nowiki> PlayStation Partner Awards|website=PlayStation|date=}}</ref>
+|-
+| PlayStation Network奖
+| Minecraft PlayStation Vita/3/4版
+| {{tc|Yes|得奖}}
+|-
+! scope="row" | 第16届游戏开发者选择奖
+| 2016年3月16日
+| 先锋奖
+| Markus Persson
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://gamechoiceawards.com/archive-gdca-2016/|title=16th Annual Game Developers Choice Awards|website=Game Choice Awards}}</ref>
+|-
+! scope="row" | 2016年日本游戏大奖
+| 2016年9月15日
+| 优秀奖
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://awards.cesa.or.jp/2016/en/prize/prize_01.html|title=Japan Game Awards:2016|website=Japan Game Awards|date=}}</ref>
+|-
+! scope="row" | 2016年英国电影学院儿童奖
+| 2016年11月20日
+| BAFTA儿童投票 - 游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.bafta.org/media-centre/press-releases/british-academy-childrens-awards-winners-announced/|title=British Academy Children’s Awards Winners Announced|website=BAFTA|date=November 20, 2016}}</ref>
+|-
+! scope="row" | 2017年PlayStation合作伙伴奖
+| 2017年11月30日
+| 双白金奖
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.playstation.com/en-hk/local/events/playstation-awards/history/2017/|title=Award results in 2017 <nowiki>|</nowiki> PlayStation Partner Awards|website=PlayStation|date=}}</ref>
+|-
+! scope="row" | 2018年尼克频道儿童选择奖
+| 2018年3月24日
+| 最喜爱电子游戏
+| Minecraft Java版
+| {{tc|No|提名}}
+| <ref>{{Citation|url=https://www.hollywoodreporter.com/lists/kids-choice-awards-complete-list-winners-2018-1089562/favorite-movie-7/|title=Kids’ Choice Awards: Complete List of Winners|website=The Hollywood Reporter|date=March 24, 2018}}</ref>
+|-
+! scope="row" | 第37届金摇杆奖
+| 2019年11月16日
+| 持续游玩奖
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{tweet|GoldenJoysticks|1195373951544954880|The game that keeps on giving, <nowiki>@Minecraft</nowiki>, is the winner of the Still Playing Award. Congratulations to <nowiki>@mojang</nowiki> and <nowiki>@Xbox</nowiki> #goldenjoysticks|November 16, 2019|archive=|archiveid=}}</ref>
+|-
+! scope="row" | 2020年尼克频道儿童选择奖
+| 2020年5月2日
+| 最喜爱电子游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.hollywoodreporter.com/news/general-news/kids-choice-awards-lebron-james-endgame-slime-virtual-show-1292990/|title=Kids’ Choice Awards: LeBron James, ‘Endgame’ Cast and Slime Featured in Virtual Show|website=The Hollywood Reporter|date=May 2, 2020}}</ref>
+|-
+! rowspan="2" scope="row" | 第38届金摇杆奖
+| rowspan="2" | 2020年11月24日
+| 持续游玩奖
+| Minecraft
+| {{tc|Yes|得奖}}
+| rowspan="2" | <ref>{{tweet|GoldenJoysticks|1331353299036073984|Congratulations to <nowiki>@Mojang</nowiki>  for their second win of the night - because <nowiki>@Minecraft</nowiki> has won Best Gaming Community! #goldenjoysticks|November 24, 2020|archive=|archiveid=}}</ref>
+|-
+| 最佳游戏社区
+| Minecraft
+| {{tc|Yes|得奖}}
+|-
+! scope="row" | 2021年尼克频道儿童选择奖
+| 2021年3月13日
+| 最喜爱电子游戏
+| Minecraft
+| {{tc|No|提名}}
+| <ref>{{Citation|url=https://www.hollywoodreporter.com/movies/movie-news/kids-choice-awards-unveils-nominees-taps-kenan-thompson-to-host-4126072/|title=Kids’ Choice Awards Unveils Nominees, Taps Kenan Thompson to Host|website=The Hollywood Reporter|date=February 2, 2021}}</ref>
+|-
+! scope="row" | {{w|en:2021 Streamer Awards|2021年主播大奖}}
+| 2022年3月12日
+| 年度直播游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://thestreamerawards.com/winners|title=The Streamer Awards - Winners|website=The Streamer Awards|date=}}</ref>
+|-
+! scope="row" | 2022年尼克频道儿童选择奖
+| 2022年4月9日
+| 最喜爱电子游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.hollywoodreporter.com/movies/movie-news/kids-choice-awards-2022-winners-list-1235127819/|title=Kids’ Choice Awards: ‘Spider-Man: No Way Home’ Wins Big; Dr. Jill Biden Speaks|website=The Hollywood Reporter|date=April 9, 2022}}</ref>
+|-
+! scope="row" | {{w|en:2022 Streamer Awards|2022年主播大奖}}
+| 2023年3月11日
+| 年度直播游戏
+| Minecraft
+| {{tc|No|提名}}
+| <ref>{{Citation|url=https://thestreamerawards.com/winners|title=The Streamer Awards - Winners|website=The Streamer Awards|date=}}</ref>
+|-
+! scope="row" | 2023年尼克频道儿童选择奖
+| 2023年3月4日
+| 最喜爱电子游戏
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.hollywoodreporter.com/movies/movie-news/kids-choice-awards-winners-jenna-ortega-taylor-swift-harry-styles-1235341096/|title=‘Wednesday,’ ‘Sonic the Hedgehog 2,’ Taylor Swift, Harry Styles Among Winners at 2023 Kids’ Choice Awards|website=The Hollywood Reporter|date=March 4, 2023}}</ref>
+|-
+! scope="row" | 2024年尼克频道儿童选择奖
+| 2024年7月13日
+| 最喜爱电子游戏
+| Minecraft
+| {{tc|No|提名}}
+| <ref>{{Citation|url=https://www.hollywoodreporter.com/tv/tv-news/kids-choice-awards-nominees-list-taylor-swift-travis-kelce-1235914167/|title=Kids’ Choice Awards: Taylor Swift, Olivia Rodrigo, Beyoncé, Travis Kelce, Zendaya Among Nominees|website=The Hollywood Reporter|date=June 4, 2024}}</ref>
+|-
+! rowspan="2" scope="row" | 2024年为地球而玩奖
+| rowspan="2" | 2024年11月20日
+| 最佳绿色行动
+| Minecraft Urban Miner活动
+| {{tc|Yes|得奖}}
+| rowspan="2" | <ref>{{Citation|url=https://www.playing4theplanet.org/post/playing-for-the-planet-awards-hosts-first-ever-show-in-helsinki-as-winners-announced|title=Playing for the Planet Awards hosts first-ever show in Helsinki as winners announced|website=playing4theplanet|date=November 20, 2024}}</ref>
+|-
+| 创变者奖
+| Mojang Studios
+| {{tc|Yes|得奖}}
+|-
+! scope="row" | 第42届金摇杆奖
+| 2024年11月21日
+| 持续游玩奖（PC与主机）
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{tweet|GoldenJoysticks|1859645542604870026|Now let’s crown the Still Playing - PC & Console award...and the winner is <nowiki>@Minecraft</nowiki>! 🏆 #GoldenJoystickAwards|November 21. 2024|archive=|archiveid=}}</ref>
+|-
+! scope="row" | 2025年尼克频道儿童选择奖
+| 2025年6月21日
+| 最喜爱电子游戏
+| Minecraft
+| {{tc|No|提名}}
+| <ref>{{Citation|url=https://www.hollywoodreporter.com/tv/tv-news/kids-choice-awards-2025-nominees-host-1236217405/|title=Kids’ Choice Awards 2025: Tyla to Host; Ariana Grande, Lady Gaga and Kendrick Lamar Lead Nominees|website=The Hollywood Reporter|date=May 15, 2025}}</ref>
+|-
+! scope="row" | 第43届金摇杆奖
+| 2025年11月20日
+| 持续游玩奖（PC与主机）
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{tweet|GoldenJoysticks|1991553687299465625|The Still Playing Award - PC and Console recognizes PC and console games that players are still enjoying long after their initial release. Congratulations to this year’s winner, the legendary <nowiki>@Minecraft</nowiki>, who’ve won a massive seven #GoldenJoystickAwards since 2011! ⛏️|November 20, 2025|archive=|archiveid=}}</ref>
+|-
+! scope="row" | 2026年{{w|en:Swedish Game Awards|瑞典游戏大奖}}
+| 2026年2月18日
+| 最佳实时服务奖
+| Minecraft
+| {{tc|Yes|得奖}}
+| <ref>{{Citation|url=https://www.swedishgameawards.se/post/vinnarna-i-swedish-game-awards-2026|title=Vinnarna i Swedish Game Awards 2026|website=Swedish Game Awards|date=February 20, 2026}}</ref>
+|}
+
+== 流行文化当中的引用 ==
+{{main|流行文化中的Minecraft}}
+
+许多在文化中的引用反映出了Minecraft的普及程度，这包括很多[http://knowyourmeme.com/search?=minecraft 模因（meme）]，并且这些电子游戏、电视节目和电影中也有引用。
+
+== 画廊 ==
+<gallery>
+Minecraft logo 2.svg|游戏徽标
+China Edition.png|[[中国版]]徽标
+Minecraft franchise logo.svg|品牌徽标
+Minecraft franchise icon.png|品牌图标
+MC key art 2024.jpg|主视觉图
+MC key art.jpg|旧版主视觉图
+Java Edition icon 2.png|[[Java版]]图标
+Bedrock Edition icon 2.png|[[基岩版]]图标
+MC Standard key art.jpg|标准版视觉图
+MC Deluxe key art.webp|豪华合集视觉图
+MC Ultimate key art.webp|终极合集视觉图
+</gallery>
+
+== 参考 ==
+{{Reflist|2}}
+
+== 导航 ==
+{{Navbox Minecraft}}
+{{Navbox Minecraft (franchise)|games}}
+
+[[Category:游戏]]
+
+[[cs:Minecraft]]
+[[de:Minecraft]]
+[[el:Minecraft]]
+[[en:Minecraft]]
+[[es:Minecraft]]
+[[fr:Minecraft]]
+[[hu:Minecraft]]
+[[it:Minecraft]]
+[[ja:Minecraft]]
+[[ko:Minecraft]]
+[[lzh:礦藝]]
+[[nl:Minecraft]]
+[[pl:Minecraft]]
+[[pt:Minecraft]]
+[[ru:Minecraft]]
+[[th:Minecraft]]
+[[tr:Minecraft]]
+[[uk:Minecraft]]

@@ -1,0 +1,179 @@
+{{about|自然的食物类物品|更稀有、更有益的食物|金苹果|和|附魔金苹果|Minecraft Dungeons中的消耗品|MCD:苹果|Story Mode中的苹果|Story Mode:苹果}}{{Infobox item
+|image=Apple.png
+|invimage=Apple
+}}
+{{quote|苹果可以恢复两格饥饿值，但是等等！它们也可以与金锭合成金苹果，恢复与苹果等量的饥饿值，但是给予你生命恢复和伤害吸收的效果。马也喜欢苹果，给幼年马喂苹果可以帮助它们长得更大更强壮。|[[Duncan Geere]]<ref>{{article|taking-inventory-apple|Taking Inventory: Apple|Nov 23,2018}}</ref>||Duncan Geere Mojavatar.png}}
+
+'''苹果（Apple）'''是一种主要通过破坏[[橡树树叶]]和[[深色橡树树叶]]获得的[[食物]]类[[物品]]。
+
+== 获取 ==
+=== 树叶 ===
+没有被[[剪刀]]或具有[[精准采集]]的工具挖掘破坏，或者自然枯萎时，[[橡树树叶]]和[[深色橡树树叶]]有0.5%（{{frac|1|200}}）的概率掉落一个苹果。使用带有[[时运]]魔咒的工具破坏树叶会增加掉落苹果的概率：时运I是0.556%（{{frac|1|180}}），时运II是0.625%（{{frac|1|160}}），时运III是0.833%（{{frac|1|120}}）。
+
+=== 箱子战利品 ===
+{{LootChestItem|apple}}
+
+=== 交易 ===
+{{Trade sources}}
+
+== 用途 ==
+=== 食物 ===
+{{main|食物}}
+手持苹果按住{{ctrl|使用}}键即可食用，每个苹果可以恢复{{fp|4|2.4}}。
+
+{{in|be}}玩家在[[饥饿值]]为满的状态下也可以食用苹果。<ref>{{bug|MCPE-178647}}</ref>
+
+=== 马、驴、骡 ===
+苹果能治疗[[马]]、[[驴]]、[[骡]]{{health|3}}生命值、提高3%驯服概率和加速60秒幼年马、幼年驴、幼年骡的成长速度。
+
+=== 合成材料 ===
+{{crafting usage|Apple}}
+
+=== 堆肥 ===
+将苹果放入[[堆肥桶]]中有65%的概率增加一层堆肥层。
+
+== 数据值 ==
+=== ID ===
+{{el|je}}：
+{{ID table
+|generatetranslationkeys=java
+|Apple
+|spritetype=item
+|nameid=apple
+|showitemtags=je
+|itemtags={{GameTag|item|apple}}
+|foot=1}}
+
+{{el|be}}：
+{{ID table
+|generatetranslationkeys=bedrock
+|Apple
+|spritetype=item
+|showitemtags=be
+|itemtags={{GameTagBE|item|apple}}
+|nameid=apple
+|foot=1}}
+
+=== 物品数据 ===
+{{el|je}}：
+{{see also|物品格式}}
+
+{{Default item components}}
+
+{{el|be}}：
+{{see also|基岩版存档格式/物品格式}}
+
+== 进度 ==
+{{load advancements|prefix=husbandry|root;balanced_diet}}
+
+== 历史 ==
+{{HistoryTable
+|{{HistoryLine|java Indev}}
+|{{HistoryLine||0.31|dev=20091231-2147|[[File:Apple JE1 BE1.png|32px]] 加入了苹果。
+|苹果暂时没有用途。}}
+|{{HistoryLine|||dev=20100110|苹果现在可以正常食用，可以恢复{{hp|4}}，以替代之前可以食用的[[蘑菇]]。}}
+|{{HistoryLine|||dev=20100128-2304|为了测试新的合成系统，苹果现在可以用来合成[[箭]]。}}
+|{{HistoryLine|||dev=20100129-1447|苹果现在不再可以用来合成[[箭]]。}}
+|{{HistoryLine||20100206-2034|[[File:Golden Helmet (item) JE1 BE1.png|32px]] 更改了苹果的纹理。}}
+|{{HistoryLine||2010年2月23日|link=none|Minecraft Forum的用户JTE发帖称在自己制作的合成指南末尾添加了“[[Notch]]在被杀死时会掉落苹果”与“苹果能用于合成‘[[金苹果]]’”两条设定——随后说明这只是在开玩笑。在当时的游戏中，苹果还不能在生存模式下获得。<ref>http://www.minecraftforum.net/topic/2750582-the-secret-history-of-minecraft/</ref><ref name="JTECraftingGuide">https://echidnatribe.org/Minecraft/crafting.php</ref>}}
+|{{HistoryLine|java Infdev}}
+|{{HistoryLine||20100227-1414|现在杀死名为“[[Notch]]”的玩家会掉落一个苹果。
+|苹果现在能被用来合成[[金苹果]]。
+|[[File:Apple JE1 BE1.png|32px]] 更改了苹果的纹理。}}
+|{{HistoryLine||20100327|引入了[[重生]]机制。对名为“[[Notch]]”的玩家来说，现在苹果可以在生存模式下无限获得。}}
+|{{HistoryLine|java Beta}}
+|{{HistoryLine||1.8|dev=pre1|苹果现在可在[[要塞]]储藏室的箱子中生成。
+|苹果现在恢复{{hunger|4}}而不是{{hp|4}}。
+|苹果现在可以堆叠到64个。}}
+|{{HistoryLine|java}}
+|{{HistoryLine||1.0.0|dev=Beta 1.9-pre3|苹果现在可在[[要塞]]走廊的箱子中生成。}}
+|{{HistoryLine||1.1|dev=11w48a|橡树[[树叶]]被破坏时有{{frac|1|200}}的概率掉落一个苹果。}}
+|{{HistoryLine|||dev=12w01a|苹果现在可在[[村庄]]铁匠铺的箱子中生成。}}
+|{{HistoryLine||1.3.1|dev=12w16a|苹果现在可在[[奖励箱]]中生成。}}
+|{{HistoryLine|||dev=12w18a|名为“[[Notch]]”的玩家死亡时不再会掉落苹果。}}
+|{{HistoryLine|||dev=12w21a|农民[[村民]]现在会以1个[[绿宝石]]的价格[[交易|出售]]5个苹果。
+|苹果现在能被用于合成[[附魔金苹果]]。}}
+|{{HistoryLine||1.4.2|dev=12w37a|[[File:Apple JE2 BE2.png|32px]] 更改了苹果的纹理。}}
+|{{HistoryLine||1.5|dev=13w09b|[[时运]]魔咒现在会现在增加苹果掉落的概率。}}
+|{{HistoryLine||1.7.2|dev=13w43a|现在深色橡树树叶被破坏时有{{frac|1|200}}的概率掉落一个苹果。}}
+|{{HistoryLine||1.9|dev=15w43a|苹果现在可在[[雪屋]]地下室的箱子中生成。}}
+|{{HistoryLine|||dev=15w44a|略微提升了奖励箱中苹果的平均数量。
+|苹果现在不能被用于合成[[附魔金苹果]]。}}
+|{{HistoryLine||1.11|dev=16w33a|农民村民现在会以1个绿宝石的价格出售5-7个苹果。}}
+|{{HistoryLine||2017年11月8日|link={{tweet|jappa|928276030854516737}}|[[File:Apple (pre-release).png|32px]] [[JAPPA]]展示了苹果的新纹理。}}
+|{{HistoryLine||1.13|dev=17w47a|在[[扁平化]]之前，苹果的数字ID是260。}}
+|{{HistoryLine||1.14|dev=18w43a|[[File:Apple JE3 BE3.png|32px]] 更改了苹果的纹理。}}
+|{{HistoryLine||1.14|dev=18w48a|苹果现在可在平原[[村庄]]房屋的箱子中生成。}}
+|{{HistoryLine|||dev=19w03a|现在将苹果放入堆肥桶有50%的概率使堆肥层数增加1。}}
+|{{HistoryLine|||dev=19w05a|现在将苹果放入堆肥桶有65%的概率使堆肥层数增加1。}}
+|{{HistoryLine|||dev=19w11a|更改了村民的交易选项，现在学徒级农民村民会以1个[[绿宝石]]的价格出售4个苹果。}}
+|{{HistoryLine|pocket alpha}}
+|{{HistoryLine||0.4.0|[[File:Apple JE1 BE1.png|32px]] 加入了苹果。}}
+|{{HistoryLine||0.5.0|苹果现在恢复{{hp|4}}而不是{{hp|2}}。}}
+|{{HistoryLine||0.8.0|[[File:Apple JE2 BE2.png|32px]] 更改了苹果的纹理。}}
+|{{HistoryLine||0.12.1|dev=build 1|在[[创造模式]]的[[物品栏]]中加入了苹果。
+|苹果现在可以堆叠到64个。
+|苹果现在恢复{{hunger|4}}而不是{{hp|4}}。
+|现在[[时运]]可以用来增大苹果掉落的概率。
+|苹果现在可以用来合成[[金苹果]]和[[附魔金苹果]]。}}
+|{{HistoryLine||0.15.0|dev=build 1|苹果现在可以用来喂养[[马]]。}}
+|{{HistoryLine|pocket}}
+|{{HistoryLine||1.0.0|dev=0.17.0.1|苹果现在可在[[雪屋]]地下室的[[箱子]]中生成。}}
+|{{HistoryLine||1.0.4|dev=1.0.4.0|农民[[村民]]现在会以1个绿宝石的价格[[交易|出售]]5-7个苹果。}}
+|{{HistoryLine|bedrock}}
+|{{HistoryLine||1.2.0|dev=1.2.0.2|苹果现在不能被用于合成[[附魔金苹果]]。
+|苹果现在可在[[奖励箱]]中生成。}}
+|{{HistoryLine||1.10.0|dev=1.10.0.3|苹果现在可在平原[[村庄]]武器匠小屋的箱子和平原村庄房屋的箱子中生成。
+|[[File:Apple JE3 BE3.png|32px]] 更改了苹果的纹理。}}
+|{{HistoryLine||1.11.0|dev=1.11.0.1|苹果现在可以在沙漠、热带草原、针叶林和积雪针叶林村庄武器匠小屋的箱子中生成。
+|苹果现在可以用来填充[[堆肥桶]]。}}
+|{{HistoryLine|||dev=1.11.0.4|农夫[[村民]]现在会以1个绿宝石的价格出售4个苹果，作为第二层交易。}}
+|{{HistoryLine|console}}
+|{{HistoryLine||xbox=TU1|xbone=CU1|ps3=1.00|psvita=1.00|ps4=1.00|wiiu=Patch 1|switch=1.0.1|[[File:Apple JE1 BE1.png|32px]] 加入了苹果。}}
+|{{HistoryLine||xbox=TU5|现在树叶可以掉落苹果。
+|苹果现在可以堆叠到64个。
+|苹果现在恢复{{hunger|4}}而不是{{hp|4}}。}}
+|{{HistoryLine||xbox=TU6|苹果现在可以用来合成金苹果。}}
+|{{HistoryLine||xbox=TU12|[[File:Apple JE2 BE2.png|32px]] 更改了苹果的纹理。}}
+|{{HistoryLine||xbox=TU14|xbone=CU1|ps3=1.04|psvita=1.00|ps4=1.00|wiiu=Patch 1|switch=1.0.1|苹果现在可以用来合成附魔金苹果。
+|农民村民现在会以1个绿宝石的价格出售苹果。}}
+|{{HistoryLine||xbox=TU43|xbone=CU33|ps3=1.36|psvita=1.36|ps4=1.36|wiiu=Patch 13|苹果现在可在[[雪屋]]地下室的箱子中生成。}}
+|{{HistoryLine||xbox=TU54|xbone=CU44|ps3=1.52|psvita=1.52|ps4=1.52|wiiu=Patch 24|switch=1.0.4|农民村民现在会以1个绿宝石的价格出售5-7个苹果。{{check version}}}}
+|{{HistoryLine||xbox=none|xbone=none|ps3=none|psvita=none|ps4=1.90|wiiu=none|switch=none|[[File:Apple JE3 BE3.png|32px]] 更改了苹果的纹理。}}
+|{{HistoryLine||ps4=1.91|农夫村民现在会以1个绿宝石的价格出售4个苹果，作为第二层交易。}}
+|{{HistoryLine|New 3DS}}
+|{{HistoryLine||0.1.0|[[File:Apple JE2 BE2.png|32px]] 加入了苹果。}}
+}}
+
+== 你知道吗 ==
+* 苹果在[[Java版1.4.2]]之前的纹理来源于[[Notch]]制作的另一款游戏''[[Legend of the Chambered]]''。
+
+== 画廊 ==
+<gallery>
+Apple in Stronghold.png|在要塞的箱子里发现的苹果
+Apple Item.png|摧毁树叶掉落的苹果
+Obtaining an apple by trading.png|从村民处购买苹果
+</gallery>
+
+== 参考 ==
+{{Reflist}}
+
+== 导航 ==
+{{Navbox items|Food & Drinks}}
+
+[[cs:Jablko]]
+[[de:Apfel]]
+[[en:Apple]]
+[[es:Manzana]]
+[[fr:Pomme]]
+[[hu:Alma]]
+[[it:Mela]]
+[[ja:リンゴ]]
+[[ko:사과]]
+[[lzh:林檎]]
+[[nl:Appel]]
+[[pl:Jabłko]]
+[[pt:Maçã]]
+[[ru:Яблоко]]
+[[th:แอปเปิ้ล]]
+[[uk:Яблуко]]

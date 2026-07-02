@@ -1,0 +1,467 @@
+{{For}}
+{{Infobox entity
+|group1=常规
+|1-1=Creeper.png
+|group1size=128px
+|group2={{tr|闪电|高壓}}变种
+|2-2=Charged Creeper Animated.gif
+|group2size=150px
+|invimage=Creeper Spawn Egg
+|health={{hp|20}}
+|behavior=敌对生物
+|damage=''爆炸伤害值取100%接触率时''<br>'''爆炸（普通类型）：'''<br>{{AutoDmg|43}}<br>'''爆炸（{{tr|闪电|高壓}}变种）：'''<br>{{AutoDmg|85}}
+|spawn=见{{slink||生成}}
+|size=
+'''{{el|je}}：'''<br>
+高度：1.7格<br>宽度：0.6格<br>
+'''{{el|be}}：'''<br>
+高度：1.8格<br>宽度：0.6格
+|usableitems={{ItemLink|Flint and Steel}}<br>
+{{ItemLink|Fire Charge}}{{only|je}}<br>
+{{ItemLink|Name Tag}}
+}}
+{{relevant tutorial|苦力怕农场}}
+{{quote|这些瘦长的青绿色怪物会带着极度悲伤的神情凝视着你。要是你让它靠近，很快你脸上也会露出类似的表情。因为苦力怕要是离你距离在三格以内就会爆炸，把你炸得粉碎（唉，这种事时有发生！），甚至可能破坏你建造的东西（不——为——什——么——啊——！！！？！？！？！）。|[[Tom Stone]]<ref>{{article|meet-creeper|Meet the Creeper|May 15, 2017}}</ref>||Tom Stone Mojavatar.png}}
+
+'''{{tr|苦力怕（Creeper）|苦力怕（Creeper）|Creeper}}'''是常见的敌对生物，它会悄无声息地接近[[玩家]]，当距离目标3格以内时就会开始爆炸。苦力怕是[[火药]]的主要来源，也是获取部分[[音乐唱片]]的唯一方式。
+
+被闪电击中后，苦力怕会变成'''闪电苦力怕（Charged Creeper）'''，其爆炸威力更强，借此可获得[[生物头颅]]。
+
+凭借独特的外表、极高的杀伤力以及强大的地形与建筑物破坏能力，苦力怕已成为[[Minecraft]]的象征标志之一，在玩家和非玩家群体中都颇具名气。
+
+== 生成 ==
+苦力怕会在[[主世界]]中[[亮度#内部天空光照|内部天空光照]]小于等于7，且[[亮度#方块光照|方块光照]]为0的[[生成#可生成位置|可生成位置]]上生成，[[蘑菇岛]]和[[深暗之域]]除外。
+
+{{in|be}}苦力怕不会在[[河流]]、[[冻河]]和[[雪原]]生成。<ref>{{bug|MCPE-161245}}</ref><ref>{{bug|MCPE-17651}}</ref>
+
+== 掉落物 ==
+苦力怕被杀死时掉落：
+{{DropTable|name=Creeper
+|{{DropLine|name=Gunpowder|quantity=0-2|lootingquantity=0-1}}
+|{{DropLine|name=Music Disc|image=Music Disc Cat|notes=random_disc,killed_by_skeleton}}
+|{{DropLine|name=Creeper Head|notes=charged_creeper}}
+|notes=
+charged_creeper = 僅當被[[高壓苦力怕]]炸死時。
+random_disc = [[音乐唱片13|13]]、[[音乐唱片cat|cat]]、[[音乐唱片blocks|blocks]]、[[音乐唱片chirp|chirp]]、[[音乐唱片far|far]]、[[音乐唱片mall|mall]]、[[音乐唱片mellohi|mellohi]]、[[音乐唱片stal|stal]]、[[音乐唱片strad|strad]]、[[音乐唱片ward|ward]]、[[音乐唱片11|11]]或[[音乐唱片wait|wait]]。
+killed_by_skeleton.java = 僅當被[[骷髏]]、[[流髑]]、[[沼骸]]、[[凋零骷髏]]或[[焦骸]]殺死時。
+killed_by_skeleton.bedrock = 僅當被[[骷髏]]、[[流髑]]、[[沼骸]]或[[焦骸]]殺死時。
+}}
+* {{xp|5}}，当被[[玩家]]或驯服的[[狼]]杀死时
+
+== 行为 ==
+[[File:Creeper Chase.png|250px|缩略图|一只追赶玩家并准备爆炸的苦力怕]]
+苦力怕没有空闲音效和脚步声。它会追逐在其发现的半径16格（±5%）、垂直±4格以内的玩家。当玩家佩戴[[苦力怕的头]]时，苦力怕的探测范围减少到正常范围的一半（8格）。苦力怕受到其他生物的伤害时会进行反击，但如果玩家在附近，苦力怕会优先将玩家作为攻击目标。{{in|be}}如果玩家有[[隐身]]效果且没有穿戴任何[[盔甲]]，无论玩家离苦力怕有多近，苦力怕都不会发现玩家的存在。
+
+苦力怕造成的[[爆炸]]的爆炸威力为3。当苦力怕距离目标3格以内时，苦力怕将会开始一个{{convert|30}}的爆炸计时。此时，苦力怕发出较大的嘶嘶声，期间身体开始闪烁并逐渐膨胀，最终爆炸。{{in|je}}爆炸计时不为0的苦力怕寻路停止，不会移动；{{in|be}}苦力怕在爆炸计时期间也会继续追逐目标。
+
+在苦力怕的爆炸计时期间，如果苦力怕与目标的距离超过7格，则苦力怕会取消爆炸。{{in|java}}苦力怕会回滚其爆炸计时，同时开始倒放激活动画，然后回到可以移动的状态；{{in|be}}苦力怕的爆炸计时会立刻重置为0。
+
+对苦力怕使用[[打火石]]或{{only|je|for=[[火焰弹]]|short=1}}可以强制其开始准备爆炸，且无法取消。
+
+与其他生物不同，有目标的苦力怕在寻路时能接受的摔落高度为<code>-{}-3 + 剩余生命值 - 1</code>。这使苦力怕能够主动跳下不会使自己受到致命摔落伤害的地形。苦力怕受到摔落伤害后，爆炸计时会立即增加<code>-{}-摔落距离 × 1.5</code>，至多通过这种方式增加至{{convert|25}}。如果当前爆炸计时超过{{convert|25}}，受到摔落伤害后计时会重置为{{convert|25}}。
+
+类似于其他生物，苦力怕能够爬上[[梯子]]和[[藤蔓]]，但不会故意这样做。
+
+当苦力怕与[[猫]]或[[豹猫]]距离6格或更近时，苦力怕会开始忽略附近生物并逃离到与其相距至少16格。苦力怕在逃离时速度比追赶玩家要快。已经开始准备爆炸的苦力怕会在爆炸取消前忽略附近的猫或豹猫。
+
+{{in|java}}如果爆炸时苦力怕带有[[状态效果]]，其爆炸后会在原地创造带有这些效果的[[区域效果云]]。
+
+[[雪傀儡]]<ref>{{bug|MC-73964}}</ref>、[[监守者]]、[[卫道士#“Johnny”卫道士|“Johnny”卫道士]]、[[凋灵]]和{{only|je|for=有队伍且与该苦力怕不在同一队伍的[[潜影贝]]}}会攻击苦力怕；[[山羊]]也会随机冲撞攻击苦力怕，但苦力怕不会进行反击。
+
+{{in|BE}}普通的苦力怕准备爆炸时，如果被[[闪电束|闪电]]劈中，变为闪电苦力怕的同时准备爆炸的行为会被立刻中断，即使苦力怕是用打火石点燃的。
+
+=== 闪电苦力怕 ===
+[[File:Charged Creeper.png|125px|右]]
+[[File:Charged and normal creeper explosion comparison.png|200px|缩略图|右|闪电苦力怕（左）和普通苦力怕（右）在草地上的爆炸半径对比]]
+{{relevant tutorial|闪电苦力怕陷阱}}
+闪电苦力怕是一种具有更强大爆炸威力的苦力怕变种。与普通苦力怕相比，其周围有明显的蓝色电弧环绕。
+
+普通苦力怕会在周围4格以内位置出现[[闪电]]时，被转化为闪电苦力怕，任何方式生成的闪电均有效。
+
+闪电苦力怕造成的爆炸的爆炸威力为6，是[[TNT]]的1.5倍、普通苦力怕的2倍。
+
+被闪电苦力怕的爆炸杀死的苦力怕、[[骷髅]]、[[凋灵骷髅]]、[[僵尸]]和[[猪灵]]会掉落相应的[[生物头颅]]。{{in|java}}如果闪电苦力怕同时炸死了多只上述生物，只有一只会掉落其头颅。
+
+可以用{{only|je|for={{cmd|summon creeper ~ ~ ~ <nowiki>{powered:1}</nowiki>}}|short=1}}或{{only|be|for={{cmd|summon creeper ~ ~ ~ ~ ~ minecraft:become_charged}}|short=1}}来召唤闪电苦力怕。
+{{-}}
+
+== 音效 ==
+{{el|je}}：
+{{Sound table
+|sound=Creeper death.ogg
+|subtitle={{tp|subtitles.entity.creeper.death}}
+|source=敌对生物
+|description=死亡
+|id=entity.creeper.death
+|translationkey=subtitles.entity.creeper.death}}
+{{Sound table
+|sound=Creeper say1.ogg
+|sound2=Creeper say2.ogg
+|sound3=Creeper say3.ogg
+|sound4=Creeper say4.ogg
+|subtitle={{tp|subtitles.entity.creeper.hurt}}
+|source=敌对生物
+|description=受伤
+|id=entity.creeper.hurt
+|translationkey=subtitles.entity.creeper.hurt}}
+{{Sound table
+|sound=Creeper fuse.ogg
+|subtitle={{tp|subtitles.entity.creeper.primed}}
+|source=敌对生物
+|description=即将爆炸
+|id=entity.creeper.primed
+|translationkey=subtitles.entity.creeper.primed}}
+{{Sound table
+|sound=Explosion1.ogg
+|sound2=Explosion2.ogg
+|sound3=Explosion3.ogg
+|sound4=Explosion4.ogg
+|subtitle={{tp|subtitles.entity.generic.explode}}
+|source=敌对生物
+|description=爆炸
+|id=entity.creeper.explode
+|translationkey=subtitles.entity.generic.explode
+|foot=1}}
+
+{{el|be}}：
+{{Sound table
+|bedrock=1
+|sound=mob.creeper.say1.wav
+|sound2=mob.creeper.say2.wav
+|sound3=mob.creeper.say3.wav
+|sound4=mob.creeper.say4.wav
+|source=敌对生物
+|description=受伤
+|id=mob.creeper.say
+|typeid=hurt
+|soundvolume
+|soundpitch=0.8-1.2
+|sounddistance
+|soundpreload=1
+}}
+{{Sound table
+|bedrock=1
+|sound=mob.creeper.death.wav
+|source=敌对生物
+|description=死亡
+|id=mob.creeper.death
+|typeid=death
+|soundvolume
+|soundpitch=0.8-1.2
+|sounddistance
+}}
+{{Sound table
+|bedrock=1
+|sound=Creeper fuse.ogg
+|source=方块
+|description=即将爆炸
+|id=random.fuse
+|typeid=fuse
+|soundvolume
+|soundpitch=0.5
+|sounddistance
+|soundpreload=1
+}}
+{{Sound table
+|bedrock=1
+|sound=Explosion1.ogg
+|sound2=Explosion2.ogg
+|sound3=Explosion3.ogg
+|sound4=Explosion4.ogg
+|source=方块
+|description=爆炸
+|id=random.explode
+|typeid=explode
+|soundvolume=4.0
+|soundpitch
+|sounddistance
+|soundpreload=1
+|foot=1
+}}
+
+== 数据值 ==
+=== ID ===
+{{edition|java}}：
+{{ID table
+|generatetranslationkeys=java
+|Creeper
+|spritetype=entity
+|nameid=creeper
+|foot=1}}
+
+{{edition|bedrock}}：
+{{ID table
+|generatetranslationkeys=bedrock
+|Creeper
+|spritetype=entity
+|nameid=creeper
+|foot=1}}
+
+=== 实体数据 ===
+{{el|je}}：
+{{main|实体数据格式}}
+苦力怕有与之相联系的包含许多该[[生物]]属性的存档数据。
+
+{{/ED}}
+
+{{el|be}}：
+{{see also|基岩版存档格式/实体格式|基岩版存档格式/实体格式/组件}}
+
+== 成就 ==
+{{Load achievements|Monster-Hunter;archer;it-spreads}}
+
+以下成就适用于所有生物：
+{{Load achievements|mob-kabob;over-overkill;overkill|main=none}}
+
+== 进度 ==
+{{Load advancements|adventure.kill_a_mob;adventure.kill_all_mobs;adventure.kill_mob_near_sculk_catalyst}}
+
+以下进度适用于所有生物：
+{{Load advancements|adventure.arbalistic;adventure.overoverkill;adventure.root;adventure.shoot_arrow;adventure.spear_many_mobs;adventure.throw_trident|main=none}}
+
+== 视频 ==
+{{bv|BV1yJ411H7gF}}
+
+== 历史 ==
+{{cleanup|section=1}}
+{{HistoryTable
+|{{HistoryLine||2009年8月20日|link=https://archive.org/download/Minecraft_IRC_Logs_2009/DBN-IRC-Logs/%23minecraft.20090820.log|[[File:Creeper (pre-release).png|24px]] [[Notch]]展示了制作失败的[[猪]]模型。他评论道：“它动起来的时候看上去更加怪异（creepier）了……哈哈，我会把它作为一种令人毛骨悚然（creepy）的生物保留下来 <nowiki>=D</nowiki>”。{{Info needed|此纹理是否同样受到阴影的影响？}}}}
+|{{HistoryLine||2009年9月1日|link={{notch|177152983}}|[[File:Creeper JE1.png|24px]] 苦力怕在[[The Word of Notch]]上被展示。
+|[[File:Creeper (fixed shadows) JE1.png|24px]] 虽然纹理本身是很明亮的，但是苦力怕实际看起来比预期的要暗一些。
+|苦力怕的行为更像[[僵尸]]，四处跳跃直到发现[[玩家]]。
+|苦力怕的近战攻击伤害只有{{hp|4}}，比僵尸的{{hp|6}}伤害要少。
+|一旦被杀死，苦力怕会引起4×4×4范围的球形爆炸，留下一个相当大的坑，破坏许多[[方块]]，并伤害在这个范围内的任何玩家。
+|杀死一只苦力怕可以获得250点数。}}
+|{{HistoryLine|java Classic}}
+|{{HistoryLine||0.24 SURVIVAL_TEST|[[File:Creeper JE1.png|24px]] 加入了苦力怕。}}
+|{{HistoryLine||0.24_SURVIVAL_TEST_03|[[水]]和[[熔岩]]不再会因苦力怕的爆炸而掉落。}}
+|{{HistoryLine||0.25 SURVIVAL TEST|苦力怕现在会重新生成或消失，攻击向它们射出箭的[[骷髅]]。}}
+|{{HistoryLine||2009年10月20日|link={{notch|218118974}}|[[Notch]]提到苦力怕的爆炸不再能够摧毁石质方块了。}}
+|{{HistoryLine||0.26 SURVIVAL_TEST|[[File:Creeper JE2.png|24px]] 更改了苦力怕的纹理。
+|苦力怕的爆炸不再能够摧毁石头或者石质方块了。
+|苦力怕爆炸之后会冒烟了。}}
+|{{HistoryLine||0.27 SURVIVAL TEST|苦力怕被杀死时获得的点数被降至200。}}
+|{{HistoryLine|java Indev}}
+|{{HistoryLine||0.31|dev=20091223-0040|苦力怕不再自然生成。}}
+|{{HistoryLine|||dev=20100202-2157|[[File:Creeper JE2 BE1.png|24px]] 更改了苦力怕的纹理。
+|苦力怕和其他生物又可以自然生成了，但它们现在都是友好的。}}
+|{{HistoryLine|||dev=20100204-2027|苦力怕重新变得敌对，通过靠近玩家并爆炸来攻击{{verify|是否在这个版本？|history=1|java=1}}。先前的生存测试中，苦力怕只会造成近战伤害，并且只有被玩家杀死时才会爆炸。
+|苦力怕[[爆炸]]时不再产生树叶[[粒子]]。}}
+|{{HistoryLine||20100219|現在苦力怕死亡时会掉落[[火藥|硫磺]]。}}
+|{{HistoryLine|java Alpha}}
+|{{HistoryLine||v1.0.3|为苦力怕加入了单独的音效（在此之前，它们受伤会发出玩家受伤时的声音）。}}
+|{{HistoryLine||v1.0.14|加入了“13”和“cat”两张[[音乐唱片]]，会在苦力怕被[[骷髅]]射杀时掉落。}}
+|{{HistoryLine||v1.2.0_02|苦力怕有了新的受伤[[音效]]。|旧的受伤音效：{{sound||Creeper Oldhurt1.ogg}}{{sound||Creeper Oldhurt2.ogg}}{{sound||Creeper Oldhurt3.ogg}}{{sound||Creeper Oldhurt4.ogg}}}}
+|{{HistoryLine|java Beta}}
+|{{HistoryLine||1.4|[[File:Java Edition logo 7.png|150px]] [[Minecraft]]徽标的字母A上现在有一张苦力怕的脸。}}
+|{{HistoryLine||1.5|[[File:Charged Creeper JE1 BE1.png|32px]] 加入了[[苦力怕#闪电苦力怕|闪电苦力怕]]，闪电击中时充电而成，强化其爆炸半径与威力。}}
+|{{HistoryLine||1.8|dev=pre1|苦力怕现在变得危险得多，未穿着[[盔甲]]且处于距离爆炸的苦力怕4-5方格内的玩家会被直接杀死。伤害取决于[[难度]]。}}
+|{{HistoryLine|java}}
+|{{HistoryLine||1.0.0|dev=Beta 1.9-pre5|除非被攻击，苦力怕和其他敌对生物不再会攻击[[创造模式]]的玩家。}}
+|{{HistoryLine|||dev=rc1|苦力怕的[[爆炸]]有了新的音效。}}
+|{{HistoryLine||1.1|dev=11w50a|苦力怕现在会掉落除了“11”以外的所有[[音乐唱片]]。}}
+|{{HistoryLine||1.2.1|dev=12w05b|更新了苦力怕的AI，现在会远离驯服的[[猫]]和[[豹猫]]。}}
+|{{HistoryLine||1.2.1|dev=12w07a|因为[[AI]]的彻底检修，苦力怕不会再攻击其他生物了。
+|现在苦力怕不再向[[玩家]]左侧移动，而是会停在玩家面前。}}
+|{{HistoryLine||1.3.1|dev=12w30a|苦力怕的威力更大了，并具有击退效果。根据难度变化，苦力怕所造成的[[伤害]]在简单难度下约减少50%的伤害，在普通难度下伤害和之前相同，在困难难度下比之前多约33%的伤害。在困难难度下，苦力怕的伤害能使穿着全套钻石[[盔甲]]的玩家只剩2颗心。<ref>{{tweet|dinner|227339500941082626|In full diamond armour + hard difficulty a creeper can knock you down to 2hearts!|2012年7月23日}}</ref>}}
+|{{HistoryLine||1.4.2|dev=12w38b|苦力怕有了新的掉落力学；若苦力怕从足够的高度摔落，将会引发爆炸。}}
+|{{HistoryLine||1.4.4|dev=1.4.3|苦力怕现在会掉落音乐唱片“11”和“wait”了。}}
+|{{HistoryLine||1.6.1|dev=13w18a|苦力怕在[[创造模式]]被攻击不再会爆炸了。}}
+|{{HistoryLine||1.7.2|dev=13w36a|现在可以使用[[打火石]]引爆苦力怕了。}}
+|{{HistoryLine||1.8|dev=14w05a|玩家现在可以在[[旁观模式]]进入苦力怕的视角了。绿色的苦力怕着色器被应用，玩家被限制跟随苦力怕的移动。}}
+|{{HistoryLine|||dev=14w11a|[[女巫]]、[[骷髅]]、[[僵尸]]、[[僵尸猪人]]和其他苦力怕现在会逃避准备爆炸的苦力怕了。}}
+|{{HistoryLine|||dev=14w30a|苦力怕、骷髅、凋灵骷髅和僵尸被闪电苦力怕杀死时会掉落对应的头颅了。}}
+|{{HistoryLine|||dev=14w30b|若一只闪电苦力怕炸死了不止一个可以掉落头颅的生物，则只会掉落一个头颅。}}
+|{{HistoryLine||1.8.1|dev=pre1|生物不再逃离爆炸时的苦力怕了。|苦力怕不再攻击铁傀儡了。}}
+|{{HistoryLine||1.9|dev=15w32a|当玩家戴着苦力怕的[[生物头颅]]的时候苦力怕的发现范围减半。}}
+|{{HistoryLine|||dev=15w33c|玩家戴着苦力怕[[生物头颅]]的时候检测范围再次被调整，现在是正常范围的37.5%。}}
+|{{HistoryLine|||dev=15w36a|玩家戴着苦力怕[[生物头颅]]的时候检测范围又被调回到50%。}}
+|{{HistoryLine|||dev=15w39a|将苦力怕的高度从1.8格高更改为1.7格高。}}
+|{{HistoryLine|||dev=15w51a|当游戏规则{{cd|doMobLoot}}为{{cd|false}}时，苦力怕不再掉落音乐唱片。}}
+|{{HistoryLine||1.11|dev=16w32a|如果苦力怕带有某种药水效果，其爆炸后会在原地创造一个该效果的药水云。|苦力怕的实体ID从{{cd|Creeper}}改为{{cd|creeper}}。}}
+|{{HistoryLine||1.14|dev=18w43a|苦力怕被[[流浪者]]杀死时也会掉落唱片了。}}
+|{{HistoryLine||1.17|dev=21w15a|苦力怕被[[山羊]]攻击后不再会变得敌对。}}
+|{{HistoryLine||1.19.3|dev=pre2|苦力怕现在可以被[[火焰弹]]点燃。}}
+|{{HistoryLine||1.21.11|dev=25w44a|苦力怕被[[焦骸]]杀死时也会掉落音乐唱片了。}}
+|{{HistoryLine|pocket alpha}}
+|{{HistoryLine||0.3.3|[[File:Creeper JE2 BE1.png|24px]] 加入了苦力怕。
+|它们还无法自然生成，需要外部帮助才能生成。<ref>https://youtu.be/vG167PET3o0</ref>
+|苦力怕仍然使用旧的[[爆炸]]音效。
+|苦力怕的爆炸会产生白雾，但范围更小。
+|苦力怕会向[[玩家]]的左侧靠近，和僵尸一样缓慢。}}
+|{{HistoryLine||0.4.0|苦力怕现在可以自然生成了。}}
+|{{HistoryLine||0.7.4|手持[[打火石]]点击苦力怕会使其自行[[爆炸]]。}}
+|{{HistoryLine||0.9.0|dev=build 1|苦力怕不再浮在地面上2像素的位置了。}}
+|{{HistoryLine|||dev=build 2|当手持[[打火石]]面对苦力怕时，会出现一个点燃（ignite）按钮以供引爆，而非直接点击。}}
+|{{HistoryLine|||dev=build 8|苦力怕现在使用新的AI，会避开火、仙人掌、熔岩或是摔落（以及空闲时会避开水）。}}
+|{{HistoryLine|||dev=build 9|回退了build 8中的更改。}}
+|{{HistoryLine||0.9.2|苦力怕现在有了正确的爆炸半径。
+|修复了爆炸时间。在这之前会立刻爆炸。}}
+|{{HistoryLine||0.11.0|dev=build 1|苦力怕现在可以爬上[[梯子]]了。}}
+|{{HistoryLine||0.12.1|dev=build 1|苦力怕拥有了一个新的AI。
+|[[File:Charged Creeper.png|32px]] 苦力怕现在被雷击中会变成闪电苦力怕了。
+|苦力怕现在拥有了一个新的爆炸音效。|苦力怕爆炸前拥有闪烁的动画。}}
+|{{HistoryLine||0.14.0|dev=build 1|苦力怕变得更矮了（由1.8方块变为1.7）。}}
+|{{HistoryLine|bedrock}}
+|{{HistoryLine||1.2.0|dev=1.2.0.2|被骷髅射杀的苦力怕现在会掉落音乐唱片。}}
+|{{HistoryLine|||dev=1.2.0.22|更改了苦力怕爆炸的音效。}}
+|{{HistoryLine||1.10.0|dev=1.10.0.3|被[[流浪者]]射杀的苦力怕现在会掉落音乐唱片。}}
+|{{HistoryLine||1.16.0|dev=1.15.0.55|现在在船上的苦力怕会伤害周围的玩家。}}
+|{{HistoryLine||1.16.0|dev=1.16.0.57|现在在水中船上的苦力怕会伤害周围的玩家。}}
+|{{HistoryLine||1.16.210|dev=1.16.210.51|苦力怕被[[山羊]]冲撞时不再反击。}}
+|{{HistoryLine||1.21.40|dev=1.21.40.20|现在苦力怕被[[沼骸]]杀死时会掉落音乐唱片。<ref>{{bug|MCPE-179008|||Fixed}}</ref>}}
+|{{HistoryLine||1.21.60|dev=1.21.60.21|苦力怕爆炸时不再会闪烁为纯白色。<ref>{{bug|MCPE-51809|||Fixed}}</ref>}}
+|{{HistoryLine||1.21.130|dev=1.21.130.26|现在苦力怕被[[焦骸]]杀死时会掉落音乐唱片。}}
+|{{HistoryLine|console}}
+|{{HistoryLine||xbox=TU1|xbone=CU1|ps3=1.00|psvita=1.00|ps4=1.00|wiiu=Patch 1|switch=1.0.1|[[File:Creeper JE2 BE1.png|32px]] 加入了苦力怕。|[[File:Charged Creeper.png|32px]] 加入了闪电苦力怕。}}
+|{{HistoryLine||xbox=TU12|苦力怕不再攻击其他生物了。在此之前，苦力怕被骷髅射中时会进行反击，并在此过程中形成一个大坑。}}
+|{{HistoryLine||xbox=TU14|ps3=1.04|psvita=1.00|ps4=1.00|苦力怕的威力更大了，并具有击退效果。根据难度变化，苦力怕所造成的伤害改变为 简单：约减少50%的伤害，普通：伤害和之前相同，困难：比之前多约33%的伤害。在穿着全套钻石盔甲以及在困难难度下，苦力怕能把玩家伤到只剩2颗心。
+|现在苦力怕会敌对于最后一个攻击它的玩家了。
+|增加了苦力怕的爆炸威力。
+|如果苦力怕掉落到与玩家一定的高度时，它们会爆炸。}}
+|{{HistoryLine||xbox=TU24|xbone=CU12|ps3=1.16|psvita=1.16|ps4=1.16|更新了苦力怕的闪烁动画。}}
+|{{HistoryLine||xbox=TU31|xbone=CU19|ps3=1.22|psvita=1.22|ps4=1.22|wiiu=Patch 3|苦力怕可使用打火石强行爆炸。
+|苦力怕被闪电苦力怕杀死时会掉落一个生物头颅。}}
+|{{HistoryLine||xbox=TU54|xbone=CU44|ps3=1.52|psvita=1.52|ps4=1.52|wiiu=Patch 24|switch=1.0.4|如果苦力怕身上有药水效果，它的爆炸会留下该药水的滞留效果。}}
+|{{HistoryLine||xbox=none|xbone=none|ps3=none|psvita=none|ps4=1.90|wiiu=none|switch=none|苦力怕被流浪者杀死时会掉落音乐唱片。}}
+|{{HistoryLine|3ds}}
+|{{HistoryLine||0.1.0|[[File:Creeper JE2 BE1.png|32px]] 加入了苦力怕。}}
+}}
+
+== 你知道吗 ==
+=== 设定 ===
+* [[Notch]]在推特上说：“我觉得苦力怕应该是由树叶之类的东西组成的。我也不知道它为什么会爆炸。”
+* 有人曾问Notch苦力怕的手感如何，Notch说苦力怕摸起来“像风干的树叶一样松脆”。<ref>{{tweet|notch|27464490580}}</ref>
+* 苦力怕之所以是鲜绿色的，是因为Minecraft的旧版树叶纹理是鲜绿色的，这样苦力怕能更好地伪装自己，这也让它们变得极其危险，因为从远处很难发现它们。
+* 苦力怕是为数不多的在[[纹理更新]]中没有更改纹理的生物之一。
+* 当被问及引发苦力怕爆炸的原理时，[[Dinnerbone]]说：“苦力怕由于惊惧而剧烈颤抖，而这个动作引爆了它自己，这跟两根木棍摩擦生火的道理是一样的。”<ref>{{tweet|Dinnerbone|408694324927676416}}</ref>
+* {{tr|苦力怕的英文名称“creeper”|苦力怕的英文名稱「creeper」|Creeper的名稱}}来自形容词“creepy”，表示苦力怕是个怪异的东西。“creepy”的动词形式“creep”有“不知不觉而来”“悄悄地缓慢前行”之意。后来，苦力怕的行为模式改为悄无声息地接近玩家并自爆，可能就参考了“creep”一词的含义。
+
+=== 特性 ===
+* 闪电苦力怕是在游戏后期仍对玩家有巨大威胁的敌对生物之一。即使身穿全套[[下界合金盔甲]]，且魔咒带来的[[盔甲机制#保护魔咒机制|伤害减免]]达到最大值80%，闪电苦力怕仍可能造成最高{{hp|20.32}}的伤害；而如果其魔咒只有全套[[保护]]IV，最高可造成{{hp|36.576}}的伤害。
+* 当闪电苦力怕带有[[隐身]]效果时，它们身上的蓝色“电弧”依然可见。
+* 闪电苦力怕的蓝色“电弧”在纹理文件中被命名为<samp>creeper_armor</samp>（苦力怕护甲）。
+* 苦力怕爆炸前的嘶嘶声实际上是[[TNT]]发出的嘶嘶声的0.5倍速慢放。
+
+=== 影响 ===
+==== 游戏彩蛋 ====
+* 游戏内有多处出现了苦力怕面部图案，包括：
+** Minecraft徽标的字母A中
+** [[青色带釉陶瓦]]的每个面上
+** [[雕纹砂岩]]的每个侧面上
+** [[羊驼]]身上装备的[[绿色地毯]]上
+** [[牧师]]村民长袍的背上
+* [[云]]的纹理包含了一个向右旋转90°（即朝向东方）的苦力怕图案。
+* [[23w13a_or_b]]中的[[标签（物品）|标签]]物品使用苦力怕图案表示“嘶嘶…语法错误”。
+
+==== 周边 ====
+[[File:CreeperAnatomy.jpg|缩略图|200px|苦力怕的解剖学]]
+苦力怕出现在Minecraft的很多周边产品中<ref>https://shop.minecraft.net/</ref>，包括但不限于：
+* 毛绒玩具；
+* 动作玩偶；
+* 手镯；
+* T恤衫，其中苦力怕解剖图T恤衫展示了苦力怕的内部结构，还写上了苦力怕的拉丁文学名：''Creepus Explodus''；
+* [[乐高Minecraft]]；
+* PaperCraft；
+
+==== 致敬 ====
+* MINECON
+** [[MINECON 2011]]会上分发的礼品袋里，有可折叠和按压的苦力怕、[[钻石]]和[[草方块]]的饰品，可用于收藏或装饰房间。
+** 在[[MINECON Live 2019]]生物群系投票的山地宣传片中，一个苦力怕的脸出现在了视频右上角的雪山上。
+
+* Minecraft地图
+** Oxm Magazine在Minecraft Xbox 360版上建造的自定义地图OXM Land上，有一个巨大的苦力怕的头，Creepthulhu被称为土地神。
+
+* 歌曲
+** ''Revenge''是TryHardNinja演唱的歌曲，改编自''DJ Got Us Fallin' in Love''。其中的第一句歌词为“Creeper? aww man”，这首歌曲也作为一个歌词接龙的梗广为流传。
+
+* 电视系列
+** 在电视节目秀系列[[wikipedia:Mad (TV series)|''Mad'']]（''Criminal Minecraft''和''ThunderLolcats''<ref>https://www.youtube.com/watch?v=ndA69KiffJE&t=61s</ref>）上，出现了几个苦力怕。在''ThunderLolcats''中，它们使用了标语：“那就是ssss.. 你在那儿得到的一个很好的东西。”
+
+* YouTube视频
+** YouTube上的许多视频都有苦力怕的特征，包括采访视频、“Let's Play”系列、动画片和其他视频里的配角。当搜索“[https://www.youtube.com/results?search_query=Minecraft+Creeper Minecraft Creeper]”时，YouTube推送了超过1,500,000个视频。
+
+* 主机/PC游戏
+** 在[[wikipedia:Borderlands 2|{{tr|无主之地2|邊緣禁地2}}]]中，腐蚀洞穴群的西北多数部分有一条矿井，苦力怕就会出现在那里，还有[[泥土]]、[[煤矿石]]、[[石头]]、[[金矿石]]和一个“坏苦力怕”，其力量和尺寸比正常普通苦力怕都要大2倍。
+** 在[https://www.carbongames.com/ Airmech]中，苦力怕作为一个自杀式炸弹袭击单位boomer的一个“皮肤”出现。这里的苦力怕有绿的、蓝的和红的，取决于它们所在团队的颜色。
+** 在《章鱼奶爸：致命捕捉》中，一个苦力怕的头可以在杂货店里的架子上面看见，旁边还有2把镐和一些草方块，它被认为是“Minecraft”收藏品的一部分。
+** 在[http://www.awesomenauts.com Awesomenauts]中，一个可游玩角色（Clunk）拥有一个引用了苦力怕的“皮肤”，并完全具有发出嘶嘶声和爆炸的音效。
+** [[wzh:泰拉瑞亚|泰拉瑞亚]]内的一件万圣节服装（苦力怕套装）为苦力怕外形。
+** [http://mcpixel.net/ {{tr|像素哥|馬痞先}}]中一个关卡里有一个看得见且可交互的苦力怕。
+** [https://evoland.gamepedia.com/Evoland_2 进化之地2]是一个致敬其他经典游戏而设计的游戏。在该游戏中，生物“令人害怕的苦力怕”（Dreaded Creepers）在[https://evoland.gamepedia.com/The_Mine 当前年代的矿区]中出现。如玩家被该生物杀死，则会解锁[https://evoland.gamepedia.com/Evoland_2_achievements#sssSSSSSss_BOOM.21 sssSSSSSss BOOM!] 成就。
+
+* Flash游戏
+** 在[http://jayisgames.com/games/stealing-the-diamond ''Stealing the Diamond'']中，当Henry Stickmin使用镐从博物馆的外墙进入时，一只苦力怕就会出现在他身后并爆炸，摧毁了部分墙壁。
+** 在[http://www.xgenstudios.com/play/stick-rpg-2 ''Stick RPG2'']地图远处的尽头处，一个微笑的苦力怕可以在地面的洞里看见。
+** 在[http://ks.renai.us/viewtopic.php?f=3&t=3071 ''Katawa Crash'']中，苦力怕是玩家可以伤害的对象之一。
+** 在游戏[http://www.transformice.com/ ''Transformice'']里，苦力怕的头颅作为可购买的老鼠的帽子出现。
+
+* 其他游戏
+** 在澳大利亚阿德莱德的Universal Chicken制作的游戏里，有一个关卡带有一个苦力怕的脸部图案。
+** 像素垃圾2 PS3版的标题屏幕里，一只小小的苦力怕隐藏在游戏内其他敌人之中。
+** 在[[Notch]]为VVVVVV设计的自定义关卡“金字塔大逃亡”里，一张苦力怕的脸可以在金字塔远方左边的雕刻中看到。
+** 在《火炬之光2》里，苦力怕在一个“彩蛋”任务里扮演了一个重要的角色。当玩家接受这个任务并进入名叫“Notch's Cave”（Notch的洞穴）的洞穴时，就会看见成群的苦力怕，这些苦力怕会接近玩家并爆炸。在洞穴的尽头附近，玩家可以找到一把Minecraft风格的剑。
+** 在一个叫做[http://www.silvergames.com/strollin ''Strollin'']的游戏里，有一个可购买的苦力怕物品，这个物品可让炸弹把玩家炸得更远。
+** 在游戏Geometry Dash中，普通模式下通关官方第16关“Hexagon Force”关卡会给予玩家一个苦力怕方形头颅的图标，玩家可以使用此图标装饰自己的控制角色cube。这个物品可以进行色彩调整，若将主色调调为绿色而副色调调为黑色，则cube将看起来与正常的苦力怕很相似。
+** 在Notch用2天时间设计的一个小游戏[[Minicraft]]里也有苦力怕。在游戏中有趣的是，随着玩家深入地底，苦力怕也会变得更坚硬。
+
+=== 成就 ===
+* 苦力怕在[[wzh:吉尼斯世界记录|吉尼斯世界纪录]]2013年公布的《电视游戏机历史上最著名的50位反派角色》（Top 50 Video Game Villains of All Times）中排名第十。<ref>{{cite|url=https://www.guinnessworldrecords.com/news/2013/1/bowser-crowned-greatest-videogame-villain-of-all-time-in-poll-for-guinness-world-records-2013-gamers-edition-46745|title=Bowser crowned ‘greatest videogame villain of all time’ in poll for Guinness World Records 2013 Gamer’s Edition|website=[[wzh:吉尼斯世界记录|吉尼斯世界纪录]]|date=2013-01-23}}</ref>
+* 2012年6月18日星期一，一只苦力怕被送上了太空。<ref>http://www.benoxley.com/physoc-outreach{{dead link}}</ref>
+
+== 画廊 ==
+<gallery>
+File:Original pig.jpg|最初的[[猪]]模型，苦力怕的长相由此而来
+File:Creepers_old_2009.png|暗绿色的苦力怕模型
+File:Creeper Danger.png|洞穴中的苦力怕
+File:Creeper Vision.png|旁观模式中苦力怕的视角
+File:Creeper Death.png|死亡的苦力怕
+File:Charged creeper next to a normal creeper.png|一只普通苦力怕和一只闪电苦力怕
+File:ExplosionComparison.png|爆炸破坏程度的比较。左上方是凋灵头颅的、左边第一个是凋灵的、第二个是苦力怕的、右边第二个是闪电苦力怕的、右边第一个是TNT的
+File:CreeperExplosion.png|因苦力怕爆炸而受损的村庄房屋
+File:A creeper in Alpha.png|即将爆炸的苦力怕
+File:Creeper (texture) JE1.png|苦力怕的原始纹理文件。注意树叶
+</gallery>
+
+=== 在其他媒体 ===
+<gallery>
+File:Monster Horde Story Mode.jpg|苦力怕出现在[[Minecraft: Story Mode]]
+File:LEGO_Minecraft_Micro-Mobs.jpg|来自[[乐高Minecraft]]的迷你苦力怕和史蒂夫模型
+File:Creeper minifig.jpg|来自[[乐高Minecraft]]的迷你苦力怕
+File:Creeper_Scarf.jpg|[https://www.jinx.com/p/minecraft_creeper_scarf.html JINX]制作的苦力怕围巾
+File:Creeper_Plushies.jpg|JINX制作的苦力怕毛绒玩具
+File:Minecraft creeper backpack.jpg|[http://www.thinkgeek.com/product/1758/ ThinkGeek]里的苦力怕背包
+File:Poppable_Creeper_Figure.jpg|由[https://www.jinx.com/p/minecraft_survival_mode_exploding_creeper_5_figure.html JINX]制作的5英寸苦力怕玩具
+File:Creeper Mobestiary.jpg|来自[[Minecraft丛书#其他|我的世界生物图鉴]]的苦力怕的解剖图
+File:Creeper in Stick RPG 2.png|在名叫''[https://stickrpg2.fandom.com Stick RPG 2]''的游戏中可以找到的苦力怕彩蛋
+File:Three Creepers.jpeg|Minecraft、Minecraft Dungeons和Minecraft Legends中的苦力怕见面
+</gallery>
+
+== 参见 ==
+* [[Tutorial:闪电苦力怕陷阱]]
+
+== 参考 ==
+{{reflist}}
+
+== 导航 ==
+{{Navbox entities|mobs}}
+
+[[Category:敌对生物]]
+
+[[cs:Creeper]]
+[[de:Creeper]]
+[[en:Creeper]]
+[[es:Creeper]]
+[[fr:Creeper]]
+[[hu:Creeper]]
+[[it:Creeper]]
+[[ja:クリーパー]]
+[[ko:크리퍼]]
+[[lzh:伏臨]]
+[[nl:Creeper]]
+[[pl:Creeper]]
+[[pt:Creeper]]
+[[ru:Крипер]]
+[[th:ครีปเปอร์]]
+[[tr:Creeper]]
+[[uk:Кріпер]]

@@ -286,13 +286,12 @@ def batch_cmd(
         # 报告未展开的模板
         if result.unresolved:
             click.secho(
-                f"\n⚠️  警告：{len(result.unresolved)} 个模板未展开（驼峰映射缺失或模板不存在）：",
+                f"\n⚠️  警告：{len(result.unresolved)} 个模板未展开（模板不存在或返回空）：",
                 fg="yellow",
                 err=True,
             )
             for name in result.unresolved:
                 click.secho(f"  - {name}", fg="yellow", err=True)
-            click.secho("建议添加到 MarkdownConverter.CAMEL_CASE_TEMPLATES", fg="yellow", err=True)
 
         if result.failed:
             click.echo(
