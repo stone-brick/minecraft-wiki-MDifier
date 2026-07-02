@@ -1,0 +1,311 @@
+{{For||铁}}
+{{Infobox item
+|image=Iron Ingot.png
+|invimage=Iron Ingot
+}}
+
+'''铁锭（Iron Ingot）'''是一种用途广泛的金属合成材料，可以通过冶炼[[铁矿石]]、[[深层铁矿石]]或[[粗铁]]获得。
+
+== 获取 ==
+=== 合成 ===
+{{Crafting
+|showname=0
+|Block of Iron
+|Output=Iron Ingot,9
+|type=Material
+|head=1
+}}
+{{Crafting
+|A1= Iron Nugget
+|B1= Iron Nugget
+|C1= Iron Nugget
+|A2= Iron Nugget
+|B2= Iron Nugget
+|C2= Iron Nugget
+|A3= Iron Nugget
+|B3= Iron Nugget
+|C3= Iron Nugget
+|Output=Iron Ingot
+|type= Material
+|foot=1
+}}
+
+=== 烧炼 ===
+{{Smelting
+|Raw Iron;Iron Ore;Deepslate Iron Ore
+|Iron Ingot
+|0.7
+}}
+
+=== 箱子战利品 ===
+{{LootChestItem|iron_ingot}}
+
+=== 生物掉落物 ===
+{{Drop sources|Iron Ingot}}
+
+== 用途 ==
+=== 合成材料 ===
+{{crafting usage|Iron Ingot}}
+
+=== 交易 ===
+{{Trade uses}}
+
+=== 修复 ===
+一些铁质物品可以在[[铁砧]]中用铁锭[[修复]]：
+* {{ItemLink|Chainmail Helmet}}
+* {{ItemLink|Chainmail Chestplate}}
+* {{ItemLink|Chainmail Leggings}}
+* {{ItemLink|Chainmail Boots}}
+* {{ItemLink|Iron Helmet}}
+* {{ItemLink|Iron Chestplate}}
+* {{ItemLink|Iron Leggings}}
+* {{ItemLink|Iron Boots}}
+* {{ItemLink|Iron Sword}}
+* {{ItemLink|Iron Axe}}
+* {{ItemLink|Iron Pickaxe}}
+* {{ItemLink|Iron Shovel}}
+* {{ItemLink|Iron Hoe}}
+* {{ItemLink|Iron Spear}}
+
+=== 治疗铁傀儡 ===
+对铁傀儡{{ctrl|使用}}1个铁锭能恢复它{{hp|25}}的生命值。
+
+=== 信标 ===
+与[[绿宝石]]、[[钻石]]、[[金锭]]、[[下界合金锭]]一样，铁锭可用于激活[[信标]]的状态效果。玩家需选择一种可用的状态效果，然后将1个铁锭放入矿物槽中消耗。
+
+=== 锻造原材料 ===
+{{Smithing
+|head=1
+|ingredients=任意[[盔甲纹饰锻造模板]] +<br>任意[[盔甲]] +<br>[[铁锭]]
+|Any Armor Trim Smithing Template
+|Leather Cap;Leather Tunic;Leather Pants;Leather Boots;
+Chainmail Helmet;Chainmail Chestplate;Chainmail Leggings;Chainmail Boots;
+Copper Helmet;Copper Chestplate;Copper Leggings;Copper Boots;
+Diamond Helmet;Diamond Chestplate;Diamond Leggings;Diamond Boots;
+Golden Helmet;Golden Chestplate;Golden Leggings;Golden Boots;
+Netherite Helmet;Netherite Chestplate;Netherite Leggings;Netherite Boots;
+Turtle Shell
+|Iron Ingot
+|Iron Trim Leather Cap;Iron Trim Leather Tunic;Iron Trim Leather Pants;Iron Trim Leather Boots;
+Iron Trim Chainmail Helmet;Iron Trim Chainmail Chestplate;Iron Trim Chainmail Leggings;Iron Trim Chainmail Boots;
+Iron Trim Copper Helmet;Iron Trim Copper Chestplate;Iron Trim Copper Leggings;Iron Trim Copper Boots;
+Iron Trim Diamond Helmet;Iron Trim Diamond Chestplate;Iron Trim Diamond Leggings;Iron Trim Diamond Boots;
+Iron Trim Golden Helmet;Iron Trim Golden Chestplate;Iron Trim Golden Leggings;Iron Trim Golden Boots;
+Iron Trim Netherite Helmet;Iron Trim Netherite Chestplate;Iron Trim Netherite Leggings;Iron Trim Netherite Boots;
+Iron Trim Turtle Shell
+|tail=1
+}}
+
+== 成就 ==
+{{load achievements|acquire-hardware}}
+
+== 进度 ==
+{{load advancements|story.smelt_iron}}
+
+== 数据值 ==
+=== ID ===
+{{edition|java}}：
+{{ID table
+|showitemtags=je
+|generatetranslationkeys=java
+|Iron Ingot
+|spritetype=item
+|nameid=iron_ingot
+|itemtags={{GameTag|item|iron_ingot}}
+|foot=1}}
+
+{{edition|bedrock}}：
+{{ID table
+|generatetranslationkeys=bedrock
+|Iron Ingot
+|spritetype=item
+|nameid=iron_ingot
+|showitemtags=be
+|itemtags={{GameTagBE|item|iron_ingot}}
+|foot=1
+}}
+
+== 视频 ==
+{{video note|该视频对铁矿石分布和掉落物的描述已于[[洞穴与山崖]]失效。|outdated}}
+{{bv|BV1qt411u7aN}}
+
+== 历史 ==
+{{HistoryTable
+|{{HistoryLine|java Indev}}
+|{{HistoryLine||0.31|dev=20100128-2203|[[File:Iron Ingot JE1.png|32px]] 加入了铁锭。}}
+|{{HistoryLine||0.31|dev=20100129-1447|[[File:Iron Ingot JE2 BE1.png|32px]] 更改了铁锭的纹理。
+|现在，铁锭可用于合成[[铁块]]、[[打火石]]、和[[铁剑]]、[[铁锹]]、[[铁镐]]和[[铁斧]]。}}
+|{{HistoryLine|||dev=20100130|铁锭现在可以用于制作[[箭]]。}}
+|{{HistoryLine||20100206-2034|铁锭现在可以用于制作[[铁锄]]。}}
+|{{HistoryLine||20100212-1210|铁锭现在可以用于制作[[铁盔甲]]。}}
+|{{HistoryLine||20100219|铁锭现在可以用于制作[[打火石]]。}}
+|{{HistoryLine|java Infdev}}
+|{{HistoryLine||20100615|铁锭现在可以用于制作[[水桶]]。}}
+|{{HistoryLine||20100618|铁锭现在可以用于制造[[铁轨]]和[[矿车]]。}}
+|{{HistoryLine||20100625-1917|铁锭现在可以在[[地牢]]的箱子里找到。}}
+|{{HistoryLine|java Alpha}}
+|{{HistoryLine||v1.0.1|铁锭现在可以被用于制作[[铁门]]。}}
+|{{HistoryLine||v1.0.14|铁锭现在不再被用于制作[[箭]]。}}
+|{{HistoryLine||v1.0.15|现在在多人游戏中，可以通过{{cmd|iron}}命令获得4个铁锭。}}
+|{{HistoryLine||v1.1.0|铁锭现在可以被用于制作[[指南针]]。}}
+|{{HistoryLine||v1.2.0|移除了{{cmd|iron}}命令。}}
+|{{HistoryLine|java Beta}}
+|{{HistoryLine||1.5|铁锭现在被用于制作[[探测铁轨]]。}}
+|{{HistoryLine||1.7|铁锭现在被用于制作[[活塞]]和[[剪刀]]。}}
+|{{HistoryLine||1.8|dev=pre1|铁锭现在会在[[要塞]]与[[废弃矿井]]的箱子里自然生成。
+|铁锭现在被用于制作[[铁栏杆]]。}}
+|{{HistoryLine|java}}
+|{{HistoryLine||1.0.0|dev=Beta 1.9-pre2|铁锭现在被用于制作[[炼药锅]]。}}
+|{{HistoryLine|||dev=Beta 1.9-pre3|铁锭现在会在[[要塞]]走廊祭坛的箱子里自然生成。}}
+|{{HistoryLine||1.1|dev=12w01a|铁锭现在会在[[村庄]]铁匠铺的箱子里自然生成。}}
+|{{HistoryLine||1.2.1|dev=12w06a|现在[[僵尸]]会掉落铁锭，使它成为了[[可再生资源]]。}}
+|{{HistoryLine|||dev=12w08a|[[铁傀儡]]现在会掉落3-5个铁锭。}}
+|{{HistoryLine||1.3.1|dev=12w21a|铁锭现在会在[[沙漠神殿]]的箱子里自然生成。
+|铁匠[[村民]]现在会以1颗绿宝石的价格收购8-9个铁锭。}}
+|{{HistoryLine|||dev=12w22a|铁锭现在会在[[丛林神庙]]的箱子里自然生成。
+|铁锭现在被用于制作[[绊线钩]]。}}
+|{{HistoryLine||1.4.2|dev=12w32a|铁锭现在能够用来激活[[信标]]。}}
+|{{HistoryLine|||dev=12w41a|铁锭现在可以用来合成[[铁砧]]。}}
+|{{HistoryLine||1.5|dev=13w01a|铁锭与金锭现在可以用来制作[[重质测重压力板]]。}}
+|{{HistoryLine|||dev=13w02a|铁锭现在被用于制作[[漏斗]]和[[激活铁轨]]。}}
+|{{HistoryLine||1.6.1|dev=13w16a|铁锭现在可用于合成[[马鞍]]。}}
+|{{HistoryLine|||dev=13w18a|铁锭现在会在[[下界要塞]]的箱子里自然生成。
+|铁锭不再能用于合成马鞍。}}
+|{{HistoryLine||1.8|dev=14w02a|盔甲商、武器商和工具商[[村民]]现在会以1颗[[绿宝石]]的价格收购7~9个铁锭。}}
+|{{HistoryLine|||dev=14w07a|铁锭现在可以用来制作[[铁活板门]]。}}
+|{{HistoryLine||1.9|dev=15w31a|铁锭现在会在[[末地船]]的箱子里自然生成。}}
+|{{HistoryLine|||dev=15w33c|铁锭能被用于合成[[盾牌]]。}}
+|{{HistoryLine|||dev=15w44a|大幅减少了[[地牢]]和[[沙漠神殿]]箱子的平均铁锭数量，并稍微减少了[[废弃矿井]]和[[下界要塞]]的铁锭数量。}}
+|{{HistoryLine||1.11|dev=16w39a|铁锭现在会在[[林地府邸]]的箱子里自然生成。}}
+|{{HistoryLine||1.11.1|dev=16w50a|铁锭现在能够用来合成[[铁粒]]。}}
+|{{HistoryLine||2017年11月8日|link={{tweet|jappa|928276030854516737}}|[[File:Iron Ingot (pre-release).png|32px]] [[JAPPA]]展示了铁锭的新纹理。}}
+|{{HistoryLine||1.13|dev=17w47a|在[[扁平化]]之前，铁锭的数字ID是265。}}
+|{{HistoryLine|||dev=18w10a|铁锭现在会在[[埋藏的宝藏]]中自然生成。}}
+|{{HistoryLine|||dev=18w11a|铁锭现在会在[[沉船]]的箱子中自然生成。}}
+|{{HistoryLine||1.14|dev=18w43a|铁锭现在可用于合成[[弩]]。
+|[[File:Iron Ingot JE3 BE2.png|32px]] 更改了铁锭的纹理。}}
+|{{HistoryLine|||dev=18w47a|铁锭现在可以在[[掠夺者前哨站]]的顶部箱子里找到。}}
+|{{HistoryLine|||dev=18w50a|铁锭现在可以用于合成[[高炉]]。
+|铁锭现在可以在村庄工具匠房屋的箱子里找到。}}
+|{{HistoryLine|||dev=19w04a|铁锭现在可以用于合成[[切石机]]。}}
+|{{HistoryLine|||dev=19w11a|铁锭现在可以用于合成[[锻造台]]。}}
+|{{HistoryLine||1.15|dev=19w41a|铁锭现在能用来治疗[[铁傀儡]]。}}
+|{{HistoryLine||1.16|dev=20w16a|铁锭现在会在[[堡垒遗迹]]的箱子内生成。
+|铁锭现在可用于合成[[锁链]]。}}
+|{{HistoryLine||1.17|dev=21w08a|铁锭现在可以通过烧炼[[深层铁矿石]]获得。}}
+|{{HistoryLine|||dev=21w14a|铁锭现在可以通过烧炼[[粗铁]]获得。}}
+|{{HistoryLine||1.19.4|dev=23w04a|exp=update_1_20|现在铁锭可以作为锻造原材料，在[[锻造台]]中为盔甲加上纹饰。}}
+|{{HistoryLine||1.20|dev=23w12a|23w04a中的用途不再属于[[实验性内容]]。}}
+|{{HistoryLine||1.20.3|dev=23w42a|exp=update_1_21|现在铁锭可用于合成[[合成器]]。}}
+|{{HistoryLine|||dev=23w45a|铁锭现在可以在[[试炼密室]]的走廊饰纹陶罐中获得。}}
+|{{HistoryLine||1.20.5|dev=24w05a|exp=update_1_21|铁锭现在可从[[宝库]]普通战利品中获得。}}
+|{{HistoryLine||1.21|dev=24w18a|23w42a、23w45a和24w05a中的变更不再属于[[实验性内容]]。}}
+|{{HistoryLine||1.21.5|dev=25w02a|[[磁石]]的合成配方中的[[下界合金锭]]被替换为铁锭。}}
+|{{HistoryLine||1.21.6|dev=25w20a|铁锭现在可以用来合成[[鞍]]。}}
+|{{HistoryLine||1.21.11|dev=25w41a|铁锭现在可用于合成[[铁矛]]。}}
+|{{HistoryLine||26.3|dev=snapshot-1|现在铁锭可以在[[废弃营地]]的[[氧化的铜箱子]]中找到。}}
+|{{HistoryLine|pocket alpha}}
+|{{HistoryLine||0.2.0|[[File:Iron Ingot JE2 BE1.png|32px]] 加入了铁锭。此时铁锭无法获得，且没有用途。}}
+|{{HistoryLine||0.3.2|铁锭现在可以通过烧炼铁矿石获得。
+|铁锭现在可用于制作[[剪刀]]、[[铁块]]、[[铁镐]]、[[铁斧]]、[[铁剑]]和[[铁锹]]。}}
+|{{HistoryLine||0.4.0|铁锭现在可以被用于制作[[打火石]]和[[铁锄]]。}}
+|{{HistoryLine||0.5.0|铁锭现在可以被用于制作[[下界反应核]]。}}
+|{{HistoryLine||0.6.0|铁锭现在可以被用于制作[[铁盔甲]]。}}
+|{{HistoryLine||0.7.0|铁锭现在可以被用于制作[[水桶]]。}}
+|{{HistoryLine||0.8.0|dev=build 1|铁锭现在可以被用于制作[[指南针]]和[[铁栏杆]]。}}
+|{{HistoryLine|||dev=build 2|铁锭现在可以被用于制作[[矿车]]和[[铁轨]]。}}
+|{{HistoryLine||0.9.0|dev=build 1|铁锭现在可以在[[村庄]]铁匠铺的箱子、[[要塞]]箱子和[[地牢]]箱子里自然生成。
+|[[僵尸]]现在会掉落铁锭。}}
+|{{HistoryLine||0.12.1|dev=build 1|铁锭不再能被用来合成下界反应核。打破下界反应核会掉落铁锭。
+|铁锭现在可以被用于制作[[铁砧]]。
+|铁锭现在可以在[[下界要塞]]的箱子中找到。
+|加入了[[铁傀儡]]，它们会掉落铁锭。
+|铁锭现在可以被用于在铁砧上修复铁制[[盔甲]]、[[工具]]和[[武器]]。
+|[[僵尸村民]]现在会掉落铁锭。}}
+|{{HistoryLine||0.13.0|dev=build 1|铁锭现在可以被用于制作[[绊线钩]]、[[探测铁轨]]、[[铁活板门]]和[[压力板]]。
+|铁锭现在会在[[沙漠神殿]]的箱子里自然生成。}}
+|{{HistoryLine||0.14.0|dev=build 1|铁锭现在可以被用于制作[[漏斗]]和[[炼药锅]]。|铁锭现在会在[[废弃矿井]]中的[[运输矿车]]中自然生成。}}
+|{{HistoryLine||0.15.0|dev=build 1|铁锭现在可以被用于制作[[活塞]]。|增加了[[丛林神庙]]，铁锭会在其中隐藏的宝箱房里自然生成。
+|[[尸壳]]现在会掉落铁锭。}}
+|{{HistoryLine||0.16.0|dev=build 4|铁锭现在可以被用于选择[[信标]]的[[状态效果]]。}}
+|{{HistoryLine|pocket edition}}
+|{{HistoryLine||1.0.0|dev=0.17.0.1|铁锭现在可以在[[末地船]]的箱子里自然生成。
+|铁锭现在可以在[[要塞]]的箱子里自然生成。}}
+|{{HistoryLine||1.0.4|dev=1.0.4.0|加入了[[交易]]，盔甲商、武器商和工具商[[村民]]现在会以1颗[[绿宝石]]的价格收购7-9个铁锭。}}
+|{{HistoryLine||1.1.0|dev=1.1.0.0|铁锭现在可以被用于制作[[铁粒]]。
+|现在可以用铁粒合成铁锭。
+|铁锭现在可以在[[林地府邸]]的箱子里自然生成。}}
+|{{HistoryLine|bedrock edition}}
+|{{HistoryLine||1.4.0|dev=1.2.14.2|铁锭现在可以在[[埋藏的宝藏]]的箱子中自然生成。
+|铁锭现在可以在[[沉船]]的箱子中自然生成。}}
+|{{HistoryLine||1.8.0|dev=1.8.0.10|铁锭现在可以用来合成[[弩]]。}}
+|{{HistoryLine||1.10.0|dev=1.10.0.3|铁锭现在可以在[[掠夺者前哨站]]和平原村庄铁匠铺的箱子中自然生成。
+|铁锭现在可以用来合成[[高炉]]、[[切石机]]和[[盾牌]]。
+|[[File:Iron Ingot JE3 BE2.png|32px]] 更改了铁锭的纹理。}}
+|{{HistoryLine||1.11.0|dev=1.11.0.1|铁锭现在可以在村庄的盔甲匠房屋和工具匠房屋的箱子中找到。
+|铁锭现在可以在热带草原、针叶林、沙漠和积雪针叶林村庄的铁匠铺中找到。}}
+|{{HistoryLine|||dev=1.11.0.4|盔甲商、工具商和武器商村民现在会以1个绿宝石的价格收购4个铁锭。}}
+|{{HistoryLine||1.16.0|dev=1.16.0.57|铁锭现在可以在[[堡垒遗迹]]的箱子中自然生成。}}
+|{{HistoryLine||1.17.0|dev=1.16.230.52|铁锭现在可以通过烧炼深层铁矿石获得。}}
+|{{HistoryLine|||dev=1.17.0.50|铁锭现在可以通过烧炼粗铁获得。}}
+|{{HistoryLine||1.18.10|dev=1.18.10.26|铁锭现在能用来治疗铁傀儡。}}
+|{{HistoryLine||1.19.80|dev=1.19.80.21|exg=next_major_update|现在铁锭可以作为锻造原材料，在[[锻造台]]中为盔甲加上纹饰。}}
+|{{HistoryLine||1.20.0|dev=1.20.0.21|1.19.80.21中的用途不再属于[[实验性玩法]]。}}
+|{{HistoryLine||1.20.50|dev=1.20.50.21|exg=updateAnnouncedLive2023|现在铁锭可用于合成[[合成器]]。}}
+|{{HistoryLine||1.20.60|dev=1.20.60.20|exg=updateAnnouncedLive2023|铁锭现在可以在[[试炼密室]]的走廊饰纹陶罐中获得。}}
+|{{HistoryLine||1.21.0|dev=1.21.0.22|1.20.50.21和1.20.60.20中的变更不再属于[[实验性玩法]]。}}
+|{{HistoryLine|||dev=1.21.0.24|现在[[饰纹陶罐]]战利品中铁锭的最大数量由6个减少至2个，权重由50提高至100。}}
+|{{HistoryLine||1.21.60|dev=1.21.60.25|exg=y_2025_drop_1|[[磁石]]的合成配方中的[[下界合金锭]]被替换为铁锭。}}
+|{{HistoryLine||1.21.70|dev=1.21.70.23|1.21.60.25中的变更不再属于[[实验性玩法]]。}}
+|{{HistoryLine||1.21.90|dev=1.21.90.25|铁锭现在可以用来合成[[鞍]]。}}
+|{{HistoryLine||1.21.130|dev=1.21.130.20|铁锭现在可用于合成[[铁矛]]。
+|将埋藏的宝藏中铁锭的数量由3-5个减少至1-4个，以匹配{{el|je}}。}}
+|{{HistoryLine||26.40|exg=y_2026_drop_3|dev=26.40.27|现在铁锭可以在[[废弃营地]]的[[氧化的铜箱子]]中找到。}}
+|{{HistoryLine|console}}
+|{{HistoryLine||xbox=TU1|xbone=CU1|ps3=1.00|psvita=1.00|ps4=1.00|wiiu=Patch 1|switch=1.0.1|[[File:Iron Ingot JE2 BE1.png|32px]] 加入了铁锭。}}
+|{{HistoryLine||xbox=TU3|现在铁锭可用于合成[[活塞]]和[[剪刀]]。}}
+|{{HistoryLine||xbox=TU5|铁锭现在会在[[要塞]]与[[废弃矿井]]的箱子里自然生成。
+|铁锭现在被用于制作[[铁栏杆]]。}}
+|{{HistoryLine||xbox=TU7|铁锭现在被用于制作[[炼药锅]]。}}
+|{{HistoryLine||xbox=TU9|铁锭现在会在[[村庄]]铁匠铺的箱子里自然生成。}}
+|{{HistoryLine||xbox=TU12|[[僵尸]]现在会掉落铁锭。
+|[[铁傀儡]]现在会掉落3-5个铁锭。}}
+|{{HistoryLine||xbox=TU14|ps3=1.04|现在铁锭可用于合成[[绊线钩]]和[[铁砧]]。
+|铁锭现在会在[[沙漠神殿]]的箱子里自然生成。
+|铁匠[[村民]]现在会以1颗绿宝石的价格收购8-9个铁锭。}}
+|{{HistoryLine||xbox=TU19|xbone=CU7|ps3=1.12|psvita=1.12|ps4=1.12|铁锭现在能够用来激活[[信标]]。
+|现在，铁锭可用于合成[[重质测重压力板]]、[[漏斗]]和[[激活铁轨]]。}}
+|{{HistoryLine||xbox=TU31|xbone=CU19|ps3=1.22|psvita=1.22|ps4=1.22|wiiu=Patch 3|盔甲商、武器商和工具商[[村民]]现在会以1颗[[绿宝石]]的价格收购7-9个铁锭。}}
+|{{HistoryLine||xbox=TU25|xbone=CU14|ps3=1.17|psvita=1.17|ps4=1.17|铁锭现在可以用来制作[[铁活板门]]。}}
+|{{HistoryLine||xbox=TU46|xbone=CU36|ps3=1.38|psvita=1.38|ps4=1.38|wiiu=Patch 15|铁锭现在会在[[末地船]]的箱子里自然生成。}}
+|{{HistoryLine||xbox=TU53|xbone=CU43|ps3=1.49|psvita=1.49|ps4=1.50|wiiu=Patch 23|switch=1.0.3|铁锭现在可以被用于制作[[铁粒]]。}}
+|{{HistoryLine||xbox=TU54|xbone=CU44|ps3=1.52|psvita=1.52|ps4=1.52|wiiu=Patch 24|switch=1.0.4|铁锭现在会在[[林地府邸]]的箱子里自然生成。}}
+|{{HistoryLine||xbox=TU69|xbone=none|ps3=1.76|psvita=1.76|ps4=1.76|wiiu=Patch 38|switch=none|铁锭现在可以在[[埋藏的宝藏]]的箱子中自然生成。
+|铁锭现在可以在[[沉船]]的箱子中自然生成。}}
+|{{HistoryLine||xbox=none|xbone=none|ps3=none|psvita=none|ps4=1.90|wiiu=none|switch=none|[[File:Iron Ingot JE3 BE2.png|32px]] 更改了铁锭的纹理。
+|铁锭现在可以用来合成[[盾牌]]和[[弩]]。}}
+|{{HistoryLine||xbox=none|xbone=none|ps3=none|psvita=none|ps4=1.91|wiiu=none|switch=none|铁锭现在可以在[[掠夺者前哨站]]的箱子中自然生成。
+|铁锭现在可以用来合成[[高炉]]、[[切石机]]。
+|盔甲商、武器商和工具商[[村民]]现在会以1颗[[绿宝石]]的价格收购4个铁锭。}}
+|{{HistoryLine|new3DS}}
+|{{HistoryLine||0.1.0|[[File:Iron Ingot JE2 BE1.png|32px]] 加入了铁锭。}}
+}}
+
+== 导航 ==
+{{Navbox items|Ingredients}}
+
+[[cs:Železný ingot]]
+[[de:Eisenbarren]]
+[[en:Iron Ingot]]
+[[es:Lingote de hierro]]
+[[fr:Lingot de fer]]
+[[hu:Vasrúd]]
+[[it:Lingotto di ferro]]
+[[ja:鉄インゴット]]
+[[ko:철 주괴]]
+[[lzh:鐵錠]]
+[[nl:IJzerstaaf]]
+[[pl:Sztabka żelaza]]
+[[pt:Lingote de Ferro]]
+[[ru:Железный слиток]]
+[[uk:Залізний злиток]]

@@ -1,0 +1,190 @@
+{{redirect|合成台|用于自动合成的方块|合成器}}{{Undecided translation|tw=1|hk=1}}
+{{about|Minecraft中的工作台|Story Mode中的工作台|Story Mode:工作台}}
+{{Infobox block
+|image=Crafting Table.png
+|invimage=Crafting Table
+}}
+{{quote|几乎所有玩家从第一次玩Minecraft起就会记住工作台的合成配方。当然，把四个木板摆成一个正方形就可以了。你也会发现工作台偶尔会自然生成——在村庄图书馆里，女巫小屋里，还有雪屋里。可谁知道那些女巫会合成些什么呢？|[[Duncan Geere]]<ref>{{article|block-week-crafting-table|Block of the Week: Crafting Table|February 2, 2018}}</ref>||Duncan Geere Mojavatar.png}}
+
+'''工作台（Crafting Table）'''是一种用于合成[[合成配方|配方]]更复杂的[[物品]]的方块。
+
+== 生成 ==
+=== 自然生成 ===
+工作台自然生成于下列结构中：
+* [[沼泽小屋]]
+* [[雪屋]]
+* [[村庄]]里的{{tooltip|部分房屋|基岩版的平原渔夫小屋1；沙漠小型房屋5、小型房屋8；热带草原小型房屋3、中型房屋1、中型房屋2；针叶林小型房屋3、小型房屋4、中型房屋2、中型房屋3}}
+* [[掠夺者前哨站]]外的[[掠夺者前哨站/结构#帐篷1|羊毛帐篷]]
+* [[古迹废墟]]里的部分结构
+* [[试炼密室]]的休息室
+* {{in update|drop 3 2026|for=[[竹林]]、[[桦木森林]]、[[樱花树林]]、{{pa|Dappled Forest|}}、[[繁花森林]]、[[原始松木针叶林]]、[[原始云杉针叶林]]、[[苍白之园]]、[[稀疏丛林]]、[[风袭森林]]、[[疏林恶地]]的[[废弃营地]]的部分结构}}
+
+{{Block distribution}}
+
+== 获取 ==
+=== 合成 ===
+{{in|je}}玩家加入游戏时会立刻解锁工作台的合成配方。
+
+{{Crafting
+|A2= Any Planks
+|B2= Any Planks
+|A3= Any Planks
+|B3= Any Planks
+|Output= Crafting Table
+|type= Decoration block
+}}
+
+== 破坏 ==
+挖掘工作台的合适工具是斧。
+
+{{Breaking table}}
+
+工作台被破坏后会掉落自身。
+
+== 用途 ==
+=== 合成 ===
+{{main|合成}}
+{{Filetr|Crafting Table GUI.png|thumb|class=pixel-image|Java版中工作台的界面}}
+
+{{ctrl|使用}}放置在世界中的工作台会打开工作台的3×3的合成方格，比[[物品栏]]的2×2的合成方格更大，能让玩家合成更多的物品。
+
+与物品栏里的合成方格一样，在工作台的合成方格的左边，也有存储了可用的[[合成配方]]并可进行一键合成的[[配方书]]（{{in|Java|nc=1}}默认折叠）。
+
+=== 合成材料 ===
+{{Crafting usage|Crafting Table}}
+
+=== 燃料 ===
+{{main|燃料}}
+工作台可用作[[熔炉]]、[[高炉]]或[[烟熏炉]]的燃料，每个工作台能烧炼1.5个物品。
+
+== 音效 ==
+{{Sound table/Block/Wood}}
+
+== 数据值 ==
+=== ID ===
+{{edition|java}}：
+{{ID table|generatetranslationkeys=java
+|Crafting Table
+|showblocktags=je
+|blocktags={{GameTag|block|crafting_table}}
+|spritetype=block|nameid=crafting_table|foot=1}}
+
+{{edition|bedrock}}：
+{{ID table|generatetranslationkeys=bedrock
+|Crafting Table|spritetype=block|nameid=crafting_table|showblocktags=be|blocktags={{GameTagBE|block|crafting_table}}|foot=1}}
+
+== 成就 ==
+{{load achievements|benchmaking}}
+
+== 进度 ==
+{{load advancements|story.root}}
+
+== 视频 ==
+{{bv|BV1Nt411N7py}}
+
+== 历史 ==
+{{HistoryTable
+|{{HistoryLine|java Indev}}
+|{{HistoryLine||0.31|dev=20100130|[[File:Crafting Table JE1 BE1.png|32px]] 加入了工作台，当时称为“Workbench”。
+|[[File:Crafting_Table_(facing_NWU)_JE1.png|32px]] 工作台的底部使用[[橡木原木]]的纹理。
+|随着工作台的加入，3×3的合成方格不再能够通过按下{{key|B}}键直接打开。}}
+|{{HistoryLine||0.31|dev=20100131|[[File:Crafting_Table_(facing_NWU)_JE2.png|32px]] 更改了工作台的底部纹理。}}
+|{{HistoryLine|java beta}}
+|{{HistoryLine||1.2|工作台的英文名称从“Workbench”更改为“Crafting Table”。}}
+|{{HistoryLine||1.5|工作台现在可以作为[[熔炉]]的燃料使用。}}
+|{{HistoryLine||1.6|dev=Test Build 3|现在按住{{key|Shift}}时单击输出槽，会以能够合成的最大数量合成产物。}}
+|{{HistoryLine||1.6.5|移除了按住{{key|Shift}}并单击时的快捷合成功能。}}
+|{{HistoryLine||1.8|dev=pre1|工作台现在自然生成在[[村庄]]中。}}
+|{{HistoryLine|||dev=pre2|重新加入了Beta 1.6中按住{{key|Shift}}并单击时的快捷合成功能。}}
+|{{HistoryLine|java}}
+|{{HistoryLine||1.0.0|dev=Beta 1.9-pre6|现在用[[斧]]开采工作台比徒手开采更快了。}}
+|{{HistoryLine||1.4.2|dev=12w40a|工作台会生成在[[女巫小屋]]里。}}
+|{{HistoryLine||1.9|dev=15w43a|工作台会生成于[[雪屋]]内。}}
+|{{HistoryLine||1.12|dev=17w13a|现在在工作台界面中可以使用配方书。玩家可以通过点击物品自动将所需的配方填入到工作台中。
+|合成工作台所获得的成就被移除并且不包括新的[[进度]]系统。
+|若空间允许，合成界面关闭时会将合成方格中的物品返还至物品栏中。}}
+|{{HistoryLine||2017年7月22日|link={{tweet|jappa|888484852525404162}}|[[File:Crafting Table JE2.png|32px]] [[Jasper Boerstra]]发推文展示了工作台、木板和木头的新纹理。}}
+|{{HistoryLine||1.13|dev=17w47a|在[[扁平化]]前，方块的数字ID为58。}}
+|{{HistoryLine||1.14|dev=18w43a|[[File:Crafting Table JE2.png|32px]] 更改了工作台的纹理。
+|旗帜的染色配方被[[织布机]]的功能取代，因此旗帜不再能使用工作台染色了。}}
+|{{HistoryLine|||dev=18w44a|[[File:Crafting Table JE3 BE2.png|32px]] 再次更改了工作台的纹理。}}
+|{{HistoryLine|||dev=18w47a|工作台现在会自然生成在[[掠夺者前哨站]]内。}}
+|{{HistoryLine||1.14.1|dev=pre1|[[File:Crafting Table JE4 BE3.png|32px]] 再次更改了工作台的纹理，以匹配新的橡木木板纹理。}}
+|{{HistoryLine||1.15|dev=19w34a|现在按住{{key|Shift}}时单击物品栏中的一组物品可以使之直接转移到工作台的合成方格中。}}
+|{{HistoryLine||1.20|dev=23w16a|现在工作台会自然生成于[[古迹废墟]]中。}}
+|{{HistoryLine||1.20.3|exp=update_1_21|dev=23w42a|现在工作台可用于合成[[合成器]]。}}
+|{{HistoryLine||1.21|dev=24w18a|23w42a中的变更不再属于[[实验性内容]]。}}
+|{{HistoryLine||26.3|dev=snapshot-1|加入了[[废弃营地]]，工作台会作为其的一部分自然生成。}}
+|{{HistoryLine|pocket alpha}}
+|{{HistoryLine||0.3.0|[[File:Crafting Table JE1 BE1.png|32px]] 加入了工作台。}}
+|{{HistoryLine||0.6.0|石质方块（除了熔炉和切石机本身）现在要用[[切石机（MATTIS）|切石机]]制造，这些方块从工作台的合成列表中移除。}}
+|{{HistoryLine||0.9.0|dev=build 1|工作台现在会自然生成在[[村庄]]中。
+|更新了合成界面，其布局更条理。}}
+|{{HistoryLine||0.13.0|dev=build 1|之前使用切石机制造的石质物品现在要用工作台制造。}}
+|{{HistoryLine|pocket}}
+|{{HistoryLine||1.0.0|dev=0.17.0.1|工作台会生成于[[雪屋]]内。}}
+|{{HistoryLine|bedrock}}
+|{{HistoryLine||1.2.0|dev=1.2.0.2|一个配方标签现在在工作台界面中可用。玩家可以通过点击物品自动将所需的配方填入到工作台中。
+|关闭合成界面现在会将放在工作台合成方格的物品移至物品栏中（若有足够空间）。}}
+|{{HistoryLine||1.9.0|dev=1.9.0.2|工作台现在用于合成[[制箭台]]和[[锻造台]]。}}
+|{{HistoryLine||1.10.0|dev=1.10.0.3|[[File:Crafting Table JE3 BE2.png|32px]] 更改了工作台的纹理。
+|工作台现在可在[[掠夺者前哨站]]找到。
+|工作台现在可用于合成[[制图台]]。}}
+|{{HistoryLine||1.11.0|dev=1.11.0.1|不再需要工作台来合成制图台了。}}
+|{{HistoryLine|||dev=1.11.0.7|不再需要工作台来合成制箭台和锻造台了。}}
+|{{HistoryLine||1.17.10|dev=1.17.10.20|[[File:Crafting Table JE4 BE3.png|32px]] 更改了工作台的纹理以匹配{{el|je}}及新的橡木木板纹理。}}
+|{{HistoryLine||1.20.0|dev=1.20.0.22|现在工作台会自然生成于[[古迹废墟]]中。}}
+|{{HistoryLine||1.20.50|exg=updateAnnouncedLive2023|dev=1.20.50.21|现在工作台可用于合成[[合成器]]。}}
+|{{HistoryLine||1.21.0|dev=1.21.0.22|1.20.50.21中的变更不再属于[[实验性玩法]]。}}
+|{{HistoryLine||26.40|exg=y_2026_drop_3|dev=26.40.27|加入了废弃营地，工作台会作为其的一部分自然生成。}}
+|{{HistoryLine|console}}
+|{{HistoryLine||xbox=TU1|xbone=CU1|ps3=1.00|psvita=1.00|ps4=1.00|wiiu=Patch 1|switch=1.0.1|[[File:Crafting Table JE1 BE1.png|32px]] 加入了工作台。}}
+|{{HistoryLine||xbox=none|xbone=none|ps3=none|psvita=none|ps4=1.90|wiiu=none|switch=none|[[File:Crafting Table JE3 BE2.png|32px]] 更改了工作台的纹理。}}
+|{{HistoryLine|new 3ds}}
+|{{HistoryLine||0.1.0|[[File:Crafting Table JE1 BE1.png|32px]] 加入了工作台。}}
+}}
+
+== 你知道吗 ==
+{{split|section=1|徽标}}
+[[File:Java Edition icon 1.png|thumb|100px|right|alt=Java版原始的工作台图标|{{el|je}}客户端的旧图标]]
+* 从[[Java版1.6.1]]开始，Java版客户端的旧图标一直是工作台。
+** 在此之前，客户端图标是Java的图标。
+** [[Java版1.6.2|1.6.2]]的客户端图标被意外显示为LWJGL 2的缺省图标{{verify|java=1}}，类似于RubyDung中的版本。1.6.2后，图标被恢复。
+** 2023年6月7日，随着[[Java版1.20|1.20]]的发布，[[15w43a]]及以上所有版本的图标都被更新为风格化的草方块图标。
+* 在2010年1月29日前，最早的物品栏界面是工作台的，这意味着那时无法穿上[[盔甲]]，且玩家不能看到自己的形象。
+* 尽管工作台的原文在早期版本里就已经重命名为“Crafting Table”，仍有不少语言（包括中文在内）将其视为“Workbench”并加以翻译。
+
+== 画廊 ==
+<gallery>
+File:Crafting Table in Plains Fisher Cottage.png|自然生成在[[村庄]]渔夫小屋里的工作台
+File:MATTIS.jpg|原携带版的工作台界面，使用[[MATTIS]]系统，使用至Alpha 0.9.0
+File:New MATTIS 3x3.jpg|原[[携带版]]的工作台界面，使用[[MATTIS]]系统，使用至[[基岩版1.2.0.2]]
+File:Crafting Table LCE.png|[[原主机版]]中简化的合成界面
+File:AMCM_Garrett_using_Crafting_Table.png|[[A Minecraft Movie]]中，Garrett正在使用工作台
+File:Minecraft_Movie_Crafting_Table_Concept_Art.jpg|A Minecraft Movie中工作台的概念艺术
+</gallery>
+
+== 参考 ==
+{{Reflist}}
+
+== 导航 ==
+{{Navbox blocks|functional blocks}}
+
+[[Category:功能方块]]
+
+[[cs:Pracovní stůl]]
+[[de:Werkbank]]
+[[en:Crafting Table]]
+[[es:Mesa de trabajo]]
+[[fr:Établi]]
+[[hu:Barkácsasztal]]
+[[it:Banco da lavoro]]
+[[ja:作業台]]
+[[ko:제작대]]
+[[lzh:製物案]]
+[[nl:Werkbank]]
+[[pl:Stół rzemieślniczy]]
+[[pt:Bancada de Trabalho]]
+[[ru:Верстак]]
+[[th:โต๊ะคราฟต์]]
+[[uk:Верстак]]
