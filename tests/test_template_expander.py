@@ -192,3 +192,30 @@ class TestTimeoutBehavior:
         assert call_kwargs.kwargs.get("timeout") == 30 or (
             len(call_kwargs.args) >= 3 and 30 in call_kwargs.args
         )
+
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
+    def test_expand_template_name_value(self, MockSession):
+        """展开结果包含正确的 template_name"""
+        mock_instance = MockSession.return_value
+        mock_instance.post.return_value.json.return_value = {
+            "parse": {"text": {"*": '<div class="hatnote">test</div>'}}
+        }
+        mock_instance.post.return_value.status_code = 200
+
+        expander = TemplateExpander("zh")
+        result = expander.expand("{{Hatnote|some text}}")
+        assert result["template_name"] == "Hatnote"
+
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
+    def test_expand_colon_prefixed_template(self, MockSession):
+        """{{:Template:Name}} 前导冒号被正确剥离"""
+        mock_instance = MockSession.return_value
+        mock_instance.post.return_value.json.return_value = {
+            "parse": {"text": {"*": '<div class="hatnote">test</div>'}}
+        }
+        mock_instance.post.return_value.status_code = 200
+
+        expander = TemplateExpander("zh")
+        result = expander.expand("{{:Hatnote|text}}")
+        # 前导冒号应被剥离
+        assert result["template_name"] == "Hatnote"
