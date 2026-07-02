@@ -30,7 +30,6 @@ class MarkdownConverter:
         template_cache: dict | None = None,
         use_persistent_cache: bool = True,
     ):
-        self.expander = TemplateExpander(lang=lang)
         self.lang = lang
         self.max_workers = max_workers
         self._use_persistent_cache = use_persistent_cache
@@ -50,6 +49,11 @@ class MarkdownConverter:
         # 取消标志（convert_many 检查）
         self._cancelled = False
         self._cancel_lock = threading.Lock()
+        self.expander = TemplateExpander(
+            lang=lang,
+            template_cache=self._template_cache,
+            cache_lock=self._cache_lock,
+        )
 
     def cancel(self) -> None:
         """请求取消批量转换（仅 convert_many 有效）"""

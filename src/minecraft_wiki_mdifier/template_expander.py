@@ -4,7 +4,9 @@
 通过 MediaWiki API 展开模板，获取渲染后的HTML
 """
 
+import base64
 import logging
+import threading
 from collections.abc import Callable
 
 import requests  # noqa: F401
@@ -16,6 +18,12 @@ from minecraft_wiki_mdifier.formatters import MinecraftColorFormatter
 from minecraft_wiki_mdifier.wiki import LANG_CONFIG
 
 _logger = logging.getLogger(__name__)
+
+
+def _encode_cache_value(v: str) -> str:
+    """URL-safe base64 编码，避免分隔符冲突。"""
+    return base64.urlsafe_b64encode(v.encode("utf-8")).decode("ascii")
+
 
 # 格式检测器：(elem) -> 格式字符串 | None
 FormatDetector = Callable[[object], str | None]
@@ -32,12 +40,19 @@ FORMAT_DETECTORS: list[FormatDetector] = [
 class TemplateExpander:
     """模板展开器"""
 
-    def __init__(self, lang: str = "zh"):
+    def __init__(
+        self,
+        lang: str = "zh",
+        template_cache: dict | None = None,
+        cache_lock: threading.Lock | None = None,
+    ):
         validate_lang(lang)
         self.lang = lang
         self.api_url = LANG_CONFIG[lang]["api"]
         self.session = create_session()
         self.formatter = MinecraftColorFormatter()
+        self._template_cache = template_cache if template_cache is not None else {}
+        self._cache_lock = cache_lock if cache_lock is not None else threading.Lock()
 
     def expand(self, template_call: str, page_title: str | None = None) -> dict:
         """
@@ -56,7 +71,14 @@ class TemplateExpander:
                 "table": 表格数据（如果有的话）
             }
         """
-        return self._expand_via_parse(template_call)
+        cache_key = _encode_cache_value(template_call)
+        with self._cache_lock:
+            if cache_key in self._template_cache:
+                return self._template_cache[cache_key]
+        result = self._expand_via_parse(template_call)
+        with self._cache_lock:
+            self._template_cache[cache_key] = result
+        return result
 
     def _expand_via_parse(self, template_call: str) -> dict:
         """

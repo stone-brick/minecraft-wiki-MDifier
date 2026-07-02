@@ -1,5 +1,6 @@
 """测试 template_expander.py"""
 
+import threading
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -219,3 +220,99 @@ class TestTimeoutBehavior:
         result = expander.expand("{{:Hatnote|text}}")
         # 前导冒号应被剥离
         assert result["template_name"] == "Hatnote"
+
+
+class TestExpandCaching:
+    """TemplateExpander 缓存读写测试"""
+
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
+    def test_cache_hit_returns_cached_result_without_api_call(self, MockSession):
+        """第二次调用相同模板不发起新请求"""
+        mock_instance = MockSession.return_value
+        mock_instance.post.return_value.json.return_value = {
+            "parse": {"text": {"*": '<div class="hatnote">test</div>'}}
+        }
+        mock_instance.post.return_value.status_code = 200
+
+        shared_cache = {}
+        cache_lock = threading.Lock()
+        expander = TemplateExpander("zh", template_cache=shared_cache, cache_lock=cache_lock)
+
+        result1 = expander.expand("{{Hatnote|text}}")
+        assert mock_instance.post.call_count == 1
+
+        result2 = expander.expand("{{Hatnote|text}}")
+        assert mock_instance.post.call_count == 1
+        assert result2 == result1
+
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
+    def test_different_templates_have_separate_cache_entries(self, MockSession):
+        """不同模板调用分开缓存"""
+        mock_instance = MockSession.return_value
+        mock_instance.post.return_value.json.return_value = {
+            "parse": {"text": {"*": '<div class="hatnote">test</div>'}}
+        }
+
+        shared_cache = {}
+        cache_lock = threading.Lock()
+        expander = TemplateExpander("zh", template_cache=shared_cache, cache_lock=cache_lock)
+
+        expander.expand("{{Hatnote|A}}")
+        expander.expand("{{Hatnote|B}}")
+
+        assert mock_instance.post.call_count == 2
+        assert len(shared_cache) == 2
+
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
+    def test_cache_miss_calls_api_and_stores_result(self, MockSession):
+        """未命中时调 API 并缓存结果"""
+        mock_instance = MockSession.return_value
+        mock_instance.post.return_value.json.return_value = {
+            "parse": {"text": {"*": '<div class="hatnote">cached</div>'}}
+        }
+        mock_instance.post.return_value.status_code = 200
+
+        shared_cache = {}
+        cache_lock = threading.Lock()
+        expander = TemplateExpander("zh", template_cache=shared_cache, cache_lock=cache_lock)
+
+        expander.expand("{{Hatnote|value}}")
+
+        assert mock_instance.post.call_count == 1
+        assert len(shared_cache) == 1
+        stored = list(shared_cache.values())[0]
+        assert stored["text"] == "cached"
+
+    @patch("minecraft_wiki_mdifier.template_expander.requests.Session")
+    def test_concurrent_expands_share_cache(self, MockSession):
+        """两线程并发展开同一模板，cache 共享，结果一致"""
+        import threading as t_module
+
+        mock_instance = MockSession.return_value
+        mock_instance.post.return_value.json.return_value = {
+            "parse": {"text": {"*": '<div class="hatnote">concurrent</div>'}}
+        }
+
+        shared_cache = {}
+        cache_lock = threading.Lock()
+        expander = TemplateExpander("zh", template_cache=shared_cache, cache_lock=cache_lock)
+
+        results = [None, None]
+        errors = [None, None]
+
+        def worker(i):
+            try:
+                results[i] = expander.expand("{{Hatnote|shared}}")
+            except Exception as e:
+                errors[i] = e
+
+        t1 = t_module.Thread(target=worker, args=(0,))
+        t2 = t_module.Thread(target=worker, args=(1,))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        assert errors[0] is None and errors[1] is None
+        assert results[0] == results[1]
+        assert len(shared_cache) == 1
