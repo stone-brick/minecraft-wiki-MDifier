@@ -11,13 +11,69 @@ WikiText → pypandoc(commonmark_x+raw_attribute)
 """
 
 import re
+from urllib.parse import unquote
 
 import pypandoc
+import requests
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
 
 from minecraft_wiki_mdifier.template_expander import TemplateExpander
 from minecraft_wiki_mdifier.wiki import LANG_CONFIG
+
+# =============================================================================
+# 辅助函数
+# =============================================================================
+
+
+def _get_english_title(chinese_title: str, lang: str) -> str | None:
+    """
+    通过 langlinks API 获取页面的英文名称
+
+    Args:
+        chinese_title: 中文页面标题
+        lang: 语言代码
+
+    Returns:
+        英文标题，或 None（查询失败时）
+    """
+    if lang != "zh":
+        return None
+
+    api_url = LANG_CONFIG["zh"]["api"]
+    params = {
+        "action": "query",
+        "titles": chinese_title,
+        "prop": "langlinks",
+        "lllang": "en",
+        "format": "json",
+    }
+    try:
+        resp = requests.post(api_url, data=params, timeout=10)
+        data = resp.json()
+        pages = data.get("query", {}).get("pages", {})
+        for page in pages.values():
+            langlinks = page.get("langlinks", [])
+            for link in langlinks:
+                if link.get("lang") == "en":
+                    return link.get("*")
+    except Exception:
+        pass
+    return None
+
+
+def _has_table_data(expanded: dict) -> bool:
+    """检测展开结果是否包含实际表格数据（而非只有表头）"""
+    # 检查 HTML 中是否有 <td> 元素（数据单元格）来判断是否有真实数据
+    html = expanded.get("html", "")
+    if html and "<td" in html:
+        return True
+    # 回退：检查 table 是否有足够多行
+    table = expanded.get("table", [])
+    if table and len(table) > 2:
+        return True
+    return False
+
 
 # =============================================================================
 # 正则
@@ -41,6 +97,12 @@ _SPRITE_FILE_PATTERN = re.compile(
     re.DOTALL,
 )
 
+# 匹配引用标记 <sup class="reference">...</sup>
+_CITE_BRACKET_PATTERN = re.compile(
+    r'<sup[^>]*class="reference"[^>]*>.*?</sup>',
+    re.DOTALL,
+)
+
 # =============================================================================
 # 注册表（来自 v0.1.3 converter.py）
 # =============================================================================
@@ -61,33 +123,9 @@ TEMPLATE_RENDERERS: dict[str, str] = {
     "id table": "_render_id_table",
     "navbox items": "_render_navbox_items",
     "bv": "_render_bv",
-}
-
-# 已知需要驼峰转写的模板名（小写 → 正确名）
-# parser 提取时统一小写，但 MediaWiki 区分大小写
-CAMEL_CASE_TEMPLATES: dict[str, str] = {
-    "lootchestitem": "LootChestItem",
-    "archaeologylootitem": "ArchaeologyLootItem",
-    "itemlink": "ItemLink",
-    "craftingtable": "CraftingTable",
-    "droptable": "Droptable",
-    "lootchest": "LootChest",
-    "historytable": "HistoryTable",
-    "historyline": "HistoryLine",
-    "ilink": "ILink",
-    "columns-list": "Columns-list",
-    "columns list": "Columns-list",
-    "edition": "Edition",
-    "infobox item": "Infobox item",
-    "load achievements": "Load achievements",
-    "load advancements": "Load advancements",
-    "id table": "ID table",
-    "crafting usage": "Crafting usage",
-    "trade uses": "Trade uses",
-    "drop sources": "Drop sources",
-    "navbox items": "Navbox items",
-    "video note": "Video note",
-    "sound table/block/stone": "Sound table/block/stone",
+    "drop sources": "_render_table_grid",
+    "lootchestitem": "_render_table_grid",
+    "trade uses": "_render_table_grid",
 }
 
 # =============================================================================
@@ -148,6 +186,16 @@ def _replace_mediawiki_blocks(
             expanded_text = expanded.get("text", "")
             if expanded_text.startswith("[[:Template:") and expanded_text.endswith("]]"):
                 return match.group(0)
+
+            # Trade uses 空表格修复：尝试注入英文参数重试
+            tmpl_name = expanded.get("template_name", "").lower()
+            if tmpl_name == "trade uses" and not _has_table_data(expanded):
+                english_name = _get_english_title(page_title, lang)
+                if english_name:
+                    retried = expander.expand(f"{{{{Trade uses|{english_name}}}}}", page_title)
+                    if _has_table_data(retried):
+                        return _render_template_to_markdown(retried, lang)
+
             return _render_template_to_markdown(expanded, lang)
         except Exception:
             return match.group(0)
@@ -161,6 +209,16 @@ def _replace_mediawiki_blocks(
             expanded_text = expanded.get("text", "")
             if expanded_text.startswith("[[:Template:") and expanded_text.endswith("]]"):
                 return match.group(0)
+
+            # Trade uses 空表格修复（内联模板同理）
+            tmpl_name = expanded.get("template_name", "").lower()
+            if tmpl_name == "trade uses" and not _has_table_data(expanded):
+                english_name = _get_english_title(page_title, lang)
+                if english_name:
+                    retried = expander.expand(f"{{{{Trade uses|{english_name}}}}}", page_title)
+                    if _has_table_data(retried):
+                        return _render_template_to_markdown(retried, lang)
+
             return _render_template_to_markdown(expanded, lang)
         except Exception:
             return match.group(0)
@@ -221,8 +279,8 @@ def _render_template_table(expanded: dict, lang: str) -> str:
     """渲染模板表格为 Markdown（v0.1.3 逻辑）"""
 
     def format_cell(cell: str) -> str:
-        """格式化单元格：换行转为 <br/>"""
-        return str(cell).replace("\n", "<br/>")
+        """格式化单元格：转义 | 和换行"""
+        return str(cell).replace("\n", "<br/>").replace("|", "\\|")
 
     table = expanded.get("table", [])
     if not table:
@@ -240,6 +298,195 @@ def _render_template_table(expanded: dict, lang: str) -> str:
     if not name:
         return "\n".join(lines)
     return _wrap_template(name, "\n".join(lines))
+
+
+def _get_cell_text(td) -> str:
+    """获取单元格的纯文本，移除引用标记"""
+    html = str(td)
+    html = _CITE_BRACKET_PATTERN.sub("", html)
+    soup = BeautifulSoup(html, "html.parser")
+    return soup.get_text(separator=" / ", strip=True)
+
+
+def _render_table_grid(expanded: dict, lang: str) -> str:
+    """
+    统一渲染表格，支持 rowspan 和 colspan 同时存在
+
+    算法：虚拟网格放置法
+    - 多行表头：合并为展平的列定义
+    - 数据行：按 col_state 跳过被 rowspan 占据的列
+    - colspan > 1 的单元格占用多个列位置
+    """
+    html = expanded.get("html", "")
+    if not html:
+        return expanded.get("text", "")
+
+    soup = BeautifulSoup(html, "html.parser")
+    table = soup.find("table")
+    if not table:
+        return _render_html_generic(expanded, lang)
+
+    # 1. 解析所有行（BeautifulSoup 元素）
+    all_trs = table.find_all("tr")
+    if not all_trs:
+        return _render_html_generic(expanded, lang)
+
+    # 2. 分离表头行和数据行
+    header_trs = []
+    data_trs = []
+    for tr in all_trs:
+        ths = tr.find_all("th")
+        tds = tr.find_all("td")
+        if ths and not tds:
+            header_trs.append(ths)
+        elif tds:
+            data_trs.append(tds)
+
+    if not header_trs:
+        return _render_html_generic(expanded, lang)
+
+    # 3. 建立列定义
+    col_defs = _build_col_defs(header_trs)
+
+    # 4. 渲染数据行
+    col_state = {}  # col_index -> (text, remaining_rows)
+    rendered_rows = []
+
+    for tds in data_trs:
+        row_cells = []
+        for td in tds:
+            row_cells.append(
+                {
+                    "text": _get_cell_text(td),
+                    "colspan": int(td.get("colspan", 1)),
+                    "rowspan": int(td.get("rowspan", 1)),
+                }
+            )
+        rendered_row, col_state = _place_row_cells(row_cells, col_defs, col_state)
+        rendered_rows.append(rendered_row)
+
+    # 5. 生成 Markdown
+    lines = []
+    header_cells = [d["text"] for d in col_defs]
+    lines.append("| " + " | ".join(header_cells) + " |")
+    lines.append("| " + " | ".join(["---"] * len(col_defs)) + " |")
+
+    for row in rendered_rows:
+        cells = [c.replace("\n", "<br/>").replace("|", "\\|") for c in row]
+        lines.append("| " + " | ".join(cells) + " |")
+
+    name = expanded.get("template_name") or expanded.get("class")
+    if not name:
+        return "\n".join(lines)
+    return _wrap_template(name, "\n".join(lines))
+
+
+def _build_col_defs(header_trs) -> list[dict]:
+    """
+    从多行表头构建列定义
+
+    算法：
+    - 遍历每一行（非最后一行），按 colspan 展开为 N 个列
+    - 每个展开后的列使用子行中对应的标签
+    - rowspan>1 作为 1 列（后续行显示空）
+    """
+    if len(header_trs) == 1:
+        # 单行表头
+        col_defs = []
+        for th in header_trs[0]:
+            text = th.get_text(strip=True)
+            col_defs.append({"text": text})
+        return col_defs
+
+    # 多行表头：建立列定义
+    # 子行标签（最后一行）提供每个实际列的标签
+    last_row = header_trs[-1]
+    sub_labels = [th.get_text(strip=True) for th in last_row]
+
+    col_defs = []
+    sub_idx = 0
+
+    for row in header_trs[:-1]:
+        for th in row:
+            rowspan = int(th.get("rowspan", 1))
+            colspan = int(th.get("colspan", 1))
+            parent_text = th.get_text(strip=True)
+
+            if rowspan > 1:
+                # rowspan>1：作为 1 列（后续行显示空）
+                col_defs.append({"text": parent_text})
+                sub_idx += 1  # 占据子行中的 1 列
+                continue
+
+            if colspan > 1:
+                # colspan>1：展开为 N 个列，每个使用子行的对应标签
+                for _ in range(colspan):
+                    sub_text = sub_labels[sub_idx] if sub_idx < len(sub_labels) else ""
+                    sub_idx += 1
+                    if sub_text:
+                        col_defs.append({"text": f"{parent_text}({sub_text})"})
+                    else:
+                        col_defs.append({"text": parent_text})
+            else:
+                sub_text = sub_labels[sub_idx] if sub_idx < len(sub_labels) else ""
+                sub_idx += 1
+                if sub_text:
+                    col_defs.append({"text": f"{parent_text}({sub_text})"})
+                else:
+                    col_defs.append({"text": parent_text})
+
+    return col_defs
+
+
+def _place_row_cells(row_cells: list, col_defs: list, col_state: dict) -> tuple[list[str], dict]:
+    """
+    将数据单元格放置到网格中
+
+    1. 从左到右扫描，按 col_state 跳过被 rowspan 占据的列
+    2. 将单元格按 colspan 占据多个列
+    3. 每行结束后统一缩减所有 rowspan remaining
+    """
+    num_cols = len(col_defs)
+    placed = [""] * num_cols
+    col_idx = 0
+    cell_idx = 0
+
+    while col_idx < num_cols and cell_idx < len(row_cells):
+        if col_idx in col_state:
+            # 该列被 rowspan 占据，跳过
+            col_idx += 1
+            continue
+
+        cell = row_cells[cell_idx]
+        cell_idx += 1
+
+        # 先检查并跳过所有被占据的列
+        while col_idx < num_cols and col_idx in col_state:
+            col_idx += 1
+        if col_idx >= num_cols:
+            break
+
+        # 占据 colspan 个列
+        for offset in range(cell["colspan"]):
+            if col_idx + offset >= num_cols:
+                break
+            # offset == 0 时放置文本，offset > 0 时留空
+            placed[col_idx + offset] = cell["text"] if offset == 0 else ""
+
+        # 更新 col_state：标记所有被占据的列（remaining 不在这里缩减）
+        if cell["rowspan"] > 1:
+            for c in range(col_idx, min(col_idx + cell["colspan"], num_cols)):
+                col_state[c] = (cell["text"], cell["rowspan"] - 1)
+        col_idx += cell["colspan"]
+
+    # 每行结束后，统一缩减所有 rowspan remaining
+    new_state = {}
+    for c, (text, remaining) in col_state.items():
+        if remaining >= 1:
+            new_state[c] = (text, remaining - 1)
+    col_state = new_state
+
+    return placed, col_state
 
 
 def _render_html_generic(expanded: dict, lang: str) -> str:
@@ -260,6 +507,9 @@ def _render_html_generic(expanded: dict, lang: str) -> str:
     static_base = LANG_CONFIG[lang]["static_base"]
     rendered = rendered.replace("/images/", f"{static_base}/images/")
     rendered = rendered.replace("/w/", f"{static_base}/w/")
+
+    # 解码 URL 中的百分号编码（如 %E9%93%81 -> 铁）
+    rendered = unquote(rendered)
 
     name = expanded.get("template_name") or expanded.get("class")
     if not name:
@@ -389,8 +639,8 @@ def _render_id_table(info: dict, lang: str) -> str:
         return _wrap_template("ID table", text) if text else ""
 
     def format_cell(cell: str) -> str:
-        """格式化单元格：换行转为 <br/>"""
-        return str(cell).replace("\n", "<br/>")
+        """格式化单元格：转义 | 和换行"""
+        return str(cell).replace("\n", "<br/>").replace("|", "\\|")
 
     lines = []
     for row in table:
@@ -436,6 +686,18 @@ def _render_navbox_items(info: dict, lang: str) -> str:
             elif th_class and "navbox-middle" not in th_class and elem.name == "th":
                 lines.append(f"*{text}*")
             elif elem.name == "li":
+                # 跳过 Wikipedia 标准顶级导航链接（查/论/编等单字）
+                if len(text) <= 2 and text in (
+                    "查",
+                    "论",
+                    "编",
+                    "阅",
+                    "历",
+                    "View",
+                    "Discuss",
+                    "Edit",
+                ):
+                    continue
                 lines.append(f"- {text}")
 
         if lines:
@@ -551,6 +813,14 @@ def _strip_mediawiki_syntax(text: str) -> str:
     text = re.sub(r"!\[\]\(\)", "", text)
     # 清理 mediawiki 标记残留
     text = re.sub(r"`\{=mediawiki\}`", "", text)
+    # 简化 interwiki 链接：[cs:Title](cs:Title) → [cs:Title]
+    # 简化 interwiki 链接并补全为完整 URL
+    # [cs:Železný ingot](cs:Železný_ingot) → [cs:Železný ingot](https://cs.minecraft.wiki/Železný_ingot)
+    text = re.sub(
+        r"\[([a-z]{2,3}):([^\]]+)\]\([a-z]{2,3}:([^\)]+)\)",
+        lambda m: f"[{m.group(1)}:{m.group(2)}](https://{m.group(1)}.minecraft.wiki/{m.group(3)})",
+        text,
+    )
     return text
 
 
