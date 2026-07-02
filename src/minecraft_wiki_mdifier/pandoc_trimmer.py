@@ -126,6 +126,7 @@ TEMPLATE_RENDERERS: dict[str, str] = {
     "drop sources": "_render_table_grid",
     "lootchestitem": "_render_table_grid",
     "trade uses": "_render_table_grid",
+    "droptable": "_render_droptable",
 }
 
 # =============================================================================
@@ -379,6 +380,88 @@ def _render_table_grid(expanded: dict, lang: str) -> str:
     if not name:
         return "\n".join(lines)
     return _wrap_template(name, "\n".join(lines))
+
+
+# HTML 引用脚注提取正则：提取 cite_note-xxx-N 对应的脚注文本
+_DROPTABLE_REF_PATTERN = re.compile(
+    r'<li id="cite_note-([^"]+)"[^>]*>.*?<span class="reference-text">(.*?)</span>',
+    re.DOTALL,
+)
+
+
+def _render_droptable(expanded: dict, lang: str) -> str:
+    """
+    渲染 DropTable 模板为 Markdown，同时保留掉落注释脚注。
+
+    action=parse 返回的 HTML 中，droptable-references div 包含脚注内容。
+    我们先用 markdownify 渲染表格 HTML，再提取脚注并生成 Markdown 脚注。
+    """
+    # 优先使用 raw_html（含 references div），否则降级到 html
+    html = expanded.get("raw_html") or expanded.get("html", "")
+
+    # 提取脚注：key → label + text
+    # 注意：raw_html 包含多个版本（Java/Bedrock）的 DropTable，
+    # 但脚注内容相同，只保留 base_key（如 random_disc）去重
+    footnotes: dict[str, tuple[str, str]] = {}  # cite_key → (label, text)
+    seen_base: set[str] = set()  # 记录已处理的 base_key（如 random_disc）
+    for m in _DROPTABLE_REF_PATTERN.finditer(html):
+        cite_key = m.group(1)  # 如 random_disc-1
+        raw_text = m.group(2).strip()
+        # 解码 HTML 实体
+        text_soup = BeautifulSoup(raw_text, "html.parser")
+        text = text_soup.get_text(separator=" ", strip=True)
+        # base_key = cite_key 去掉尾部序号（如 random_disc-1 → random_disc）
+        parts = cite_key.rsplit("-", 1)
+        base_key = parts[0] if len(parts) == 2 and parts[1].isdigit() else cite_key
+        if base_key not in seen_base:
+            seen_base.add(base_key)
+            footnotes[cite_key] = (chr(64 + len(footnotes) + 1), text)
+
+    # 用 markdownify 渲染 tabber div（去除 references 避免干扰）
+    soup = BeautifulSoup(html, "html.parser")
+    for ref_div in soup.find_all("div", class_="droptable-references"):
+        ref_div.decompose()
+    for style in soup.find_all("style"):
+        style.decompose()
+
+    # 移除 sprite-file span（干扰 markdownify）
+    html_clean = _SPRITE_FILE_PATTERN.sub("", str(soup))
+    rendered = md(html_clean, heading_style="atx", bullet_char="-")
+
+    # 替换相对路径
+    static_base = LANG_CONFIG[lang]["static_base"]
+    rendered = rendered.replace("/images/", f"{static_base}/images/")
+    rendered = rendered.replace("/w/", f"{static_base}/w/")
+    rendered = unquote(rendered)
+
+    # 转换 Pandoc 风格的 [[A]](cite_note-xxx) 或 [A](cite_note-xxx) 为 [^A]
+    def replace_ref(m):
+        # m.group(1) 是链接文本（如 A），m.group(2) 是 cite_key（如 random_disc-1）
+        cite_id = m.group(2)
+        parts = cite_id.rsplit("-", 1)
+        base_key = parts[0] if len(parts) == 2 and parts[1].isdigit() else cite_id
+        # 查找 base_key 对应的 label
+        for key, (label, _) in footnotes.items():
+            if key.startswith(base_key):
+                return f"[^{label}]"
+        return m.group(0)  # 未找到则保留原样
+
+    # 支持 [[A]](cite_note-xxx) 和 [A](cite_note-xxx) 两种格式
+    rendered = re.sub(r"\[+([^\]]*?)\]+\(#cite_note-([^)]+)\)", replace_ref, rendered)
+
+    # 生成脚注
+    footnote_lines = []
+    for _cite_key, (label, text) in footnotes.items():
+        footnote_lines.append(f"[^{label}]: {text}")
+
+    if footnote_lines:
+        rendered = rendered.rstrip() + "\n\n" + "\n".join(footnote_lines) + "\n"
+
+    name = expanded.get("template_name") or expanded.get("class")
+    if name:
+        rendered = _wrap_template(name, rendered)
+
+    return rendered
 
 
 def _build_col_defs(header_trs) -> list[dict]:

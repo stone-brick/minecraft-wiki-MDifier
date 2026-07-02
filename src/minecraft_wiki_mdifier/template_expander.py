@@ -153,6 +153,7 @@ class TemplateExpander:
         if elem is None:
             return {
                 "html": html,
+                "raw_html": html,
                 "class": None,
                 "text": soup.get_text(strip=True),
                 "format": "text",
@@ -173,6 +174,11 @@ class TemplateExpander:
             "table": None,
             "template_name": template_name,
         }
+
+        # 对于 DropTable 等特殊模板，保留完整 HTML（含脚注 references）
+        # container 可能比 elem（tabber div）更外层，包含 droptable-references
+        if container and str(container) != str(elem):
+            result["raw_html"] = str(container)
 
         if fmt in ("infobox_table", "table", "mcui"):
             result["table"] = self._parse_table(elem, fmt, infobox_json)
