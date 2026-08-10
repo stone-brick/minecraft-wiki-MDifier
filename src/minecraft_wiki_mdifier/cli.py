@@ -14,6 +14,13 @@ from pathlib import Path
 
 import click
 
+from minecraft_wiki_mdifier.config import (
+    CONFIG_KEYS,
+    CONFIG_PATH,
+    get_config_source,
+    load_config,
+    save_config,
+)
 from minecraft_wiki_mdifier.converter import MarkdownConverter
 from minecraft_wiki_mdifier.exceptions import FetchError, InvalidInputError, PageNotFoundError
 from minecraft_wiki_mdifier.lib import convert, convert_detailed, convert_many, search
@@ -68,12 +75,12 @@ def main():
     "--variant",
     type=str,
     default=None,
-    help="语言变体（如 zh-cn、zh-tw、zh-hk；None 则使用 lang 默认值）",
+    help="语言变体（如 zh-cn、zh-tw、zh-hk；None 则使用配置文件默认值）",
 )
 def convert_cmd(
     title_or_url: str,
     output: str | None,
-    lang: str,
+    lang: str | None,
     detail: bool,
     variant: str | None,
 ):
@@ -88,11 +95,14 @@ def convert_cmd(
         mdifier convert "铁锭" --detail     # 完整 JSON 输出
         mdifier convert "https://zh.minecraft.wiki/铁锭"
     """
+    cfg = load_config()
+    resolved_lang = lang if lang is not None else cfg.get("lang", "zh")
+    resolved_variant = variant if variant is not None else cfg.get("variant")
     try:
         if detail:
             import json
 
-            result = convert_detailed(title_or_url, lang=lang, variant=variant)
+            result = convert_detailed(title_or_url, lang=resolved_lang, variant=resolved_variant)
             content = json.dumps(
                 {
                     "title": result.title,
@@ -104,7 +114,7 @@ def convert_cmd(
                 indent=2,
             )
         else:
-            content = convert(title_or_url, lang=lang, variant=variant)
+            content = convert(title_or_url, lang=resolved_lang, variant=resolved_variant)
 
         if output:
             try:
@@ -147,19 +157,21 @@ def convert_cmd(
     "-l",
     "--lang",
     type=click.Choice(LANGUAGES, case_sensitive=False),
-    default="zh",
-    help="语言（默认 zh）",
+    default=None,
+    help="语言（None 则使用配置文件默认值）",
 )
 @click.option("-n", "--num", type=int, default=10, help="返回结果数量（默认 10）")
-def search_cmd(query: str, lang: str, num: int):
+def search_cmd(query: str, lang: str | None, num: int):
     """
     搜索Wiki页面
 
     示例:
         mdifier search "钻石"
     """
+    cfg = load_config()
+    resolved_lang = lang if lang is not None else cfg.get("lang", "zh")
     try:
-        results = search(query, lang=lang)[:num]
+        results = search(query, lang=resolved_lang)[:num]
 
         if not results:
             click.echo("未找到结果")
@@ -200,23 +212,25 @@ def search_cmd(query: str, lang: str, num: int):
     "-l",
     "--lang",
     type=click.Choice(LANGUAGES, case_sensitive=False),
-    default="zh",
-    help="默认语言（默认 zh）",
+    default=None,
+    help="默认语言（None 则使用配置文件默认值）",
 )
 @click.option(
     "--variant",
     type=str,
     default=None,
-    help="语言变体（如 zh-cn、zh-tw、zh-hk；None 则使用 lang 默认值）",
+    help="语言变体（如 zh-cn、zh-tw、zh-hk；None 则使用配置文件默认值）",
 )
 @click.option(
     "-o",
     "--output-dir",
     type=click.Path(file_okay=False),
     default=None,
-    help="输出目录；为 None 则打印到 stdout",
+    help="输出目录；None 则打印到 stdout",
 )
-@click.option("--workers", type=int, default=4, help="跨页并发抓取数")
+@click.option(
+    "--workers", type=int, default=None, help="跨页并发抓取数（None 则使用配置文件默认值）"
+)
 @click.option("--no-progress", is_flag=True, default=False, help="禁用进度条")
 @click.option(
     "--marker-format", default=None, help="自定义模板标记，格式 'open/close'，如 ':::{name}:::/:::'"
@@ -243,12 +257,17 @@ def batch_cmd(
         mdifier batch -i pages.txt -o ./out --workers 8
         mdifier batch --from-search "红石" --search-limit 30 -o ./out
     """
+    cfg = load_config()
+    resolved_lang = lang if lang is not None else cfg.get("lang", "zh")
+    resolved_variant = variant if variant is not None else cfg.get("variant")
+    resolved_workers = workers if workers is not None else cfg.get("workers", 4)
+    resolved_output_dir = output_dir if output_dir is not None else cfg.get("output_dir")
     try:
         items: list[str] = list(titles)
         if input_file:
             items.extend(_read_titles_file(input_file))
         if from_search:
-            items.extend(r["title"] for r in search(from_search, lang=lang)[:search_limit])
+            items.extend(r["title"] for r in search(from_search, lang=resolved_lang)[:search_limit])
         if not items:
             click.secho("错误: 没有提供任何标题（用 -t / -i / --from-search）", fg="red", err=True)
             sys.exit(EXIT_USAGE)
@@ -290,13 +309,13 @@ def batch_cmd(
             converter_factory = _make_converter
         result = convert_many(
             deduped,
-            lang=lang,
-            variant=variant,
-            max_workers=workers,
+            lang=resolved_lang,
+            variant=resolved_variant,
+            max_workers=resolved_workers,
             on_progress=progress,
             converter_factory=converter_factory,
         )
-        _emit_results(result, output_dir)
+        _emit_results(result, resolved_output_dir)
 
         # 报告未展开的模板
         if result.unresolved:
@@ -320,6 +339,93 @@ def batch_cmd(
     except Exception as e:
         click.secho(f"未知错误: {e}", fg="red", err=True)
         sys.exit(EXIT_SOFTWARE)
+
+
+@main.group()
+def config():
+    """查看和管理持久化配置"""
+
+
+@config.command(name="list")
+def config_list_cmd():
+    """列出所有配置项及来源（default / file / env）"""
+    cfg = load_config()
+    sources = get_config_source()
+    for key in CONFIG_KEYS:
+        val = cfg.get(key)
+        src = sources.get(key, "default")
+        src_label = {"default": "默认值", "file": "文件", "env": "环境变量"}[src]
+        if val is None:
+            display = "<未设置>"
+        elif isinstance(val, bool):
+            display = str(val)
+        else:
+            display = str(val)
+        click.echo(f"{key:<20} {display:<30} # {src_label}")
+
+
+@config.command(name="get")
+@click.argument("key", type=click.Choice(list(CONFIG_KEYS.keys()), case_sensitive=False))
+def config_get_cmd(key: str):
+    """读取指定配置项的值"""
+    cfg = load_config()
+    sources = get_config_source()
+    val = cfg.get(key)
+    if val is None:
+        click.echo("<未设置>")
+    else:
+        click.echo(val)
+    # 同时显示来源，方便调试
+    src = sources.get(key, "default")
+    src_label = {"default": "默认值", "file": "文件", "env": "环境变量"}[src]
+    click.echo(f"# 来源: {src_label}", err=True)
+
+
+@config.command(name="set")
+@click.argument("key", type=click.Choice(list(CONFIG_KEYS.keys()), case_sensitive=False))
+@click.argument("value", type=str)
+def config_set_cmd(key: str, value: str):
+    """设置配置项（类型自动推断：4 → int，true → bool，其他 → string）"""
+    try:
+        save_config(key, value)
+        cfg = load_config()
+        click.secho(f"✓ {key} = {cfg.get(key)}", fg="green")
+    except Exception as e:
+        click.secho(f"设置失败: {e}", fg="red", err=True)
+        sys.exit(EXIT_IOERR)
+
+
+@config.command(name="path")
+def config_path_cmd():
+    """显示配置文件路径"""
+    click.echo(CONFIG_PATH)
+
+
+@config.command(name="edit")
+def config_edit_cmd():
+    """用默认编辑器打开配置文件"""
+    import os
+    import subprocess
+
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not CONFIG_PATH.exists():
+        CONFIG_PATH.write_text("[defaults]\n", encoding="utf-8")
+    editor = os.getenv("EDITOR") or os.getenv("VISUAL")
+    if not editor:
+        # 尝试常见的编辑器
+        for candidate in ("code", "vim", "nano", "notepad"):
+            if subprocess.call(f"where {candidate} >NUL 2>&1", shell=True) == 0:
+                editor = candidate
+                break
+    if not editor:
+        click.secho("未设置 EDITOR/VISUAL 环境变量，请手动编辑:", fg="yellow", err=True)
+        click.echo(CONFIG_PATH, err=True)
+        sys.exit(EXIT_CONFIG)
+    try:
+        subprocess.run([editor, str(CONFIG_PATH)], check=True)
+    except subprocess.CalledProcessError as e:
+        click.secho(f"编辑器启动失败: {e}", fg="red", err=True)
+        sys.exit(EXIT_IOERR)
 
 
 @main.group()

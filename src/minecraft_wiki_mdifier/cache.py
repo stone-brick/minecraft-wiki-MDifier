@@ -8,13 +8,14 @@
 """
 
 import json
+import os
 import time
 from datetime import UTC
 from pathlib import Path
 
 from minecraft_wiki_mdifier.exceptions import CacheError
 
-CACHE_DIR = Path.home() / ".cache" / "mdifier"
+CACHE_DIR = Path(os.getenv("MDIFFER_CACHE_DIR", Path.home() / ".cache" / "mdifier"))
 CACHE_FILE = CACHE_DIR / "templates.json"
 
 # 缓存有效期（7 天，wiki 内容会更新）

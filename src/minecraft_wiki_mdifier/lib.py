@@ -11,9 +11,13 @@ from itertools import count
 
 from minecraft_wiki_mdifier._validators import validate_lang
 from minecraft_wiki_mdifier.cache import get_or_load_persistent_cache, save_cache
+from minecraft_wiki_mdifier.config import load_config
 from minecraft_wiki_mdifier.converter import MarkdownConverter
 from minecraft_wiki_mdifier.exceptions import InvalidInputError
 from minecraft_wiki_mdifier.wiki import WikiFetcher, WikiPage, parse_url
+
+# 模块级配置（进程生命周期内缓存一次）
+_config = load_config()
 
 
 @dataclass
@@ -57,10 +61,10 @@ def convert(
 
     Args:
         title_or_url: 页面标题或完整URL
-        lang: 语言，'zh'或'en'，None则自动检测
+        lang: 语言，'zh'或'en'，None则使用配置文件默认值
         template_cache: 跨调用共享的模板缓存（None 则新建空 dict）
             不会自动持久化到磁盘（用 convert_many 才有）
-        variant: 语言变体（None 则使用 lang 对应的默认变体）
+        variant: 语言变体（None 则使用配置文件默认值）
 
     Returns:
         Markdown格式字符串
@@ -75,8 +79,12 @@ def convert(
         >>> convert("钻石", template_cache=shared)
         >>> convert("铁锭", template_cache=shared)  # 共享
     """
-    page, lang = _resolve_and_fetch(title_or_url, lang)
-    converter = MarkdownConverter(lang=lang, variant=variant, template_cache=template_cache)
+    resolved_lang = lang if lang is not None else _config.get("lang", "zh")
+    resolved_variant = variant if variant is not None else _config.get("variant")
+    page, _ = _resolve_and_fetch(title_or_url, resolved_lang)
+    converter = MarkdownConverter(
+        lang=resolved_lang, variant=resolved_variant, template_cache=template_cache
+    )
     result = converter.convert_wiki(page)
     converter.flush_cache()
     return result
@@ -92,8 +100,8 @@ def convert_detailed(
 
     Args:
         title_or_url: 页面标题或完整URL
-        lang: 语言，'zh'或'en'，None则自动检测
-        variant: 语言变体（None 则使用 lang 对应的默认变体）
+        lang: 语言，'zh'或'en'，None则使用配置文件默认值
+        variant: 语言变体（None 则使用配置文件默认值）
 
     Returns:
         ConvertResult对象，包含标题、Markdown、来源和模板数据
@@ -105,8 +113,10 @@ def convert_detailed(
         >>> print(result.markdown)
         >>> print(result.templates)
     """
-    page, lang = _resolve_and_fetch(title_or_url, lang)
-    converter = MarkdownConverter(lang=lang, variant=variant)
+    resolved_lang = lang if lang is not None else _config.get("lang", "zh")
+    resolved_variant = variant if variant is not None else _config.get("variant")
+    page, _ = _resolve_and_fetch(title_or_url, resolved_lang)
+    converter = MarkdownConverter(lang=resolved_lang, variant=resolved_variant)
     markdown = converter.convert_wiki(page)
     return ConvertResult(
         title=page.title,
@@ -139,9 +149,9 @@ def _convert_one(converter: MarkdownConverter, page: WikiPage | None, title: str
 
 def convert_many(
     items: list[str],
-    lang: str = "zh",
+    lang: str | None = None,
     variant: str | None = None,
-    max_workers: int = 4,
+    max_workers: int | None = None,
     on_progress: Callable[[int, int, str], None] | None = None,
     template_cache: dict | None = None,
     converter_factory: Callable[[str, str | None, dict | None], MarkdownConverter] | None = None,
@@ -151,9 +161,9 @@ def convert_many(
 
     Args:
         items: 标题或 URL 列表（可混合）
-        lang: 默认语言
-        variant: 语言变体（None 则使用 lang 对应的默认变体）
-        max_workers: 跨页并发抓取数
+        lang: 默认语言，None 则使用配置文件默认值
+        variant: 语言变体，None 则使用配置文件默认值
+        max_workers: 跨页并发抓取数，None 则使用配置文件默认值
         on_progress: 进度回调 (done, total, title)
         template_cache: 跨批次共享的模板缓存（None 则内部新建）
         converter_factory: 自定义 converter 工厂 (lang, variant, cache) -> MarkdownConverter
@@ -175,7 +185,10 @@ def convert_many(
         >>> threading.Timer(0.5, c.cancel).start()
         >>> convert_many(['钻石'], converter_factory=lambda l, v, cache: c)
     """
-    validate_lang(lang)
+    resolved_lang = lang if lang is not None else _config.get("lang", "zh")
+    resolved_variant = variant if variant is not None else _config.get("variant")
+    resolved_workers = max_workers if max_workers is not None else _config.get("workers", 4)
+    validate_lang(resolved_lang)
 
     # 1. 归一化输入：URL → (lang, title)
     parsed: list[tuple[str, str]] = []
@@ -185,7 +198,7 @@ def convert_many(
             # 始终使用 URL 中解析出的语言（URL 语言优先于 --lang 参数）
             parsed.append((parsed_lang, title))
         else:
-            parsed.append((lang, item))
+            parsed.append((resolved_lang, item))
 
     # 2. 按 lang 分组
     by_lang: dict[str, list[tuple[int, str]]] = {}
@@ -210,11 +223,11 @@ def convert_many(
         fetcher = WikiFetcher(lang=group_lang)
         # 用用户工厂或默认工厂创建 converter
         cache = template_cache if template_cache is not None else get_or_load_persistent_cache()
-        converter = factory(group_lang, variant, cache)
+        converter = factory(group_lang, resolved_variant, cache)
         titles = [t for _, t in group]
 
         # 跨页并发抓取
-        pages = fetcher.fetch_many(titles, max_workers=max_workers)
+        pages = fetcher.fetch_many(titles, max_workers=resolved_workers)
 
         # 跨页并发转换（每页 1 线程，模板展开内部有 10 workers）
         with ThreadPoolExecutor(max_workers=2) as ex:
@@ -254,13 +267,13 @@ def convert_many(
     )
 
 
-def search(query: str, lang: str = "zh") -> list[dict]:
+def search(query: str, lang: str | None = None) -> list[dict]:
     """
     搜索Minecraft Wiki页面
 
     Args:
         query: 搜索关键词
-        lang: 语言，'zh' 或 'en'
+        lang: 语言，None 则使用配置文件默认值
 
     Returns:
         搜索结果列表，每项包含title、description、url
@@ -271,7 +284,8 @@ def search(query: str, lang: str = "zh") -> list[dict]:
         >>> for r in results:
         >>>     print(r['title'])
     """
-    fetcher = WikiFetcher(lang=lang)
+    resolved_lang = lang if lang is not None else _config.get("lang", "zh")
+    fetcher = WikiFetcher(lang=resolved_lang)
     return fetcher.search(query)
 
 
