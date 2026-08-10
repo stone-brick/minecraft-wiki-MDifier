@@ -220,8 +220,8 @@ md = convert("铁锭", variant="zh-tw")  # 繁体
 
 # 详细模式
 result = convert_detailed("铁锭")
-print(result.title)      # 页面标题
-print(result.source)     # "api" 或 "html"
+print(result.title)  # 页面标题
+print(result.source)  # "api" 或 "html"
 print(result.templates)  # 模板数据 dict
 
 # 批量转换
@@ -255,9 +255,9 @@ for r in results[:5]:
 
 ```python
 items = [
-    "钻石",                                      # zh
-    "https://minecraft.wiki/wiki/Diamond",      # en（URL 识别）
-    "Iron Ingot",                                # 使用默认 lang
+    "钻石",  # zh
+    "https://minecraft.wiki/wiki/Diamond",  # en（URL 识别）
+    "Iron Ingot",  # 使用默认 lang
 ]
 result = convert_many(items, lang="zh")
 ```
@@ -270,8 +270,8 @@ result = convert_many(items, lang="zh")
 from minecraft_wiki_mdifier.converter import MarkdownConverter
 
 c = MarkdownConverter()
-c.template_marker_open = '<details><summary>{name}</summary>'
-c.template_marker_close = '</details>'
+c.template_marker_open = "<details><summary>{name}</summary>"
+c.template_marker_close = "</details>"
 ```
 
 CLI 端用 `--marker-format`：
@@ -287,22 +287,21 @@ mdifier batch -t 钻石 --marker-format '<details><summary>{name}</summary></det
 import threading
 from minecraft_wiki_mdifier.converter import MarkdownConverter
 
-c = MarkdownConverter(lang='zh')
+c = MarkdownConverter(lang="zh")
 threading.Timer(0.5, c.cancel).start()  # 0.5 秒后取消
 
-convert_many(['钻石', '铁锭', '附魔台'],
-             converter_factory=lambda l, cache: c)
+convert_many(["钻石", "铁锭", "附魔台"], converter_factory=lambda l, cache: c)
 
-print(c.is_cancelled())       # True
-print(c.unresolved_templates) # frozenset({'HistoryTable', ...})
+print(c.is_cancelled())  # True
+print(c.unresolved_templates)  # frozenset({'HistoryTable', ...})
 ```
 
 ### 跨调用共享缓存
 
 ```python
 shared = {}
-convert("钻石", template_cache=shared)   # 24 条模板展开
-convert("铁锭", template_cache=shared)   # 增量 17 条，24 条共享
+convert("钻石", template_cache=shared)  # 24 条模板展开
+convert("铁锭", template_cache=shared)  # 增量 17 条，24 条共享
 ```
 
 注意：`template_cache` 参数是进程内共享，不写盘；磁盘缓存（`~/.cache/mdifier/`）跨进程共享。
