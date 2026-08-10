@@ -85,6 +85,15 @@ mdifier convert "https://minecraft.wiki/wiki/Iron_Ingot"
 mdifier search "钻石"
 mdifier search "diamond" --lang en
 
+# 语言变体（繁体/简体）
+mdifier convert "铁锭" --variant zh-tw    # 繁体
+mdifier convert "铁锭" --variant zh-cn    # 简体（默认）
+
+# 持久化配置
+mdifier config list             # 查看所有配置项
+mdifier config set variant zh-tw  # 设置默认变体
+mdifier config path             # 配置文件路径
+
 # 批量转换
 mdifier batch -t 钻石 -t 铁锭 -o ./out
 mdifier batch -i pages.txt -o ./out --workers 8
@@ -138,8 +147,9 @@ mdifier convert "TITLE_OR_URL" [-o OUTPUT] [--lang {zh|en|ja}] [--detail]
 | 选项             | 说明                                           |
 | -------------- | -------------------------------------------- |
 | `-o, --output` | 输出文件路径                                       |
-| `-l, --lang`   | 语言（默认 zh）                                    |
+| `-l, --lang`   | 语言（None 则使用配置文件默认值）                           |
 | `--detail`     | 输出完整 JSON（含 title、markdown、source、templates） |
+| `--variant`    | 语言变体（如 zh-cn、zh-tw、zh-hk）                     |
 
 ### search
 
@@ -147,10 +157,10 @@ mdifier convert "TITLE_OR_URL" [-o OUTPUT] [--lang {zh|en|ja}] [--detail]
 mdifier search "QUERY" [-l {zh|en|ja}] [-n NUM]
 ```
 
-| 选项           | 说明           |
-| ------------ | ------------ |
-| `-l, --lang` | 语言（默认 zh）    |
-| `-n NUM`     | 返回结果数（默认 10） |
+| 选项           | 说明                |
+| ------------ | ----------------- |
+| `-l, --lang` | 语言（None 则使用配置文件默认值） |
+| `-n NUM`     | 返回结果数（默认 10）       |
 
 ### batch
 
@@ -164,8 +174,10 @@ mdifier batch [-t TITLE] [-i FILE] [--from-search QUERY] [-o DIR] [--workers N] 
 | `-i, --input-file` | 标题列表文件（每行一个，`#` 开头为注释）                     |
 | `--from-search`    | 通过搜索获取标题                                   |
 | `--search-limit`   | `--from-search` 时返回的最大结果数                  |
-| `-o, --output-dir` | 输出目录；为 None 则打印到 stdout                    |
-| `--workers`        | 跨页并发抓取数（默认 4）                              |
+| `-l, --lang`       | 默认语言（None 则使用配置文件默认值）                     |
+| `--variant`        | 语言变体（None 则使用配置文件默认值）                   |
+| `-o, --output-dir` | 输出目录（None 则使用配置文件默认值；为 None 则打印到 stdout） |
+| `--workers`        | 跨页并发抓取数（None 则使用配置文件默认值）                |
 | `--no-progress`    | 禁用进度条                                      |
 | `--marker-format`  | 自定义模板标记，格式 `open/close`（`{name}` 为模板类名占位符） |
 | `--no-markers`     | 禁用模板起讫标记（`:::name`）                        |
@@ -180,6 +192,21 @@ mdifier cache info|clear|prune
 - `clear` — 清空整个缓存（加 `-y` 跳过确认）
 - `prune` — 仅清理已过期条目
 
+### config
+
+```bash
+mdifier config list              # 列出所有配置项及来源
+mdifier config get <key>        # 读取配置项
+mdifier config set <key> <value> # 设置配置项（类型自动推断）
+mdifier config path             # 显示配置文件路径
+mdifier config edit             # 用默认编辑器打开
+```
+
+- **配置文件**：`~/.config/mdifier/config.toml`（XDG 标准）
+- **支持的 key**：`lang`、`variant`、`workers`、`output_dir`、`marker_format`、`no_markers`
+- **类型自动推断**：`"4"` → int，`"true"` → bool，其他 → string
+- **优先级**：`默认值 < 配置文件 < 环境变量 MDIFFER_* < CLI 参数`
+
 ## Python API
 
 ```python
@@ -187,6 +214,9 @@ from minecraft_wiki_mdifier import convert, convert_detailed, convert_many, sear
 
 # 简单转换
 md = convert("铁锭")
+
+# 指定语言变体
+md = convert("铁锭", variant="zh-tw")  # 繁体
 
 # 详细模式
 result = convert_detailed("铁锭")
@@ -208,6 +238,9 @@ results = search("diamond", lang="en")
 for r in results[:5]:
     print(f"{r['title']}: {r['description']}")
 ```
+
+> 所有 API 参数（`lang`、`variant`、`max_workers`、`output_dir` 等）均可省略，
+> 默认值来自 `~/.config/mdifier/config.toml` 或环境变量 `MDIFFER_*`。`
 
 ### URL 自动识别
 
@@ -357,6 +390,7 @@ MdifierError
 ## 多语言支持
 
 内置 `zh`（zh.minecraft.wiki）、`en`（minecraft.wiki）和 `ja`（ja.minecraft.wiki）。
+中文 wiki 默认变体 `zh-cn`，可通过 `--variant` 或 `config set variant` 切换为 `zh-tw` / `zh-hk` 等。
 
 ## 项目结构
 
@@ -367,10 +401,11 @@ src/minecraft_wiki_mdifier/
 ├── cli.py                # CLI 入口（click）
 ├── wiki.py               # MediaWiki API 获取 + HTML 降级
 ├── pandoc_trimmer.py     # 核心转换：Pandoc 预处理 + 模板渲染
-├── template_expander.py  # 模板展开（action=parse 降级链）
+├── template_expander.py  # 模板展开（action=parse 统一）
 ├── formatters.py         # Minecraft 颜色代码格式化
 ├── converter.py          # Markdown 生成
 ├── cache.py              # 模板缓存持久化
+├── config.py             # 持久化配置文件管理
 ├── exceptions.py         # 异常层级
 ├── _session.py           # HTTP Session 工厂
 └── _validators.py        # 语言验证器
@@ -388,7 +423,7 @@ pypandoc(commonmark_x+raw_attribute)
 遍历输出，识别 {=mediawiki} 块和内联模板
     │
     ▼
-TemplateExpander.expand() — 统一 action=parse
+TemplateExpander.expand() — 统一 action=parse（config.py 在 lib.py 加载时被读取一次，进程内常驻）
     │
     ▼
 pandoc_trimmer 渲染器分发 — 专用渲染器 > 通用 markdownify

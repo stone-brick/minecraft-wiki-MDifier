@@ -21,7 +21,7 @@ Minecraft Wiki の取得時、プレー HTML はスタイルノイズだらけ�
 需要があると気づいて、急いで作りました。
 
 開発中は何度も壁にぶつかり、より良い方法を模索し、
-現在の `action=bucket` + `action=expandtemplates` + `action=parse` 三層フォールバック架构に辿り着きました。
+現在の Pandoc プリプロセス + `action=parse` 統一架构に辿り着きました。
 
 ## 問題と解決
 
@@ -50,19 +50,19 @@ Bold/Italic タグのネスト、`{{end-bold}}` などの MediaWiki 固有構文
 Wikitext のテンプレートはただのプレースホルダーで、原文にはテンプレート展開後の実際の 내용이含まれておらず、AI は構造化データをここから學べません。
 
 mdifier の解決策：
-- `action=bucket` API で構造化データ（Lua データ）を取得
-- `action=expandtemplates` API でテンプレートを展開
+- `action=parse` 統一で全テンプレートを展開
+- Pandoc プリプロセス：wikitext → Markdown、`{=mediawiki}` ブロックは单独展開
 - HTML の冗長属性をクリーニングし、セマンティック構造を保持
 - テンプレートの展開結果をキャッシュして API 呼び出しを削減
 
-**性能比較**（Diamond、Iron Ingot、Gold Ingot の変換）：
+**性能比較**（作業台、苦力怕、林檎、鉄錠、Minecraft の変換；5 ページ）：
 
 | アプローチ | 耗时 | 高速化 |
 | --------- | ------ | --------- |
-| キャッシュなし、直列（ベースライン） | 51.37s | 1.0x |
-| キャッシュなし、並列 | 22.00s | 2.3x |
-| キャッシュあり（コールド） | 19.02s | 2.7x |
-| キャッシュあり（ホット） | 0.20s | **251.9x** |
+| キャッシュなし、直列（ベースライン） | 137.40s | 1.0x |
+| キャッシュなし、並列 | 84.13s | 1.6x |
+| キャッシュあり（コールド） | 92.08s | 1.5x |
+| キャッシュあり（ホット） | 3.41s | **40.3x** |
 
 ## インストール
 
@@ -107,6 +107,15 @@ mdifier search "ダイヤモンド" --lang ja
 mdifier batch -t Diamond -t Iron_Ingot -o ./out
 mdifier batch -i pages.txt -o ./out --workers 8
 mdifier batch -t Diamond --no-markers  # テンプレートマーカー無効化
+
+# 言語バリアント（中国語繁体字/簡体字）
+mdifier convert "铁锭" --variant zh-tw    # 繁体字
+mdifier convert "铁锭" --variant zh-cn    # 簡体字（デフォルト）
+
+# 永続化設定
+mdifier config list              # 全設定キーを表示
+mdifier config set variant zh-tw  # デフォルトバリアントを設定
+mdifier config path            # 設定ファイルのパスを表示
 
 # キャッシュ管理
 mdifier cache info
@@ -156,8 +165,9 @@ mdifier convert "TITLE_OR_URL" [-o OUTPUT] [--lang {zh|en|ja}] [--detail]
 | オプション | 説明 |
 |-----------|------|
 | `-o, --output` | 出力ファイルパス |
-| `-l, --lang` | 言語（デフォルト zh） |
+| `-l, --lang` | 言語（None → 設定ファイルデフォルト） |
 | `--detail` | 完全な JSON 出力（title, markdown, source, templates） |
+| `--variant` | 言語バリアント（例: zh-cn、zh-tw、zh-hk） |
 
 ### search
 
@@ -167,6 +177,7 @@ mdifier search "QUERY" [-l {zh|en|ja}] [-n NUM]
 
 | オプション | 説明 |
 |-----------|------|
+| `-l, --lang` | 言語（None → 設定ファイルデフォルト） |
 | `-n NUM` | 結果数（デフォルト 10） |
 
 ### batch
@@ -181,8 +192,10 @@ mdifier batch [-t TITLE] [-i FILE] [--from-search QUERY] [-o DIR] [--workers N] 
 | `-i, --input-file` | タイトルリストファイル（1 行 1 タイトル、`#` はコメント） |
 | `--from-search` | 検索からタイトルを取得 |
 | `--search-limit` | `--from-search` の最大結果数 |
-| `-o, --output-dir` | 出力ディレクトリ；None の場合は stdout に出力 |
-| `--workers` | 並発ページフェッチ数（デフォルト 4） |
+| `-l, --lang` | デフォルト言語（None → 設定ファイルデフォルト） |
+| `--variant` | 言語バリアント（None → 設定ファイルデフォルト） |
+| `-o, --output-dir` | 出力ディレクトリ（None → 設定ファイルデフォルト；None → stdout） |
+| `--workers` | 並発ページフェッチ数（None → 設定ファイルデフォルト） |
 | `--no-progress` | 進捗バーを無効化 |
 | `--marker-format` | カスタムマーカー形式 `open/close`（`{name}` = テンプレートクラス名） |
 | `--no-markers` | テンプレートマーカー（`:::name`）を無効化 |
@@ -197,6 +210,21 @@ mdifier cache info|clear|prune
 - `clear` — キャッシュ全体をクリア（`-y` で確認をスキップ）
 - `prune` — 期限切れエントリのみ削除
 
+### config
+
+```bash
+mdifier config list              # 全設定キーとソースを表示
+mdifier config get <key>     # 設定値を取得
+mdifier config set <key> <value> # 設定値を設定（自動型推論）
+mdifier config path          # 設定ファイルのパスを表示
+mdifier config edit           # デフォルトエディタで設定ファイルを開く
+```
+
+- **設定ファイル**: `~/.config/mdifier/config.toml`（XDG 標準）
+- **サポートキー**: `lang`, `variant`, `workers`, `output_dir`, `marker_format`, `no_markers`
+- **自動型推論**: `"4"` → int、`"true"` → bool、他 → string
+- **優先度**: `デフォルト < 設定ファイル < 環境変数 MDIFFER_* < CLI 引数`
+
 ## Python API
 
 ```python
@@ -205,11 +233,14 @@ from minecraft_wiki_mdifier import convert, convert_detailed, convert_many, sear
 # 简单変換
 md = convert("Iron Ingot")
 
+# 言語バリアントを指定
+md = convert("Iron Ingot", variant="zh-tw")  # 中国語繁体字
+
 # 詳細モード
 result = convert_detailed("Iron Ingot")
-print(result.title)      # ページタイトル
-print(result.source)    # "api" または "html"
-print(result.templates) # テンプレートデータ dict
+print(result.title)  # ページタイトル
+print(result.source)  # "api" または "html"
+print(result.templates)  # テンプレートデータ dict
 
 # バッチ変換
 result = convert_many(["Diamond", "Iron Ingot", "Enchantment Table"], max_workers=4)
@@ -239,9 +270,9 @@ for r in results[:5]:
 
 ```python
 items = [
-    "Diamond",                                     # en
-    "https://zh.minecraft.wiki/wiki/钻石",          # zh（URL 検出）
-    "Iron Ingot",                                   # デフォルト lang を使用
+    "Diamond",  # en
+    "https://zh.minecraft.wiki/wiki/钻石",  # zh（URL 検出）
+    "Iron Ingot",  # デフォルト lang を使用
 ]
 result = convert_many(items, lang="en")
 ```
@@ -254,8 +285,8 @@ result = convert_many(items, lang="en")
 from minecraft_wiki_mdifier.converter import MarkdownConverter
 
 c = MarkdownConverter()
-c.template_marker_open = '<details><summary>{name}</summary>'
-c.template_marker_close = '</details>'
+c.template_marker_open = "<details><summary>{name}</summary>"
+c.template_marker_close = "</details>"
 ```
 
 CLI: `--marker-format`:
@@ -270,22 +301,23 @@ mdifier batch -t Diamond --marker-format '<details><summary>{name}</summary>/</d
 import threading
 from minecraft_wiki_mdifier.converter import MarkdownConverter
 
-c = MarkdownConverter(lang='en')
+c = MarkdownConverter(lang="en")
 threading.Timer(0.5, c.cancel).start()  # 0.5 秒後にキャンセル
 
-convert_many(['Diamond', 'Iron Ingot', 'Enchantment Table'],
-             converter_factory=lambda l, cache: c)
+convert_many(
+    ["Diamond", "Iron Ingot", "Enchantment Table"], converter_factory=lambda l, v, cache: c
+)
 
-print(c.is_cancelled())       # True
-print(c.unresolved_templates) # frozenset({'HistoryTable', ...})
+print(c.is_cancelled())  # True
+print(c.unresolved_templates)  # frozenset({'HistoryTable', ...})
 ```
 
 ### 呼び出し間共有キャッシュ
 
 ```python
 shared = {}
-convert("Diamond", template_cache=shared)   # 24 テンプレート展開
-convert("Iron Ingot", template_cache=shared) # +17 新規、24共有
+convert("Diamond", template_cache=shared)  # 24 テンプレート展開
+convert("Iron Ingot", template_cache=shared)  # +17 新規、24共有
 ```
 
 注意：`template_cache` はプロセス内のみ、ディスク書き込みなし；ディスクキャッシュ（`~/.cache/mdifier/`）はプロセス間共有。
@@ -313,7 +345,7 @@ f.clean("&e黄色&rリセット")  # '[yellow]黄色[reset]リセット'
 | 未認識 | 汎用 markdownify 変換 |
 | 展開失敗 | フォールバック `[template: k=v]`、`class="error"` でマーク |
 
-一部のテンプレート（Trade uses、Crafting usage など）は Lua Bucket データベースに依存し、`action=bucket` API でクエリ。
+全テンプレートは `action=parse` で展開され、キャッシュ再利用される。
 
 ## キャッシュ
 
@@ -354,7 +386,6 @@ MdifierError
 │   ├── NetworkError
 │   ├── WikiAPIError
 │   └── PageNotFoundError
-├── BucketAPIError
 └── CacheError (OSError)
 ```
 
@@ -369,12 +400,14 @@ MdifierError
 | 74 | `EX_IOERR` | I/O エラー |
 | 75 | `EX_TEMPFAIL` | ネットワーク一時エラー |
 | 77 | `EX_NOPERM` | 権限エラー |
+| 78 | `EXIT_CONFIG` | 設定エラー |
 
 ## 多言語対応
 
 組み込みの `zh`（zh.minecraft.wiki）、`en`（minecraft.wiki）、`ja`（ja.minecraft.wiki）。
+中文 wiki のデフォルトバリアントは `zh-cn`，`--variant` または `config set variant` で `zh-tw` / `zh-hk` に切り替え可能。
 
-**注意**: ja wiki の Bucket i18n フィールドには中国語のデータが含まれている。プログラムはデフォルトで翻訳せず、英語原文を出力。
+**注意**: ja wiki のコンテンツには中国語の注釈が含まれる場合がある。プログラムはデフォルトで英語原文を出力。
 
 ## プロジェクト構造
 
@@ -384,11 +417,12 @@ src/minecraft_wiki_mdifier/
 ├── lib.py                # convert / convert_many / search
 ├── cli.py                # CLI エントリ（click）
 ├── wiki.py               # MediaWiki API 取得 + HTML フォールバック
-├── parser.py             # Wikitext パーサー
-├── template_expander.py  # テンプレート展開（bucket/expandtemplates）
+├── pandoc_trimmer.py     # コア: Pandoc プリプロセス + テンプレート描画
+├── template_expander.py  # テンプレート展開（action=parse 統一）
 ├── formatters.py         # Minecraft カラーコードフォーマッタ
 ├── converter.py          # Markdown 生成
 ├── cache.py              # テンプレートキャッシュ永続化
+├── config.py             # 永続化設定ファイル管理
 ├── exceptions.py         # 例外階層
 ├── _session.py           # HTTP Session ファクトリ
 └── _validators.py        # 言語バリデータ
@@ -397,9 +431,11 @@ src/minecraft_wiki_mdifier/
 **データフロー**：
 
 1. `WikiFetcher` → MediaWiki API が wikitext を取得
-2. `WikiParser` → AST を解析、テンプレートを抽出
-3. `TemplateExpander` → `action=bucket` を優先、`action=expandtemplates` にフォールバック
-4. `MarkdownConverter` → レンダラーにディスパッチ、Markdown を生成
+2. `pypandoc(commonmark_x+raw_attribute)` → wikitext を Markdown にプリプロセス
+3. 出力walking、'{=mediawiki}' ブロックとインラインテンプレートを識別
+4. `TemplateExpander.expand()` → 全テンプレート統一 `action=parse`
+5. `pandoc_trimmer` renderer ディスパッチ → 專門 renderer > 汎用 markdownify
+6. `MarkdownConverter` → 最終 Markdown を出力
 
 ## 貢献
 
